@@ -219,12 +219,15 @@ public:
         int success = 0;
         int treshold = (minutes * 60 + seconds) * 30;
         for (int i = 0; i < simulations; i++) {
-            if (i % 10000 == 0) cout << i << endl;
             Ruins ruins(undertale, times);
             if (ruins.simulate() <= treshold) success++;
         }
 
         return (double) success / (double) simulations;
+    }
+
+    double get_error_margin (int n, double probability) {
+        return 2.6 * std::sqrt((probability) * (1 - probability) / (double) n);
     }
 };
 
@@ -232,15 +235,11 @@ int main () {
     // testing all chances
     Undertale undertale;
     Simulator simulator;
-    int simulations = 1'000'000;
-    int success = 0;
-    for (int i = 0; i < simulations; i++) {
-        if (undertale.src_steps(60, 60, 20, 15) > 361) success++;
-    }   
+    int simulations = 100'000'000;
 
-    cout << (double) success / (double) simulations << endl;
-    cout << simulator.get_ruins_percentage(simulations, 10, 0) << endl;
-
+    double probs = simulator.get_ruins_percentage(simulations, 10, 0);
+    cout << "Probability:" << probs * 100 << "%" << endl;
+    cout << "Margin Error:" << simulator.get_error_margin(simulations, probs) * 100 << "%" << endl;
 
     return 0;
 }
