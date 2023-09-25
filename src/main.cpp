@@ -43,7 +43,7 @@ public:
             populationfactor = 8;
         }
         double steps = (min_steps + roundrandom(steps_delta)) * populationfactor;
-        return (int) steps;
+        return (int) steps + 1;
     }
 
     // encounterer for first half
@@ -159,8 +159,8 @@ public:
             // for the froggit encounter
             if (encounter == 0) {
                 exp += 4;
-                if (lv == 2) time += times.single_froggit[0];
-                else time += times.single_froggit[1];
+                // do arithmetic on the lv for a slight optimization based on how the array is built
+                time += times.single_froggit[lv - 2];
                 time -= times.frog_skip_save * undertale.frogskip();
             } else {
                 time += times.whimsun;
@@ -190,11 +190,11 @@ public:
                     } else { // for 2x frog
                         time += times.double_froggit[at_19];
                     }
-                    // number of frog skipps achievable depends on how many it is being fought
-                    for (int max = 1 + at_19, i = 0; i < max; i++) {
+                    // number of frog skips achievable depends on how many it is being fought
+                    for (int max = 2 - at_19, i = 0; i < max; i++) {
                         time -= times.frog_skip_save * undertale.frogskip();
                     }
-                } else { // for for 2x mold
+                } else { // for 2x mold
                     time += times.double_moldsmal[at_19];
                 }
                 kills += 2;
