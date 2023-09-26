@@ -1,2 +1,4 @@
 main.exe
-Undertale
+scripts/*
+!scripts/SpeedrunCapture.csx
+Undertale CLEAN
