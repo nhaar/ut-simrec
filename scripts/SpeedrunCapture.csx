@@ -45,6 +45,8 @@ donwtime_start = 0;
 downtime_end = 0;
 step_count = 0;
 met_encounter = 0;
+
+
 ", Data);
 
 // message updater
@@ -60,27 +62,22 @@ and keep playing until the mod stops you';
 
 // continuous timer api
 step.AppendGML(@"
-if (start_time_flag) {
-    start_time_flag = 0;
-    var cur = get_timer();
-    if (!is_timer_running) {
-    } else {
-        var file = file_text_open_append('record_' + string(session_name));
-        file_text_write_string(file, segment_name + '=' + string(cur - time_start));
-        show_debug_message(segment_name + '=' + string(cur - time_start));
-        file_text_close(file);
-    }
-    is_timer_running = 1;
-    time_start = cur;
-}
-
 if (stop_time_flag) {
     stop_time_flag = 0;
     if (is_timer_running) {
         is_timer_running = 0;
-        time_end = get_timer();
+        var file = file_text_open_append('recording_' + string(session_name));
+        file_text_write_string(file, segment_name + '=' + string(get_timer() - time_start) + ';');
+        file_text_close(file);
     }
 }
+// stop being first is on strategical, and if being two if statements as well since they can run in the same frame
+if (start_time_flag) {
+    start_time_flag = 0;
+    is_timer_running = 1;
+    time_start = get_timer();
+}
+
 ", Data);
 
 // downtime timer api
@@ -130,39 +127,47 @@ draw_text(20, 20, current_msg);
 
 
 var startSession = @"
-var file = file_text_open_write('recording_' + string(obj_time.session_name));
 obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
+var file = file_text_open_write('recording_' + string(obj_time.session_name));
 file_text_close(file);
 ";
 
-var startTime = @"obj_time.start_time_flag = 1;";
-
-// helper method
-string getStartTime(string code) {
-    return @$"
-    {startTime}
-    {code}
-    {startSession}
-    ";
+string newStage (int stage) {
+    return $"obj_time.stage = {stage};";
 }
 
+var startTime = @"obj_time.start_time_flag = 1;";
+
+string startSegment (int stage, string name) {
+    return startTime + newStage(stage) +  $"obj_time.segment_name = '{name}'";
+}
+
+var stopTime = @"obj_time.stop_time_flag = 1;";
 
 // naming screen time start
-placeTextInGML("gml_Script_scr_namingscreen", "if (naming == 4)\n{", getStartTime(@"
-obj_time.stage = 1;
-obj_time.segment_name = 'ruins-start';
-"));
+placeTextInGML("gml_Script_scr_namingscreen", "if (naming == 4)\n{", startSegment(1, "ruins-start") + startSession);
 
 // encountering first froggit in ruins
-blcon.AppendGML(@"
-if (global.battlegroup == 3) {" + startTime + @"
-    obj_time.stage = 2;
-    obj_time.segment_name = 'ruins-hallway';
-}", Data);
+// battlegroup 3 is first froggit
 
+// at the start of blcon; end of ruins start
+blcon.AppendGML(@"if (global.battlegroup == 3) {" + stopTime + @"}", Data);
 
-// debug
+// at the end of blcon; being of ruins hallway
+placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", startSegment(2, "ruins-hallway"));
+
+// exiting ruins hallway
+step.AppendGML(@"
+// as soon as gain movement for the first time
+if (stage == 2 && room == 12 && global.interact == 0) {" +
+    stopTime + newStage(3) + 
+@"
+}
+", Data);
+
+// debug - REMOVE FOR BUILD
 step.AppendGML(@"global.debug = 1;", Data);
 draw.AppendGML(@"
-draw_text(20, 40, is_timer_running);
+draw_text(20, 100, is_timer_running);
+draw_text(20, 120, obj_time.stage);
 ", Data);
