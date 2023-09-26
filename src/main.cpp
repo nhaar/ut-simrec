@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -105,7 +107,7 @@ public:
     int frog_skip_save = 90;
 
     Times ()
-    : single_froggit{ 343, 328 },
+    : single_froggit { 343, 328 },
     double_moldsmal { 845, 518 },
     triple_moldsmal { 1326, 998, 516 },
     froggit_whimsun { 527, 248 },
@@ -211,35 +213,136 @@ public:
     }
 };
 
+// class handle probability distributions, a discrete description is used to approximate a continuous distribution
+// the distribution starts at a minimum value up to a maximum value, with "bins" with a size
+// everything outside the range is given as 0
+// the distributions are not normalized
+class ProbabilityDistribution {
+    int min;
+    int max;
+    int interval;
+    int* distribution;
+    int length;
+    int total = 0;
+
+public:
+    ProbabilityDistribution (int min_value, int max_value, int interval_value, int* values, int size)
+        : min(min_value),
+        max(max_value),
+        interval(interval_value) {
+            // add +1 to include the maximum value as well, due to 0-indexing
+            // length is calculated from the range and bin size
+            length = (max + 1 - min) / interval;
+
+            // actual distribution is just an array where each element of the array represents a "x" position
+            // and the value is the number of time it appears in that "x" position
+            distribution = new int[length] {0};
+            for (int i = 0; i < size; i++) {
+                int pos = get_distribution_pos(values[i]);
+                distribution[pos]++;
+                total++;
+            }
+        }
+
+    // get the "x" position for a value in the distribution
+    int get_distribution_pos (int value) {
+        return (value - min) / interval;
+    }
+
+    // get the chance a value is in the inclusive interval min to max
+    double get_chance (int min, int max) {
+        int favorable = 0;
+        int lower_pos = get_distribution_pos(min);
+        int higher_pos = get_distribution_pos(max);
+        for (int i = lower_pos; i < higher_pos + 1; i++) {
+            favorable += distribution[i];
+        }
+        return (double) favorable / (double) total;
+    }
+
+    // get the chance a value is in the interval starting at the minimum up to a value
+    double get_chance_up_to (int max) {
+        return get_chance(min, max);
+    }
+
+    // get the chance a value is in the interval starting at a given minimum value up to the max
+    double get_chance_from (int min) {
+        return get_chance(min, max);
+    }
+
+
+    // simulating a rieman integral for the functions below like \int x \rho(x) dx / \int \rho(x) dx
+    
+    // get average value
+    double get_average () {
+        double numerator = 0;
+        for (int i = 0; i < length; i++) {
+            numerator += (min + interval * i) * distribution[i];
+        }
+        return numerator / (double) total;
+    }
+
+    // get average of square of values
+    double get_sqr_avg () {
+        double numerator = 0;
+        for (int i = 0; i < length; i++) {
+            numerator += std::pow(min + interval * i, 2) * distribution[i];
+        }
+        return numerator / (double) total;
+    }
+
+    // get the standard deviation of the values
+    double get_stdev () {
+        return std::sqrt(get_sqr_avg() - std::pow(get_average(), 2));
+    }
+
+    void export_dist (std::string name) {
+        std::ofstream file(name);
+        for (int i = 0; i < length; i++) {
+            file << min + i << "," << distribution[i] << std::endl;
+        }
+        file.close();
+    }
+};
+
+// handles methods for gathering results from simulations
 class Simulator {
     Times times;
     Undertale undertale;
 public:
-    double get_ruins_percentage (int simulations, int minutes, int seconds) {
-        int success = 0;
-        int treshold = (minutes * 60 + seconds) * 30;
+    // get the distribution for ruins runs
+    ProbabilityDistribution get_dist (int simulations, int min, int max) {
+        int* results = new int[simulations];
         for (int i = 0; i < simulations; i++) {
             Ruins ruins(undertale, times);
-            if (ruins.simulate() <= treshold) success++;
+            results[i] = ruins.simulate();
         }
 
-        return (double) success / (double) simulations;
+        int size = sizeof(results) / sizeof(results[0]);
+        ProbabilityDistribution dist(min, max, 1, results, simulations);
+        return dist;
     }
 
+    // uses a mathematical formula to calculate the marging of error from a calculated probability
     double get_error_margin (int n, double probability) {
         return 2.6 * std::sqrt((probability) * (1 - probability) / (double) n);
     }
 };
 
 int main () {
-    // testing all chances
-    Undertale undertale;
+    // // testing all chances
+    // Undertale undertale;
     Simulator simulator;
-    int simulations = 100'000'000;
+    int simulations = 1'000'000;
 
-    double probs = simulator.get_ruins_percentage(simulations, 10, 0);
-    cout << "Probability:" << probs * 100 << "%" << endl;
-    cout << "Margin Error:" << simulator.get_error_margin(simulations, probs) * 100 << "%" << endl;
+
+    int values[] = { 1, 4, 3, 3, 5, 9, 10, 5, 5, 5, 3, 1, 10, 8, 9, 7, 1, 1 };
+    int length = sizeof(values) / sizeof(values[0]);
+    ProbabilityDistribution dist = simulator.get_dist(simulations, 8 * 60 * 30, 13 * 60 * 30);
+    cout << dist.get_average() << endl;
+    cout << dist.get_stdev() << endl;
+    cout << dist.get_chance(8 * 60 * 30, 10 * 60 * 30);
+    dist.export_dist("testing.txt");
 
     return 0;
 }
