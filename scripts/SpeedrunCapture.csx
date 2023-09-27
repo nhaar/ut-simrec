@@ -31,21 +31,23 @@ stage = 0;
 current_msg = '';
 
 is_timer_running = 0;
-start_time_flag = 0;
-stop_time_flag = 0;
 time_start = 0;
 time_end = 0;
 
 segment_name = '';
 
-start_downtime = 0;
+end_down_time_flag = 0;
+// mode is for when downtime is being watched
+// running is for when downtime is being watched and a downtime has been reached
+is_downtime_mode = 0;
+downtime_name = '';
 is_downtime_mode = 0;
 is_downtime_running = 0;
-donwtime_start = 0;
-downtime_end = 0;
+downtime_start = 0;
+downtime = 0;
 step_count = 0;
 met_encounter = 0;
-
+previous_time = 0;
 
 ", Data);
 
@@ -60,53 +62,40 @@ and keep playing until the mod stops you';
 }
 ", Data);
 
-// continuous timer api
-step.AppendGML(@"
-if (stop_time_flag) {
-    stop_time_flag = 0;
-    if (is_timer_running) {
-        is_timer_running = 0;
-        var file = file_text_open_append('recording_' + string(session_name));
-        file_text_write_string(file, segment_name + '=' + string(get_timer() - time_start) + ';');
-        file_text_close(file);
-    }
+string appendNewTime (string name, string time) {
+    return @"
+    var file = file_text_open_append('recording_' + string(obj_time.session_name));
+    file_text_write_string(file, " + name + @" + '=' + string(" + time + @") + ';');
+    file_text_close(file);
+    ";
 }
-// stop being first is on strategical, and if being two if statements as well since they can run in the same frame
-if (start_time_flag) {
-    start_time_flag = 0;
-    is_timer_running = 1;
-    time_start = get_timer();
-}
-
-", Data);
 
 // downtime timer api
 step.AppendGML(@"
 // will likely need to tweak this slightly depending on the order of things
-if (start_downtime && !is_downtime_mode) {
-    is_downtime_mode = 1;
-    downtime = 0;
-    downtime_start = 0;
-    downtime_end = 0;
-    step_count = global.encounter;
-} else if (is_downtime_mode) {
+// downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
+// since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
+if (is_downtime_mode) {
     if (is_downtime_running) {
-        // being greater means it has incremented, and there was no downtime this frame
-        // else if the encounter has been met, it is expected we must leave the room asap and anytime not leaving is downtime
-        if (global.encounter > step_count || met_encounter) {
-            downtime_end = get_timer();
-            downtime += downtime_end - downtime_start;
+        // being greater means it has incremented
+        // but there is a frame delay transmitting the message
+        // and we want to stop the downtime one frame before the movement actually happened (when the movement was granted)
+        if (global.encounter > step_count) {
+            downtime += prevprev_time - downtime_start;
             is_downtime_running = 0;
         }
     } else {
         // being equals means global.encounter did not increment, thus downtime has begun
-        if (global.encounter == step_count) {
-            downtime_start = get_timer();
+        // but there is a frame delay transmitting the message
+        if (global.encounter == step_count || step_count > optimal_steps) {
+            downtime_start = previous_time;
             is_downtime_running = 1;
         }
     }
-    step_count = global.encouter;
 }
+prevprev_time = previous_time;
+previous_time = get_timer();
+step_count = global.encounter;
 ", Data);
 
 // still part of the downtime timer api
@@ -136,16 +125,45 @@ string newStage (int stage) {
     return $"obj_time.stage = {stage};";
 }
 
-var startTime = @"obj_time.start_time_flag = 1;";
+var startTime = @"
+obj_time.is_timer_running = 1;
+obj_time.time_start = get_timer();
+";
 
 string startSegment (int stage, string name) {
-    return startTime + newStage(stage) +  $"obj_time.segment_name = '{name}'";
+    return startTime + newStage(stage) + $"obj_time.segment_name = '{name}';";
 }
 
-var stopTime = @"obj_time.stop_time_flag = 1;";
+string startDowntime (int stage, string name, int steps) {
+    return @"
+    obj_time.is_downtime_mode = 1;
+    obj_time.downtime = 0;
+    obj_time.downtime_start = 0;
+    obj_time.step_count = global.encounter;
+    obj_time.optimal_steps = " + steps.ToString() + @"
+    " + newStage(stage) + $"obj_time.downtime_name = '{name}';";
+}
+
+var stopTime = @"
+if (obj_time.is_timer_running) {
+    obj_time.is_timer_running = 0;" + appendNewTime("obj_time.segment_name", "get_timer() - obj_time.time_start") + @"
+}
+";
+
+var stopDowntime = @"
+// in case the downtime ends during a downtime, must not lose the time being counted
+if (obj_time.is_downtime_mode) {
+    if (obj_time.is_downtime_running) {
+        obj_time.downtime += get_timer() + obj_time.downtime_start
+    }
+    obj_time.is_downtime_mode = 0;" + appendNewTime("obj_time.downtime_name", "obj_time.downtime") + @"
+}
+";
 
 // naming screen time start
-placeTextInGML("gml_Script_scr_namingscreen", "if (naming == 4)\n{", startSegment(1, "ruins-start") + startSession);
+ReplaceTextInGML("gml_Script_scr_namingscreen", "naming = 4", @"
+{ naming = 4;" + startSegment(1, "ruins-start") + startSession + @"}
+");
 
 // encountering first froggit in ruins
 // battlegroup 3 is first froggit
@@ -154,20 +172,60 @@ placeTextInGML("gml_Script_scr_namingscreen", "if (naming == 4)\n{", startSegmen
 blcon.AppendGML(@"if (global.battlegroup == 3) {" + stopTime + @"}", Data);
 
 // at the end of blcon; being of ruins hallway
-placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", startSegment(2, "ruins-hallway"));
+placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", @"
+if (global.battlegroup == 3) {" + startSegment(2, "ruins-hallway") + @"
+}
+");
 
-// exiting ruins hallway
+// exiting ruins hallway; end ruins hallway and start downtime
 step.AppendGML(@"
 // as soon as gain movement for the first time
 if (stage == 2 && room == 12 && global.interact == 0) {" +
-    stopTime + newStage(3) + 
+    stopTime + startDowntime(3, "ruins-leafpile", 97) + 
 @"
 }
 ", Data);
 
-// debug - REMOVE FOR BUILD
-step.AppendGML(@"global.debug = 1;", Data);
-draw.AppendGML(@"
-draw_text(20, 100, is_timer_running);
-draw_text(20, 120, obj_time.stage);
+// exitting ruins leafpile; end of downtime
+
+Data.Code.ByName("gml_Object_obj_doorC_Other_19").AppendGML(@"
+// starting downtime gives stage 2, but a new stage is started on the same room with the encounter
+if (obj_time.stage < 4 && room == 12) {"  + stopDowntime + @"
+}
 ", Data);
+
+// 
+
+// debug - REMOVE FOR BUILD
+
+
+// debug function
+void useDebug () {
+    step.AppendGML("global.debug = 1;", Data);
+
+    string[] watchVars = {
+        "is_timer_running",
+        "obj_time.stage",
+        "global.encounter",
+        "step_count",
+        "global.interact",
+        "is_downtime_running",
+        "is_downtime_mode",
+        "downtime",
+        "downtime_start",
+        "get_timer()"
+    };
+
+    // start just with line break just to not interefere with anything
+    string code = @"
+    ";
+    int i = 0;
+    foreach (string watchVar in watchVars) {
+        code += $"draw_text(20, {110 + i * 25}, '{watchVar}: ' + string({watchVar}));";
+        i++;
+    }
+    draw.AppendGML(code, Data);
+}
+
+// debug mode - REMOVE FOR BUILD
+useDebug();
