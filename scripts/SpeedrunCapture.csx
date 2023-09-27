@@ -23,6 +23,19 @@ var blconAlarm = Data.Code.ByName("gml_Object_obj_battleblcon_Alarm_0");
 // make drawing work
 Data.GameObjects.ByName("obj_time").Visible = true;
 
+
+string assignNonTakenIndex (string arr, string index, string value) {
+    var arrAccess = arr + "[target_index]";
+    return @"
+    var target_index = " + index + @";
+    // using 0 to indicate non existent elements
+    while (" + arrAccess + @" != 0) {
+        target_index++;
+    }" +
+    arrAccess + @" = " + value + @";
+    ";
+}
+
 // initializing
 create.AppendGML(@"
 session_name = 0;
@@ -49,6 +62,56 @@ step_count = 0;
 met_encounter = 0;
 previous_time = 0;
 
+previous_room = 0;
+current_room = 0;
+
+//randomize call is in gamestart, which only runs after obj_time
+randomize();
+
+// finding the order of encounters
+
+// ruins first half must have 5 encounters, 4 of them are froggits and 1 is a whimsun
+// gml 1 array so must initialize with highest index
+first_half_encounters[4] = 0;
+// lvl 2 froggit must come before lvl 3 one, thus it cant be last one
+// aditionally, I want to LV up in a frogskip or a not frogskip because then the LV up slowdown won't in the LV 2 time
+var lvl2_index = irandom(2);
+// next one is an index between lvl2_index and 3
+// the index + 1 is due to irandom including the last one
+var frogskiprel = irandom(3 - lvl2_index - 1) + lvl2_index + 1;
+// lvl3 must be after the frogskip one (where you LV up)
+var lvl3_index = irandom(4 - frogskiprel - 1) + frogskiprel + 1;
+var frogskip_roll = irandom(1);
+first_half_encounters[lvl2_index] = '2';
+first_half_encounters[lvl3_index] = '3';
+var rolled_frogskip = 'N';
+var notrolled_frogskip = 'F';
+if (frogskip_roll) {
+    rolled_frogskip = 'F';
+    notrolled_frogskip = 'N';
+}
+first_half_encounters[frogskiprel] = rolled_frogskip;
+" +
+assignNonTakenIndex("first_half_encounters", "irandom(1)", "'W'") +
+assignNonTakenIndex("first_half_encounters", "0", "notrolled_frogskip") + @"
+show_debug_message(first_half_encounters[0]);
+show_debug_message(first_half_encounters[1]);
+show_debug_message(first_half_encounters[2]);
+show_debug_message(first_half_encounters[3]);
+show_debug_message(first_half_encounters[4]);
+"
+// ruins first half encounters array guide:
+// W: whimsun
+// 2: Froggit at LV2
+// 3: Froggit at LV3
+// F: Froggit with frogskip
+// N: Froggit without frogskip
+, Data);
+
+// room tracker; it is useful for some segments that are room based
+step.AppendGML(@"
+previous_room = current_room;
+current_room = room;
 ", Data);
 
 // message updater
@@ -57,7 +120,22 @@ if (stage == 0) {
     current_msg = 'RECORDING SESSION WAITING TO START
 To start it, begin a normal run,
 and keep playing until the mod stops you';
-} else if (stage == 1) {
+} else if (stage == 3) {
+    current_msg = 'Next, walk through the next room
+as quickly as possible';
+} else if (stage == 6) {
+    current_msg = 'Now, go through the next room
+and proceed as if you were in a normal
+run until the mod stops you';
+} else if (stage == 13) {
+    current_msg = 'Now, proceed as if you have
+finished the first 11 kills, and keep
+going as if you were in a run,
+that is, you will begin by
+walking right, grinding at the end,
+and keep going until stopped
+';
+} else {
     current_msg = '';
 }
 ", Data);
@@ -114,14 +192,14 @@ draw_text(20, 20, current_msg);
 
 // adding listeners for starting/ending sessions and changing stages
 
-
 var startSession = @"
 obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
 var file = file_text_open_write('recording_' + string(obj_time.session_name));
 file_text_close(file);
 ";
 
-string newStage (int stage) {
+string newStage (int stage = -1) {
+    if (stage == -1) return "";
     return $"obj_time.stage = {stage};";
 }
 
@@ -130,11 +208,12 @@ obj_time.is_timer_running = 1;
 obj_time.time_start = get_timer();
 ";
 
-string startSegment (int stage, string name) {
-    return startTime + newStage(stage) + $"obj_time.segment_name = '{name}';";
+string startSegment (string name, int stage = -1, bool isVarName = false) {
+    string nameString = isVarName ? name : $"'{name}'";
+    return startTime + newStage(stage) + $"obj_time.segment_name = {nameString};";
 }
 
-string startDowntime (int stage, string name, int steps) {
+string startDowntime (string name, int steps, int stage = -1) {
     return @"
     obj_time.is_downtime_mode = 1;
     obj_time.downtime = 0;
@@ -162,7 +241,7 @@ if (obj_time.is_downtime_mode) {
 
 // naming screen time start
 ReplaceTextInGML("gml_Script_scr_namingscreen", "naming = 4", @"
-{ naming = 4;" + startSegment(1, "ruins-start") + startSession + @"}
+{ naming = 4;" + startSegment("ruins-start", 1) + startSession + @"}
 ");
 
 // encountering first froggit in ruins
@@ -173,47 +252,184 @@ blcon.AppendGML(@"if (global.battlegroup == 3) {" + stopTime + @"}", Data);
 
 // at the end of blcon; being of ruins hallway
 placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", @"
-if (global.battlegroup == 3) {" + startSegment(2, "ruins-hallway") + @"
+if (global.battlegroup == 3) {" + startSegment("ruins-hallway", 2) + @"
 }
 ");
 
-// exiting ruins hallway; end ruins hallway and start downtime
+// go back to past room and put at the end
+string tpRuinsHallway = @"
+    room = 11;
+    obj_mainchara.x = 2400;
+";
+
+// exiting ruins hallway; various stages use this event
 step.AppendGML(@"
 // as soon as gain movement for the first time
-if (stage == 2 && room == 12 && global.interact == 0) {" +
-    stopTime + startDowntime(3, "ruins-leafpile", 97) + 
-@"
+if (room == 12 && global.interact == 0) {
+    if (stage == 2) {" +
+        newStage(3) +
+        tpRuinsHallway + @"
+        // crank up kill count just high enough so it will not give an encounter in the next room
+        global.flag[202] = 4;
+    } else if (stage == 3) {" +
+        startDowntime("ruins-leafpile", 97, 4) + @"
+    } else if (stage == 6) {" +
+        newStage(7) + @"
+    }
 }
 ", Data);
 
 // exitting ruins leafpile; end of downtime
 
 Data.Code.ByName("gml_Object_obj_doorC_Other_19").AppendGML(@"
-// starting downtime gives stage 2, but a new stage is started on the same room with the encounter
-if (obj_time.stage < 4 && room == 12) {"  + stopDowntime + @"
+if (obj_time.stage == 4 && room == 12) {"  +
+    
+    stopDowntime +
+    newStage(5) + @"
 }
 ", Data);
 
-// 
+// to go back to the hallway for next stage
+step.AppendGML(@"
+if (stage == 5 && room > 12) {" + 
+    tpRuinsHallway +
+    newStage(6) + @"
+}
+", Data);
 
-// debug - REMOVE FOR BUILD
+string isFirstHalfStage = "obj_time.stage > 6 && obj_time.stage < 12";
+string firstHalfCurrentEncounter = "var current_encounter = obj_time.first_half_encounters[obj_time.stage - 7];";
 
+//
+placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", @"
+if (" + isFirstHalfStage + @") {
+    // default to froggit, since it's the most probable
+    var to_battle = 4;
+    // 7 is first possible stage here
+    if (obj_time.first_half_encounters[obj_time.stage - 7] == 'W') {
+        // whimsun battlegroup
+        to_battle = 5;
+    }
+    global.battlegroup = to_battle;
+}
+");
+
+// start the first half segments that begin at the encounter itself
+Data.Code.ByName("gml_Object_obj_battler_Create_0").AppendGML(@"
+if (" + isFirstHalfStage + @") {" + 
+    firstHalfCurrentEncounter + @"
+    name = 0;
+    if (current_encounter == '2') {
+        name = 'froggit-lv2';
+    } else if (current_encounter == '3') {
+         name = 'froggit-lv3';
+    } else if (current_encounter == 'W') {
+        name = 'whim';
+    }
+    //filtering out frogskip related ones
+    if (name != 0) {" +
+        startSegment("name", -1, true) + @"
+    }
+}
+", Data);
+
+// ending a segment from a battle
+step.AppendGML(@"
+if (previous_room == room_battle && current_room != room_battle) {
+    if (" + isFirstHalfStage + @") {
+        " + firstHalfCurrentEncounter + @"
+        // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
+        if (current_encounter == '2') {
+            global.xp = 29;
+        }
+        if (current_encounter != 'W' || current_encounter != 'F') {" + 
+            stopTime + @"
+        }
+        // increment for BOTH the in turn and the whole battle segments 
+        obj_time.stage++;
+    }
+}
+", Data);
+
+// rigging attacks for froggit
+// it is placed right after mycommand declaration
+placeTextInGML("gml_Object_obj_froggit_Alarm_6", "0))", @"
+if (" + isFirstHalfStage + @") {
+    " + firstHalfCurrentEncounter + @"
+    if (current_encounter == 'N') {
+        mycommand = 100;
+    } else { // as a means to speed up practice, all of them will have frog skip by default
+        mycommand = 100;
+    }
+}
+");
+
+// start the first half segments for the froggit attacks
+placeTextInGML("gml_Object_obj_froggit_Step_0", "if (global.mnfight == 2)\n{", @"
+if (" + isFirstHalfStage + @") {
+    " + firstHalfCurrentEncounter + @"
+    var name = 0;
+    switch (current_encounter) {
+        case 'F':
+            name = 'frogskip';
+            break;
+        case 'N':
+            name = 'not-frogskip';
+            break;
+    }
+    if (name != 0) {" +
+        startSegment("name", -1, true) + @"
+    }
+}
+");
+
+// end first half segments for froggit attacks
+ReplaceTextInGML("gml_Object_obj_froggit_Step_0", "attacked = 0", @" {
+    attacked = 0;
+    if (" + isFirstHalfStage + @") {
+        " + firstHalfCurrentEncounter + @"
+        if (current_encounter == 'F' || current_encounter == 'N') {" +
+            stopTime + @"
+        }
+    }
+}");
+
+// get out of first half (beginning interlude stage)
+step.AppendGML(@"
+// room < 20 just to say not battle
+if (stage == 12 && room < 20) {
+    stage = 13;
+    room = 12;
+    obj_mainchara.x = 140;
+    obj_mainchara.y = 360;
+}
+", Data);
 
 // debug function
 void useDebug () {
+    // updating it every frame is just a lazy way of doing it since it can't be done in obj_time's create event
+    // since it gets overwritten by gamestart
     step.AppendGML("global.debug = 1;", Data);
+
+    // stage skip keybinds
+    // Q skips to stage 6
+    step.AppendGML(@"
+    if (keyboard_check_pressed(ord('Q'))) {
+        stage = 6;
+        global.xp = 10;
+        global.flag[202] = 4;
+        script_execute(scr_levelup);
+        global.plot = 9.5;" +
+        tpRuinsHallway + @"
+    }
+    ", Data);
 
     string[] watchVars = {
         "is_timer_running",
         "obj_time.stage",
-        "global.encounter",
-        "step_count",
-        "global.interact",
-        "is_downtime_running",
-        "is_downtime_mode",
-        "downtime",
-        "downtime_start",
-        "get_timer()"
+        "previous_room",
+        "current_room",
+        "global.battlegroup"
     };
 
     // start just with line break just to not interefere with anything
