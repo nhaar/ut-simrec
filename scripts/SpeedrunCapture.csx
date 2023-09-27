@@ -359,7 +359,7 @@ if (" + isFirstHalfStage + @") {
     if (current_encounter == 'N') {
         mycommand = 100;
     } else { // as a means to speed up practice, all of them will have frog skip by default
-        mycommand = 100;
+        mycommand = 0;
     }
 }
 ");
