@@ -210,17 +210,24 @@ obj_time.time_start = get_timer();
 
 string startSegment (string name, int stage = -1, bool isVarName = false) {
     string nameString = isVarName ? name : $"'{name}'";
-    return startTime + newStage(stage) + $"obj_time.segment_name = {nameString};";
+    return @"
+    if (!obj_time.is_timer_running) {" +
+        startTime + newStage(stage) + $"obj_time.segment_name = {nameString};" + @"
+    }
+    ";
 }
 
 string startDowntime (string name, int steps, int stage = -1) {
     return @"
-    obj_time.is_downtime_mode = 1;
-    obj_time.downtime = 0;
-    obj_time.downtime_start = 0;
-    obj_time.step_count = global.encounter;
-    obj_time.optimal_steps = " + steps.ToString() + @"
-    " + newStage(stage) + $"obj_time.downtime_name = '{name}';";
+    if (!obj_time.is_downtime_mode) {
+        obj_time.is_downtime_mode = 1;
+        obj_time.downtime = 0;
+        obj_time.downtime_start = 0;
+        obj_time.step_count = global.encounter;
+        obj_time.optimal_steps = " + steps.ToString() + @"
+        " + newStage(stage) + $"obj_time.downtime_name = '{name}';" + @"
+    }
+    ";
 }
 
 var stopTime = @"
@@ -314,21 +321,24 @@ if (" + isFirstHalfStage + @") {
 }
 ");
 
-// start the first half segments that begin at the encounter itself
-Data.Code.ByName("gml_Object_obj_battler_Create_0").AppendGML(@"
-if (" + isFirstHalfStage + @") {" + 
-    firstHalfCurrentEncounter + @"
-    name = 0;
-    if (current_encounter == '2') {
-        name = 'froggit-lv2';
-    } else if (current_encounter == '3') {
-         name = 'froggit-lv3';
-    } else if (current_encounter == 'W') {
-        name = 'whim';
-    }
-    //filtering out frogskip related ones
-    if (name != 0) {" +
-        startSegment("name", -1, true) + @"
+// starting a segment from a battle
+step.AppendGML(@"
+if (previous_room != room_battle && current_room == room_battle) {
+    // first half segments for encounters
+    if (" + isFirstHalfStage + @") {" + 
+        firstHalfCurrentEncounter + @"
+        name = 0;
+        if (current_encounter == '2') {
+            name = 'froggit-lv2';
+        } else if (current_encounter == '3') {
+            name = 'froggit-lv3';
+        } else if (current_encounter == 'W') {
+            name = 'whim';
+        }
+        //filtering out frogskip related ones
+        if (name != 0) {" +
+            startSegment("name", -1, true) + @"
+        }
     }
 }
 ", Data);
@@ -415,6 +425,7 @@ void useDebug () {
     // Q skips to stage 6
     step.AppendGML(@"
     if (keyboard_check_pressed(ord('Q'))) {
+        is_timer_running = 0;
         stage = 6;
         global.xp = 10;
         global.flag[202] = 4;
