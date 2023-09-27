@@ -77,8 +77,10 @@ first_half_encounters[5] = 0;
 // lv 2 froggit must come before lv 3 one, thus it cant be last one
 // aditionally, I want to LV up in a frogskip or a not frogskip because then the LV up slowdown won't in the LV 2 time
 var lv2_index = irandom(3);
+show_debug_message(lv2_index);
 // lv 3 must be at least after LV up so minimum position is 2 after LV 2 one
-var lv3_index = irandom(3 - lv2_index - 2) + lv2_index + 2;
+var lv3_index = irandom(3 - lv2_index) + lv2_index + 2;
+show_debug_message(lv3_index);
 first_half_encounters[lv2_index] = '2';
 first_half_encounters[lv3_index] = '3';
 // leave an empty encounter for the LV up so that LV up itself can be measured 
@@ -87,13 +89,7 @@ first_half_encounters[lv2_index + 1] = 'A';
 assignNonTakenIndex("first_half_encounters", "irandom(2)", "'W'") +
 assignNonTakenIndex("first_half_encounters", "irandom(1)", "'F'") +
 assignNonTakenIndex("first_half_encounters", "0", "'N'") + @"
-show_debug_message(first_half_encounters[0]);
-show_debug_message(first_half_encounters[1]);
-show_debug_message(first_half_encounters[2]);
-show_debug_message(first_half_encounters[3]);
-show_debug_message(first_half_encounters[4]);
-show_debug_message(first_half_encounters[5]);
-"
+" +
 // ruins first half encounters array guide:
 // W: whimsun
 // 2: Froggit at LV2
@@ -101,6 +97,27 @@ show_debug_message(first_half_encounters[5]);
 // F: Froggit with frogskip
 // N: Froggit without frogskip
 // A: any (random encounter)
+@"
+second_half_encounters[9] = 0;" +
+assignNonTakenIndex("second_half_encounters", "irandom(4)", "'W'") +
+assignNonTakenIndex("second_half_encounters", "irandom(3)", "'F'") + 
+assignNonTakenIndex("second_half_encounters", "irandom(2)", "'A'") + 
+assignNonTakenIndex("second_half_encounters", "irandom(1)", "'B'") + 
+assignNonTakenIndex("second_half_encounters", "0", "'C'") + 
+assignNonTakenIndex("second_half_encounters", "irandom(3) + 5", "'W'") + 
+assignNonTakenIndex("second_half_encounters", "irandom(2) + 5", "'F'") + 
+assignNonTakenIndex("second_half_encounters", "irandom(1) + 5", "'B'") + 
+assignNonTakenIndex("second_half_encounters", "5", "'C'") + @"
+for (var i = 0; i < 10; i++) {
+    show_debug_message(string(i) + string(second_half_encounters[i]));
+}
+"
+// ruins second half encounters array guide:
+// W: frog whim (2 times)
+// F: 2x frog (2 times)
+// A: 1x mold (1 time)
+// B: 2x mold (2 times)
+// C: 3x mold (3 times)
 , Data);
 
 // room tracker; it is useful for some segments that are room based
@@ -124,12 +141,57 @@ as quickly as possible';
 and proceed as if you were in a normal
 run until the mod stops you';
 } else if (stage == 14) {
-    current_msg = 'Now, proceed as if you have
-finished the first 11 kills, and keep
-going as if you were in a run,
-that is, you will begin by
-walking right, grinding at the end,
-and keep going until stopped
+    current_msg = ""Now, walk to the right room
+and simply cross it (don't grind)
+"";
+} else if (stage == 16) {
+    current_msg = 'Now, grind an encounter at
+the end of this room and proceed as if it
+were a normal run until you are stopped
+';
+} else if (stage == 19) {
+    current_msg = 'Now, go through the next room
+from beginning to end as if it was a
+normal run but without grinding an encounter
+at the end
+';
+} else if (stage == 21) {
+    current_msg = 'Now grind at the
+end of the room, and proceed as a normal
+run until you are stopped
+';
+} else if (stage == 24) {
+    current_msg = 'Now, go through the next
+room from begining to end as if it was
+a normal run but without grinding an encounter
+at the end
+';
+} else if (stage == 26) {
+    current_msg = 'Now, grind an
+encounter at the end of the room,
+and proceed grinding and killing
+encounters until you are stopped
+Grind as you would in a normal
+run
+';
+} else if (stage == 32) {
+    current_msg = 'Now, continue grinding
+just the same, but as if you had 19 kills,
+that is, flee after killing the
+first enemy for ALL encounters
+';
+} else if (stage == 37) {
+    current_msg = 'Finally, kill one last encounter
+it will be a triple mold, and you must only
+kill TWO monsters, then flee
+Feel free to still attack second one
+to simulate the Froggit Whimsun attacks
+';
+} else if (stage == 39) {
+    current_msg = 'Finally, walk to the right as if
+you have finished killing all
+monsters and play normally until
+the end of Ruins
 ';
 } else {
     current_msg = '';
@@ -250,12 +312,38 @@ ReplaceTextInGML("gml_Script_scr_namingscreen", "naming = 4", @"
 // encountering first froggit in ruins
 // battlegroup 3 is first froggit
 
-// at the start of blcon; end of ruins start
-blcon.AppendGML(@"if (global.battlegroup == 3) {" + stopTime + @"}", Data);
+// everything at the start the start of blcon; end of ruins start
+blcon.AppendGML(@"
+if (global.battlegroup == 3 || obj_time.stage >= 40) {" +
+    // end of ruins start or reached nobody came in ruins
+    stopTime + @"
+} else if (
+    obj_time.stage == 16 ||
+    obj_time.stage == 21 ||
+    obj_time.stage == 26 ||
+    obj_time.stage == 32 ||
+    obj_time.stage == 37
+) { // stages used just to remove the message
+    obj_time.stage++;
+}", Data);
 
-// at the end of blcon; being of ruins hallway
+// everything at the end of blcon
 placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", @"
-if (global.battlegroup == 3) {" + startSegment("ruins-hallway", 2) + @"
+// end of ruins-hallway
+if (global.battlegroup == 3) {" +
+    startSegment("ruins-hallway", 2) + @"
+} else if (obj_time.stage == 40) {" +
+    startSegment("ruins-switches", 41) + @"
+} else if (obj_time.stage == 41) {" +
+    startSegment("perspective-a", 42) + @"
+} else if (obj_time.stage == 41) {" +
+    startSegment("perspective-b", 42) + @"
+} else if (obj_time.stage == 42) {" +
+    startSegment("perspective-c", 43) + @"
+} else if (obj_time.stage == 43) {" +
+    startSegment("perspective-d", 44) + @"
+} else if (obj_time.stage == 45) {" +
+    startSegment("ruins-end", 46) + @"
 }
 ");
 
@@ -282,27 +370,64 @@ if (room == 12 && global.interact == 0) {
 }
 ", Data);
 
+//
 // exitting ruins leafpile; end of downtime
 
 Data.Code.ByName("gml_Object_obj_doorC_Other_19").AppendGML(@"
 if (obj_time.stage == 4 && room == 12) {"  +
-    
     stopDowntime +
     newStage(5) + @"
 }
 ", Data);
 
-// to go back to the hallway for next stage
+// exitting door A downtimes
+Data.Code.ByName("gml_Object_obj_doorA_Other_19").AppendGML(@"
+if (obj_time.stage == 15 && room == 14) {"  +
+    // end leaf fall downtime
+    stopDowntime +
+    newStage(16) + @"
+} else if (obj_time.stage == 20 && room == 15) {"  +
+    // end one rock downtime
+    stopDowntime +
+    newStage(21) + @"
+} else if (obj_time.stage == 25 && room == 17) {"  +
+    // end three rock downtime
+    stopDowntime +
+    newStage(26) + @"
+}
+", Data);
+
+// teleporting at the end of downtimes
 step.AppendGML(@"
 if (stage == 5 && room > 12) {" + 
     tpRuinsHallway +
     newStage(6) + @"
+} else if (stage == 16 && room == 15) {
+    room = 14;
+    obj_mainchara.x = 210;
+    obj_mainchara.y = 81;
+} else if (stage == 21 && room == 16) {
+    room = 15;
+    obj_mainchara.x = 340;
+    obj_mainchara.y = 80;
+} else if (stage == 26 && room == 18) {
+    room = 17;
+    obj_mainchara.x = 480;
+    obj_mainchara.y = 100;
+    // reset kills to make things quick
+    global.flag[202] = 0;
 }
 ", Data);
 
 string isFirstHalfStage = "obj_time.stage > 6 && obj_time.stage < 13";
 // 7 is first possible stage here
 string firstHalfCurrentEncounter = "var current_encounter = obj_time.first_half_encounters[obj_time.stage - 7];";
+
+string isSecondHalfNoFleeStage = "obj_time.stage > 26 && obj_time.stage < 32";
+string secondHalfNoFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 27];";
+string isSecondHalfFleeStage = "obj_time.stage > 32 && obj_time.stage < 37";
+string secondHalfFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 28];";
+
 
 
 
@@ -320,6 +445,28 @@ if (" + isFirstHalfStage + @") {" +
         }
         global.battlegroup = to_battle;
     }
+} else if (obj_time.stage == 17 || obj_time.stage == 22) { // rigging to whimsun just to speed things up
+    global.battlegroup = 5;
+} else if ((" + isSecondHalfFleeStage + ") || (" + isSecondHalfNoFleeStage + @")) {
+    var current_encounter;
+    if (" + isSecondHalfNoFleeStage + @") {
+        current_encounter = obj_time.second_half_encounters[obj_time.stage - 27];
+    } else {
+        current_encounter = obj_time.second_half_encounters[obj_time.stage - 28];
+    }" + @"
+    if (current_encounter == 'W') {
+        global.battlegroup = 6;
+    } else if (current_encounter == 'F') {
+        global.battlegroup = 9;
+    } else if (current_encounter == 'A') {
+        global.battlegroup = 7;
+    } else if (current_encounter == 'B') {
+        global.battlegroup = 10;
+    } else if (current_encounter == 'C') {
+        global.battlegroup = 8;
+    }
+} else if (obj_time.stage == 38) {
+    global.battlegroup = 8;
 }
 ");
 
@@ -341,6 +488,38 @@ if (previous_room != room_battle && current_room == room_battle) {
         if (name != 0) {" +
             startSegment("name", -1, true) + @"
         }
+    } else if (" + isSecondHalfNoFleeStage + @") {" +
+        secondHalfNoFleeEncounter + @"
+        var name = 0;
+        if (current_encounter == 'W') {
+            name = 'frog-whim';
+        } else if (current_encounter == 'F') {
+            name = 'dbl-frog';
+        } else if (current_encounter == 'A') {
+            name = 'sgl-mold';
+        } else if (current_encounter == 'B') {
+            name = 'dbl-mold';
+        } else if (current_encounter == 'C') {
+            name = 'tpl-mold';
+        }" +
+        startSegment("name", -1, true) + @"
+    } else if (" + isSecondHalfFleeStage + @") {" +
+        secondHalfFleeEncounter + @"
+        var name = 0;
+        if (current_encounter == 'W') {
+            name = 'frog-whim-19';
+        } else if (current_encounter == 'F') {
+            name = 'dbl-frog-19';
+        } else if (current_encounter == 'A') {
+            name = 'sgl-mold-19';
+        } else if (current_encounter == 'B') {
+            name = 'dbl-mold-19';
+        } else if (current_encounter == 'C') {
+            name = 'tpl-mold-19';
+        }" +
+        startSegment("name", - 1, true) + @"
+    } else if (stage == 38) {" +
+        startSegment("tpl-mold-18") + @"
     }
 }
 ", Data);
@@ -362,6 +541,27 @@ if (previous_room == room_battle && current_room != room_battle) {
         }
         // increment for BOTH the in turn and the whole battle segments 
         obj_time.stage++;
+    } else if ((" + isSecondHalfFleeStage + ")  || (" + isSecondHalfNoFleeStage + @")) {" +
+        stopTime + @"
+        // last ones so we TP for explanation
+        if (obj_time.stage == 31 || obj_time.stage == 36) {
+            // exitting too false requires manually setting off persistence
+            room_persistent = false;
+            room = 18;
+            obj_mainchara.x = 40;
+            obj_mainchara.y = 100;
+            global.flag[202] = 0;
+        }
+        obj_time.stage++;
+    } else if (stage == 38) {" +
+        stopTime + @"
+        // TP back for final explanation
+        room_persistent = false; // not sure if this one is necessary (probably)
+        stage = 39;
+        room = 17;
+        obj_mainchara.x = 480;
+        obj_mainchara.y = 100;
+        global.flag[202] = 20;
     }
 }
 ", Data);
@@ -369,16 +569,21 @@ if (previous_room == room_battle && current_room != room_battle) {
 // starting a segment post a battle
 step.AppendGML(@"
 if (prevprev_room == room_battle && previous_room != room_battle) {
-    // stage 8 (first one) means we have the transition from the leafpile to the right
     if (stage == 8) {" +
+        // stage 8 (first one) means we have the transition from the leafpile to the right
         startSegment("ruins-leafpile-transition") + @"
-    }
-    // this one is for any given transition (but measured in the second one)
-    if (stage == 9) {" + 
+    } else if (stage == 9) {" +
+        // this one is for any given first half grind transition (but measured in the second one)  
         startSegment("ruins-first-transition") + @"
+    } else if (stage == 17) {" +
+        // transition from the end of the encounter in room 14
+        startSegment("leaf-fall-transition", 18) + @"
+    } else if (stage == 22) {" +
+        // leaf maze segment
+        startSegment("ruins-maze", 23) + @"
     }
 }
-")
+", Data);
 
 // rigging attacks for froggit
 // it is placed right after mycommand declaration
@@ -453,14 +658,73 @@ placeTextInGML("gml_Object_obj_battlecontroller_Step_0", "earned \"", @"
     }
 ");
 
+
+// segments up to 3 frog room nobody came:
+step.AppendGML(@"
+if (stage == 39 && previous_room == 17 && current_room == 18) {" +
+    startSegment("ruins-napsta", 40) + @"
+}
+", Data);
+
+string leafpileTp = @"
+room = 12;
+obj_mainchara.x = 240;
+obj_mainchara.y = 340;
+";
+
 // get out of first half (beginning interlude stage)
 step.AppendGML(@"
 // room < 20 just to say not battle
 if (stage == 13 && room < 20) {
-    stage = 14;
-    room = 12;
-    obj_mainchara.x = 140;
-    obj_mainchara.y = 360;
+    stage = 14;" +
+    leafpileTp + @"
+}
+", Data);
+
+// begin leaf fall downtime
+step.AppendGML(@"
+if (stage == 14 && previous_room == 12 && current_room > 12) {" +
+    // arbitrarily high steps because it doesn't matter
+    startDowntime("ruins-leaf-fall", 1000, 15) + @"
+}
+", Data);
+
+// end leaf fall transition and start rock down time
+step.AppendGML(@"
+if (stage == 18 && previous_room == 14 && current_room == 15) {" +
+    stopTime + @"
+    stage = 19;
+    room = 14;
+    obj_mainchara.x = 200;
+    obj_mainchara.y = 80;
+} else if (stage == 19 && previous_room == 14 && room != 14 && current_room == 15) {" +
+    // start one rock downtime
+    startDowntime("ruins-one-rock", 10000, 20) + @"
+}
+", Data);
+
+// end leaf maze segment and start three rock down time
+step.AppendGML(@"
+if (stage == 23 && previous_room == 16 && current_room == 17) {" +
+    stopTime + @"
+    stage = 24;
+    room = 16;
+    obj_mainchara.x = 520;
+    obj_mainchara.y = 220;
+} else if (stage == 24 && room == 17) {" +
+    startDowntime("ruins-three-rock", 10000, 25) + @"
+}
+", Data);
+
+// begin three rock down time
+step.AppendGML(@"
+
+", Data);
+
+// end ruins segment
+step.AppendGML(@"
+if (stage == 46 && previous_room == 41 && current_room == 42) {" +
+    stopTime + @"
 }
 ", Data);
 
@@ -484,12 +748,27 @@ void useDebug () {
     }
     ", Data);
 
+    // E skips to stage 14
+    step.AppendGML(@"
+    if (keyboard_check_pressed(ord('E'))) {
+        is_timer_running = 0;
+        stage = 14;
+        global.xp = 30;
+        global.flag[202] = 11;
+        script_execute(scr_levelup);
+        global.plot = 9.5;" +
+        leafpileTp + @"
+    }
+    ", Data);
+
     string[] watchVars = {
         "is_timer_running",
         "obj_time.stage",
         "previous_room",
         "current_room",
-        "global.battlegroup"
+        "global.battlegroup",
+        "is_downtime_mode",
+        "is_downtime_running"
     };
 
     // start just with line break just to not interefere with anything
@@ -501,6 +780,14 @@ void useDebug () {
         i++;
     }
     draw.AppendGML(code, Data);
+
+    // coordinates
+    draw.AppendGML(@"
+    if (instance_exists(obj_mainchara)) {
+        draw_text(20," + (110 + i * 25).ToString() + @", 'x:' +  string(obj_mainchara.x));
+        draw_text(20," + (110 + (i + 1) * 25).ToString() + @", 'y:' + string(obj_mainchara.y));
+    }
+    ", Data);
 }
 
 // debug mode - REMOVE FOR BUILD
