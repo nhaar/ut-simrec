@@ -62,6 +62,7 @@ step_count = 0;
 met_encounter = 0;
 previous_time = 0;
 
+prevprev_room = 0;
 previous_room = 0;
 current_room = 0;
 
@@ -70,35 +71,28 @@ randomize();
 
 // finding the order of encounters
 
-// ruins first half must have 5 encounters, 4 of them are froggits and 1 is a whimsun
+// ruins first half must have 6 encounters, 4 of them are froggits, 1 is a whimsun, the other is random
 // gml 1 array so must initialize with highest index
-first_half_encounters[4] = 0;
-// lvl 2 froggit must come before lvl 3 one, thus it cant be last one
+first_half_encounters[5] = 0;
+// lv 2 froggit must come before lv 3 one, thus it cant be last one
 // aditionally, I want to LV up in a frogskip or a not frogskip because then the LV up slowdown won't in the LV 2 time
-var lvl2_index = irandom(2);
-// next one is an index between lvl2_index and 3
-// the index + 1 is due to irandom including the last one
-var frogskiprel = irandom(3 - lvl2_index - 1) + lvl2_index + 1;
-// lvl3 must be after the frogskip one (where you LV up)
-var lvl3_index = irandom(4 - frogskiprel - 1) + frogskiprel + 1;
-var frogskip_roll = irandom(1);
-first_half_encounters[lvl2_index] = '2';
-first_half_encounters[lvl3_index] = '3';
-var rolled_frogskip = 'N';
-var notrolled_frogskip = 'F';
-if (frogskip_roll) {
-    rolled_frogskip = 'F';
-    notrolled_frogskip = 'N';
-}
-first_half_encounters[frogskiprel] = rolled_frogskip;
+var lv2_index = irandom(3);
+// lv 3 must be at least after LV up so minimum position is 2 after LV 2 one
+var lv3_index = irandom(3 - lv2_index - 2) + lv2_index + 2;
+first_half_encounters[lv2_index] = '2';
+first_half_encounters[lv3_index] = '3';
+// leave an empty encounter for the LV up so that LV up itself can be measured 
+first_half_encounters[lv2_index + 1] = 'A';
 " +
-assignNonTakenIndex("first_half_encounters", "irandom(1)", "'W'") +
-assignNonTakenIndex("first_half_encounters", "0", "notrolled_frogskip") + @"
+assignNonTakenIndex("first_half_encounters", "irandom(2)", "'W'") +
+assignNonTakenIndex("first_half_encounters", "irandom(1)", "'F'") +
+assignNonTakenIndex("first_half_encounters", "0", "'N'") + @"
 show_debug_message(first_half_encounters[0]);
 show_debug_message(first_half_encounters[1]);
 show_debug_message(first_half_encounters[2]);
 show_debug_message(first_half_encounters[3]);
 show_debug_message(first_half_encounters[4]);
+show_debug_message(first_half_encounters[5]);
 "
 // ruins first half encounters array guide:
 // W: whimsun
@@ -106,10 +100,12 @@ show_debug_message(first_half_encounters[4]);
 // 3: Froggit at LV3
 // F: Froggit with frogskip
 // N: Froggit without frogskip
+// A: any (random encounter)
 , Data);
 
 // room tracker; it is useful for some segments that are room based
 step.AppendGML(@"
+prevprev_room = previous_room;
 previous_room = current_room;
 current_room = room;
 ", Data);
@@ -127,7 +123,7 @@ as quickly as possible';
     current_msg = 'Now, go through the next room
 and proceed as if you were in a normal
 run until the mod stops you';
-} else if (stage == 13) {
+} else if (stage == 14) {
     current_msg = 'Now, proceed as if you have
 finished the first 11 kills, and keep
 going as if you were in a run,
@@ -304,20 +300,26 @@ if (stage == 5 && room > 12) {" +
 }
 ", Data);
 
-string isFirstHalfStage = "obj_time.stage > 6 && obj_time.stage < 12";
+string isFirstHalfStage = "obj_time.stage > 6 && obj_time.stage < 13";
+// 7 is first possible stage here
 string firstHalfCurrentEncounter = "var current_encounter = obj_time.first_half_encounters[obj_time.stage - 7];";
 
-//
+
+
+// rigging the encounters
 placeTextInGML("gml_Object_obj_battleblcon_Alarm_0", "battle = 1", @"
-if (" + isFirstHalfStage + @") {
-    // default to froggit, since it's the most probable
-    var to_battle = 4;
-    // 7 is first possible stage here
-    if (obj_time.first_half_encounters[obj_time.stage - 7] == 'W') {
-        // whimsun battlegroup
-        to_battle = 5;
+if (" + isFirstHalfStage + @") {" + 
+    firstHalfCurrentEncounter + @"
+    // only 'A' is not rigged
+    if (current_encounter != 'A') {
+        // default to froggit, since it's the most probable
+        var to_battle = 4;
+        if (current_encounter == 'W') {
+            // whimsun battlegroup
+            to_battle = 5;
+        }
+        global.battlegroup = to_battle;
     }
-    global.battlegroup = to_battle;
 }
 ");
 
@@ -352,7 +354,10 @@ if (previous_room == room_battle && current_room != room_battle) {
         if (current_encounter == '2') {
             global.xp = 29;
         }
-        if (current_encounter != 'W' || current_encounter != 'F') {" + 
+        // 'F' is the only encounter that by its end we don't have a timer happening
+        // for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
+        // so it just leaves F for having no reason to stop time here
+        if (current_encounter != 'F') {" + 
             stopTime + @"
         }
         // increment for BOTH the in turn and the whole battle segments 
@@ -360,6 +365,20 @@ if (previous_room == room_battle && current_room != room_battle) {
     }
 }
 ", Data);
+
+// starting a segment post a battle
+step.AppendGML(@"
+if (prevprev_room == room_battle && previous_room != room_battle) {
+    // stage 8 (first one) means we have the transition from the leafpile to the right
+    if (stage == 8) {" +
+        startSegment("ruins-leafpile-transition") + @"
+    }
+    // this one is for any given transition (but measured in the second one)
+    if (stage == 9) {" + 
+        startSegment("ruins-first-transition") + @"
+    }
+}
+")
 
 // rigging attacks for froggit
 // it is placed right after mycommand declaration
@@ -404,11 +423,41 @@ ReplaceTextInGML("gml_Object_obj_froggit_Step_0", "attacked = 0", @" {
     }
 }");
 
+// end the leafpile transition
+step.AppendGML(@"
+// just using > 12 because idk the exact number right now
+if (stage == 8 && previous_room == 12 && current_room > 12) {" +
+    stopTime + @"
+}
+", Data);
+
+// ruins first half transition
+step.AppendGML(@"
+// see above for why > 12
+if (stage == 9 && previous_room > 12 && current_room == 12) {" +
+    stopTime + @"
+}
+", Data);
+
+// start count for the "YOU WON!" text
+placeTextInGML("gml_Object_obj_battlecontroller_Step_0", "earned \"", @"
+    if (" + isFirstHalfStage + @") {
+        " + firstHalfCurrentEncounter + @"
+        // for 'A', we are starting time for the LV up text
+        if (current_encounter == 'A') {" +
+            startSegment("lv-up") + @"
+        } else if (current_encounter == 'N') {" +
+            // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
+            startSegment("you-won") + @"
+        }
+    }
+");
+
 // get out of first half (beginning interlude stage)
 step.AppendGML(@"
 // room < 20 just to say not battle
-if (stage == 12 && room < 20) {
-    stage = 13;
+if (stage == 13 && room < 20) {
+    stage = 14;
     room = 12;
     obj_mainchara.x = 140;
     obj_mainchara.y = 360;
