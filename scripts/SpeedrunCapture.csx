@@ -589,81 +589,151 @@ step_count = global.encounter;
 append(draw, @"
 draw_set_font(fnt_main)
 draw_set_color(c_yellow);
-draw_text(20, 20, current_msg);
+draw_text(20, 0, current_msg);
 ");
 
 // STEP CHECKS (every frame)
 
-// message check
-append(step, @$"
-if (stage == {(int)Stages.Offline}) {{
-    current_msg = 'RECORDING SESSION WAITING TO START
+// helper dictionary that keeps all messages and is used to be iterated later
+Dictionary<int, string> messages = new Dictionary<int, string> {
+    { (int)Stages.Offline, @"
+RECORDING SESSION WAITING TO START
 To start it, begin a normal run,
-and keep playing until the mod stops you';
-}} else if (stage == {(int)Stages.PreLeafPile}) {{
-    current_msg = 'Next, walk through the next room
-as quickly as possible';
-}} else if (stage == {(int)Stages.PreFirstGrind}) {{
-    current_msg = 'Now, go through the next room
+and keep playing until the mod stops you
+    " },
+    { (int)Stages.Start, @"
+PROCEED
+    " },
+    { (int)Stages.Hallway, @"
+PROCEED
+    " },
+    { (int)Stages.PreLeafPile, @"
+Next, walk through the next room
+as quickly as possible
+    " },
+    { (int)Stages.LeafPileDowntime, @"
+WALK
+    " },
+    { (int)Stages.PreFirstGrind, @"
+Now, go through the next room
 and proceed as if you were in a normal
-run until the mod stops you';
-}} else if (stage == {(int)Stages.PostFirstGrind}) {{
-    current_msg = ""Now, walk to the right room
+run until the mod stops you
+    " },
+    { (int)Stages.InFirstGrind, @"
+GRIND
+    " },
+    { (int)Stages.PostFirstGrind, @"
+Now, walk to the right room
 and simply cross it (don't grind)
-"";
-}} else if (stage == {(int)Stages.PreFallEncounter}) {{
-    current_msg = 'Now, grind an encounter at
+    " },
+    { (int)Stages.LeafFallDowntime, @"
+WALK
+    " },
+    { (int)Stages.PreFallEncounter, @"
+Now, grind an encounter at
 the end of this room and proceed as if it
 were a normal run until you are stopped
-';
-}} else if (stage == {(int)Stages.PreOneRock}) {{
-    current_msg = 'Now, go through the next room
+    " },
+    { (int)Stages.InFallEncounter, @"
+GRIND
+    " },
+    { (int)Stages.LeafFallTransition, @"
+PROCEED
+    " },
+    { (int)Stages.PreOneRock, @"
+Now, go through the next room
 from beginning to end as if it was a
 normal run but without grinding an encounter
 at the end
-';
-}} else if (stage == {(int)Stages.PreLeafMaze}) {{
-    current_msg = 'Now grind at the
+    " },
+    { (int)Stages.OneRockDowntime, @"
+WALK
+    " },
+    { (int)Stages.PreLeafMaze, @"
+Now grind at the
 end of the room, and proceed as a normal
 run until you are stopped
-';
-}} else if (stage == {(int)Stages.PreThreeRock}) {{
-    current_msg = 'Now, go through the next
+    " },
+    { (int)Stages.OneRockEncounter, @"
+GRIND
+    " },
+    { (int)Stages.InLeafMaze, @"
+PROCEED
+    " },
+    { (int)Stages.PreThreeRock, @"
+Now, go through the next
 room from begining to end as if it was
 a normal run but without grinding an encounter
 at the end
-';
-}} else if (stage == {(int)Stages.PreSecondGrind}) {{
-    current_msg = 'Now, grind an
+    " },
+    { (int)Stages.ThreeRockDowntime, @"
+WALK
+    " },
+    { (int)Stages.PreSecondGrind, @"
+Now, grind an
 encounter at the end of the room,
 and proceed grinding and killing
 encounters until you are stopped
 Grind as you would in a normal
 run
-';
-}} else if (stage == {(int)Stages.PreFleeGrind}) {{
-    current_msg = 'Now, continue grinding
+    " },
+    { (int)Stages.InSecondGrind, @"
+GRIND
+    " },
+    { (int)Stages.PreFleeGrind, @"
+Now, continue grinding
 just the same, but as if you had 19 kills,
 that is, flee after killing the
 first enemy for ALL encounters
-';
-}} else if (stage == {(int)Stages.PreTripleMold}) {{
-    current_msg = 'Finally, kill one last encounter
+    " },
+    { (int)Stages.InFleeGrind, @"
+GRIND (KILL ONLY ONE)
+    " },
+    { (int)Stages.PreTripleMold, @"
+Now, kill one last encounter
 it will be a triple mold, and you must only
 kill TWO monsters, then flee
 Feel free to still attack second one
 to simulate the Froggit Whimsun attacks
-';
-}} else if (stage == {(int)Stages.PreEnd}) {{
-    current_msg = 'Finally, walk to the right as if
+    " },
+    { (int)Stages.InTripleMold, @"
+GRIND (KILL ONLY TWO)
+    " },
+    { (int)Stages.PreEnd, @"
+Finally, walk to the right as if
 you have finished killing all
 monsters and play normally until
 the end of Ruins
-';
-}} else {{
+    " },
+    { (int)Stages.NobodyCame, @"
+PROCEED
+    " },
+    { (int)Stages.End, @"
+PROCEED
+    " }
+};
+
+// building the code that assigns the `current_msg` variable
+var currentMsgAssign = "";
+var msgTotal = Enum.GetNames(typeof(Stages)).Length;
+for (int i = 0; i < msgTotal; i++) {
+    var msg = messages[i];
+    if (i > 0) currentMsgAssign += "else";
+    currentMsgAssign += @$"
+    if (stage == {i}) {{
+        current_msg = ""{msg}"";
+    }}    
+    ";
+}
+// currently all stages have a message, so this has become obsolete
+currentMsgAssign += @$"
+else {{
     current_msg = '';
 }}
-");
+";
+
+// message check
+append(step, currentMsgAssign);
 
 // ROOM TRANSITIONS
 append(step, @$"
