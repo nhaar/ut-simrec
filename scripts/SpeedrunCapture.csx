@@ -241,6 +241,20 @@ string leafpileTp = tpTo(12, 240, 340);
 string tpRuinsHallway = tpTo(11, 2400, 80);
 
 /// <summary>
+/// GML code that disables the encounters
+/// </summary>
+string disableEncounters = @"
+obj_time.fast_encounters = 0;
+";
+
+/// <summary>
+/// GML code that enables the encounters
+/// </summary>
+string enableEncounters = @"
+obj_time.fast_encounters = 1;
+";
+
+/// <summary>
 /// Contains all the stages used in the ruins session
 /// </summary>
 enum Stages {
@@ -413,6 +427,9 @@ var draw = "gml_Object_obj_time_Draw_64";
 var blcon = "gml_Object_obj_battleblcon_Create_0";
 var blconAlarm = "gml_Object_obj_battleblcon_Alarm_0";
 
+// code for picking how many steps are needed for an encounter
+var scrSteps = "gml_Script_scr_steps";
+
 // for knowing the naming screen before the run start
 var naming = "gml_Script_scr_namingscreen";
 
@@ -449,6 +466,10 @@ time_start = 0;
 time_end = 0;
 segment_name = '';
 
+// this flag will controll how encounters are given
+// if `0`, then encounters will be disabled
+// else if `1` then encounters will be given quickly
+fast_encounters = 0;
 
 // mode is for when downtime is being watched
 // running is for when downtime is being watched and a downtime has been reached
@@ -529,6 +550,25 @@ second_half_encounters[9] = 0;
 // B: 2x mold (2 times)
 // C: 3x mold (3 times)
 );
+
+// edit step counts
+replace(scrSteps, @"
+    populationfactor = (argument2 / (argument2 - global.flag[argument3]))
+    if (populationfactor > 8)
+        populationfactor = 8
+    steps = ((argument0 + round(random(argument1))) * populationfactor)
+", $@"
+if (obj_time.fast_encounters) {{
+    // if we want fast encounters, we are probably killing things, so setting kills to 0 is
+    // a control method to not go over the limit which is manually set always 
+    global.flag[argument3] = 0;
+    steps = argument0;
+}} else {{
+    // practically disabling encounters with an arbitrarily high number since GMS1 does not have infinity
+    // this would be ~5 minutes of walking
+    steps = 10000;
+}}
+");
 
 // room tracker; it is useful for some segments that are room based
 append(step, @"
@@ -619,9 +659,9 @@ as quickly as possible
 WALK
     " },
     { (int)Stages.PreFirstGrind, @"
-Now, go through the next room
-and proceed as if you were in a normal
-run until the mod stops you
+Now, grind and encounter at the end of
+the room and continue grinding as if you were
+in a normal run
     " },
     { (int)Stages.InFirstGrind, @"
 GRIND
@@ -750,12 +790,8 @@ if (previous_room == 11 && current_room == 12) {{
         {stopTime}
         {newStage((int)Stages.PreLeafPile)}
         {tpRuinsHallway}
-        // crank up kill count just high enough so it will not give an encounter in the next room
-        global.flag[202] = 4;
     }} else if (stage == {(int)Stages.PreLeafPile}) {{
         {startDowntime("ruins-leafpile", 97, (int)Stages.LeafPileDowntime)}
-    }} else if (stage == {(int)Stages.PreFirstGrind}) {{
-        {newStage((int)Stages.InFirstGrind)}
     }}
 // exitting leafpile room
 }} else if (previous_room == 12 && current_room == 14) {{
@@ -775,6 +811,7 @@ if (previous_room == 11 && current_room == 12) {{
     // end leaf fall transition
     if (stage == {(int)Stages.LeafFallTransition}) {{
         {stopTime}
+        {disableEncounters}
         stage = {(int)Stages.PreOneRock};
         {tpTo(14, 200, 80)}
     // start one rock downtime
@@ -792,6 +829,7 @@ if (previous_room == 11 && current_room == 12) {{
     // end leaf maze segment
     if (stage == {(int)Stages.InLeafMaze}) {{
         {stopTime}
+        {disableEncounters}
         stage = {(int)Stages.PreThreeRock};
         {tpTo(16, 520, 220)}
     // start three rock downtime
@@ -872,6 +910,7 @@ if (previous_room == 11 && current_room == 12) {{
         // increment for BOTH the in turn and the whole battle segments 
         obj_time.current_encounter++;
         if (obj_time.current_encounter == {firstHalfLength}) {{
+            {disableEncounters}
             {newStage((int)Stages.PostFirstGrind)}
         }}
 
@@ -889,6 +928,7 @@ if (previous_room == 11 && current_room == 12) {{
         {startSegment("leaf-fall-transition", (int)Stages.LeafFallTransition)}
     }} else if (stage == {(int)Stages.OneRockEncounter}) {{
         // leaf maze segment
+        {disableEncounters}
         {startSegment("ruins-maze", (int)Stages.InLeafMaze)}
     }} else if ({isSecondHalf}) {{
         {stopTime}
@@ -901,7 +941,6 @@ if (previous_room == 11 && current_room == 12) {{
             }} else {{
                 {newStage((int)Stages.PreTripleMold)}
             }}
-            global.flag[202] = 0;
         }}
 
         // first one means we are coming from the incomplete transition from three rock
@@ -916,6 +955,7 @@ if (previous_room == 11 && current_room == 12) {{
         // TP back for final explanation
         stage = {(int)Stages.PreEnd};
         {tpTo(17, 500, 110)}
+        // max out kills
         global.flag[202] = 20;
     }}
 }}
@@ -937,6 +977,8 @@ append(blcon, @$"
 if (obj_time.stage == {(int)Stages.Start} || obj_time.stage == {(int)Stages.NobodyCame}) {{
     {stopTime}
 // all stages below are mostly used just to remove the message
+}} else if (obj_time.stage =={(int)Stages.PreFirstGrind}) {{
+    {newStage((int)Stages.InFirstGrind)}
 }} else if (obj_time.stage == {(int)Stages.PreFallEncounter}) {{
     {newStage((int)Stages.InFallEncounter)}
 }} else if (obj_time.stage == {(int)Stages.PreLeafMaze}) {{
@@ -992,6 +1034,7 @@ append(doorC, @$"
 // stop leafpile downtime
 if (obj_time.stage == {(int)Stages.LeafPileDowntime} && room == 12) {{
     {stopDowntime}
+    {enableEncounters}
     {newStage((int)Stages.PreFirstGrind)}
 }}
 ");
@@ -1001,14 +1044,17 @@ append(doorA, @$"
 if (obj_time.stage == {(int)Stages.LeafFallDowntime} && room == 14) {{
     // end leaf fall downtime
     {stopDowntime}
+    {enableEncounters}
     {newStage((int)Stages.PreFallEncounter)}
 }} else if (obj_time.stage == {(int)Stages.OneRockDowntime} && room == 15) {{
     // end one rock downtime
     {stopDowntime}
+    {enableEncounters}
     {newStage((int)Stages.PreLeafMaze)}
 }} else if (obj_time.stage == {(int)Stages.ThreeRockDowntime} && room == 17) {{
     // end three rock downtime
     {stopDowntime}
+    {enableEncounters}
     {newStage((int)Stages.PreSecondGrind)}
 // ending second half grind
 }} else if (obj_time.stage == {(int)Stages.PreEnd} && room == 17) {{
@@ -1027,16 +1073,14 @@ if (room == 41 && obj_time.stage == {(int)Stages.End}) {{
 
 // teleporting at the end of downtimes
 append(step, @$"
-if (stage == {(int)Stages.PreFirstGrind} && room > 12) {{ 
-    {tpRuinsHallway}
+if (stage == {(int)Stages.PreFirstGrind} && room == 14) {{ 
+    {tpTo(12, 180, 260)}
 }} else if (stage == {(int)Stages.PreFallEncounter} && room == 15) {{
     {tpTo(14, 210, 100)}
 }} else if (stage == {(int)Stages.PreLeafMaze} && room == 16) {{
     {tpTo(15, 340, 100)}
 }} else if (stage == {(int)Stages.PreSecondGrind} && room == 18) {{
     {tpTo(17, 430, 110)}
-    // reset kills to make things quick
-    global.flag[202] = 0;
 }}
 ");
 
@@ -1112,11 +1156,10 @@ void useDebug () {
     append(step, @$"
     if (keyboard_check_pressed(ord('Q'))) {{
         is_timer_running = 0;
-        stage = {(int)Stages.PreFirstGrind};
+        stage = {(int)Stages.PreLeafPile};
         global.xp = 10;
-        global.flag[202] = 4;
         script_execute(scr_levelup);
-        global.plot = 9.5;
+        global.plot = 9;
         {tpRuinsHallway}
     }}
     ");
@@ -1127,7 +1170,6 @@ void useDebug () {
         is_timer_running = 0;
         stage = {(int)Stages.PostFirstGrind};
         global.xp = 30;
-        global.flag[202] = 11;
         script_execute(scr_levelup);
         global.plot = 9.5;
         {leafpileTp}
