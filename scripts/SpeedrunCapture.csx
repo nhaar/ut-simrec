@@ -461,7 +461,6 @@ downtime = 0;
 step_count = 0;
 previous_time = 0;
 
-prevprev_room = 0;
 previous_room = 0;
 current_room = 0;
 
@@ -533,7 +532,6 @@ second_half_encounters[9] = 0;
 
 // room tracker; it is useful for some segments that are room based
 append(step, @"
-prevprev_room = previous_room;
 previous_room = current_room;
 current_room = room;
 ");
@@ -876,8 +874,22 @@ if (previous_room == 11 && current_room == 12) {{
         if (obj_time.current_encounter == {firstHalfLength}) {{
             {newStage((int)Stages.PostFirstGrind)}
         }}
+
+        // the first one means we have the transition from the leafpile to the right
+        if (current_encounter == 1) {{
+            {startSegment("ruins-leafpile-transition")}
+        // this one is for any given first half grind transition (but measured in the second one)  
+        }} else if (current_encounter == 2) {{
+            {startSegment("ruins-first-transition")}
+        }}
     }} else if (stage == {(int)Stages.PostFirstGrind}) {{
         {leafpileTp}
+    }} else if (stage == {(int)Stages.InFallEncounter}) {{
+        // transition from the end of the encounter in room 14
+        {startSegment("leaf-fall-transition", (int)Stages.LeafFallTransition)}
+    }} else if (stage == {(int)Stages.OneRockEncounter}) {{
+        // leaf maze segment
+        {startSegment("ruins-maze", (int)Stages.InLeafMaze)}
     }} else if ({isSecondHalf}) {{
         {stopTime}
         // last ones so we TP for explanation
@@ -891,34 +903,7 @@ if (previous_room == 11 && current_room == 12) {{
             }}
             global.flag[202] = 0;
         }}
-    }} else if (stage == {(int)Stages.InTripleMold}) {{
-        {stopTime}
-        // TP back for final explanation
-        stage = {(int)Stages.PreEnd};
-        {tpTo(17, 500, 110)}
-        global.flag[202] = 20;
-    }}
-}}
-");
 
-// starting a segment post a battle
-append(step, @$"
-if (prevprev_room == room_battle && previous_room != room_battle) {{
-    if ({isFirstGrind}) {{
-        // the first one means we have the transition from the leafpile to the right
-        if (current_encounter == 1) {{
-            {startSegment("ruins-leafpile-transition")}
-        // this one is for any given first half grind transition (but measured in the second one)  
-        }} else if (current_encounter == 2) {{
-            {startSegment("ruins-first-transition")}
-        }}
-    }} else if (stage == {(int)Stages.InFallEncounter}) {{
-        // transition from the end of the encounter in room 14
-        {startSegment("leaf-fall-transition", (int)Stages.LeafFallTransition)}
-    }} else if (stage == {(int)Stages.OneRockEncounter}) {{
-        // leaf maze segment
-        {startSegment("ruins-maze", (int)Stages.InLeafMaze)}
-    }} else if ({isSecondHalf}) {{
         // first one means we are coming from the incomplete transition from three rock
         if (current_encounter == 1) {{
             {startSegment("three-rock-transition")}
@@ -926,6 +911,12 @@ if (prevprev_room == room_battle && previous_room != room_battle) {{
         }} else if (current_encounter == 2) {{
             {startSegment("ruins-second-transition")}
         }}
+    }} else if (stage == {(int)Stages.InTripleMold}) {{
+        {stopTime}
+        // TP back for final explanation
+        stage = {(int)Stages.PreEnd};
+        {tpTo(17, 500, 110)}
+        global.flag[202] = 20;
     }}
 }}
 ");
