@@ -1,18 +1,47 @@
 /******
 helper variables and functions
 ******/
+
+/// <summary>
+/// Append GML to the end of a code entry
+/// </summary>
+/// <param name="codeName">Name of the code entry</param>
+/// <param name="code">Code to append</param>
 void append (string codeName, string code) {
     Data.Code.ByName(codeName).AppendGML(code, Data);
 }
 
+/// <summary>
+/// Replace text in a code entry
+/// </summary>
+/// <param name="codeName">Name of the code entry</param>
+/// <param name="text">Exact text to be replaced</param>
+/// <param name="replacement">Text to overwrite the old text</param>
 void replace (string codeName, string text, string replacement) {
     ReplaceTextInGML(codeName, text, replacement);
 }
 
+/// <summary>
+/// Place text inside a code entry
+/// </summary>
+/// <param name="codeName">Name of the code entry</param>
+/// <param name="preceding">String matching the exact text that precedes where the code should be placed</param>
+/// <param name="placement">New code to place</param>
 void place (string codeName, string preceding, string placement) {
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
 }
 
+/// <summary>
+/// Generate GML code that (assuming it exists) finds the first index in an array that contains only `0`
+/// and assigns it a value
+/// </summary>
+/// <param name="arr">Name of the array variable in GML</param>
+/// <param name="index">The first index to start searching, it will go up from here</param>
+/// <param name="value">Value to assign to the found spot</param>
+/// <remarks>
+/// If it incorrectly assumes there is a free index then it will crash the game with an out of range error
+/// </remarks>
+/// <returns></returns>
 string assignNonTakenIndex (string arr, string index, string value) {
     var arrAccess = arr + "[target_index]";
     return @$"
@@ -25,6 +54,12 @@ string assignNonTakenIndex (string arr, string index, string value) {
     ";
 }
 
+/// <summary>
+/// Generate GMl code that appends the time for a segment/downtime to the end of the current session's file
+/// </summary>
+/// <param name="name">Name for the segment/downtime</param>
+/// <param name="time">String containing the total time obtained (in microseconds)</param>
+/// <returns></returns>
 string appendNewTime (string name, string time) {
     return @$"
     var file = file_text_open_append('recording_' + string(obj_time.session_name));
@@ -33,35 +68,54 @@ string appendNewTime (string name, string time) {
     ";
 }
 
-
-
+/// <summary>
+/// GML code that starts a new recording session
+/// </summary>
 var startSession = @"
 obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
 var file = file_text_open_write('recording_' + string(obj_time.session_name));
 file_text_close(file);
 ";
 
+/// <summary>
+/// Generate GML code that reassigns the value of stage or not
+/// </summary>
+/// <param name="stage">If given, will reassign the stage to the given stage number, else it will do nothing</param>
+/// <returns></returns>
 string newStage (int stage = -1) {
     if (stage == -1) return "";
     return $"obj_time.stage = {stage};";
 }
 
-var startTime = @"
-obj_time.is_timer_running = 1;
-obj_time.time_start = get_timer();
-";
-
+/// <summary>
+/// Generate GML code that starts the segment timer
+/// </summary>
+/// <param name="name">Name of the segment</param>
+/// <param name="stage">Stage to update to, or `-1` to not update the stage</param>
+/// <param name="isVarName">
+/// Should be set to `true` if the `name` param should be interpreted as being a GML variable name
+/// and to `false` if it should be interpreted as being a GML string literal
+/// </param>
+/// <returns></returns>
 string startSegment (string name, int stage = -1, bool isVarName = false) {
     string nameString = isVarName ? name : $"'{name}'";
     return @$"
     if (!obj_time.is_timer_running) {{
-        {startTime}
+        obj_time.is_timer_running = 1;
+        obj_time.time_start = get_timer();
         {newStage(stage)}
         obj_time.segment_name = {nameString};
     }}
     ";
 }
 
+/// <summary>
+/// Generate GML code that starts the downtime mode
+/// </summary>
+/// <param name="name">Name of the downtime</param>
+/// <param name="steps">Number of optimal steps to complete downtime</param>
+/// <param name="stage">Value to set the stage to, or `-1` if the stage should not be changed</param>
+/// <returns></returns>
 string startDowntime (string name, int steps, int stage = -1) {
     return @$"
     if (!obj_time.is_downtime_mode) {{
@@ -76,6 +130,9 @@ string startDowntime (string name, int steps, int stage = -1) {
     ";
 }
 
+/// <summary>
+/// GML code that stops the segment timer
+/// </summary>
 var stopTime = @$"
 if (obj_time.is_timer_running) {{
     obj_time.is_timer_running = 0;
@@ -83,6 +140,9 @@ if (obj_time.is_timer_running) {{
 }}
 ";
 
+/// <summary>
+/// GML code that stops downtime mode
+/// </summary>
 var stopDowntime = @$"
 // in case the downtime ends during a downtime, must not lose the time being counted
 if (obj_time.is_downtime_mode) {{
@@ -94,24 +154,58 @@ if (obj_time.is_downtime_mode) {{
 }}
 ";
 
+/// <summary>
+/// GML variable that is `1` if the current stage corresponds to any of the ones in the
+/// first half grind and `0` otherwise
+/// </summary>
 string isFirstHalfStage = "obj_time.stage > 6 && obj_time.stage < 13";
 
-// 7 is first possible stage here
+/// <summary>
+/// GML code that assigns a `var` `current_encounter` the value of the current first half encounter
+/// </summary>
+// 7 is the first possible encounter here
 string firstHalfCurrentEncounter = "var current_encounter = obj_time.first_half_encounters[obj_time.stage - 7];";
 
+/// <summary>
+/// GML variable that is `1` if the current stage is any of the ones in the second half without fleeing grind
+/// and `0` otherwise
+/// </summary>
 string isSecondHalfNoFleeStage = "obj_time.stage > 26 && obj_time.stage < 32";
 
+/// <summary>
+/// GML code that assigns a `var` `current_encounter` the value of the current second half no flee encounter
+/// </summary>
 string secondHalfNoFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 27];";
 
+/// <summary>
+/// GML variable that is `1` if the current stage is any of the ones in the second half with fleeing grind
+/// and `0` otherwise
+/// </summary>
 string isSecondHalfFleeStage = "obj_time.stage > 32 && obj_time.stage < 37";
 
+/// <summary>
+/// GML code that assigns a `var` `current_encounter` the value of the current second half with flee encounter
+/// </summary>
 string secondHalfFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 28];";
 
-
+/// <summary>
+/// Generate GML code that teleports the player to a room and in a given position inside the room
+/// </summary>
+/// <param name="room">The room ID</param>
+/// <param name="x">x position to teleport to</param>
+/// <param name="y">y position to telport to</param>
+/// <returns></returns>
 string tpTo (int room, int x, int y) {
     return tpTo(room.ToString(), x, y);
 }
 
+/// <summary>
+/// Generate GML code that teleports the player to a room and in a given position inside the room
+/// </summary>
+/// <param name="room">The room ID as a string or the room name</param>
+/// <param name="x">x position to teleport to</param>
+/// <param name="y">y position to telport to</param>
+/// <returns></returns>
 string tpTo (string room, int x, int y) {
     return @$"
     obj_time.tp_flag = 1;
@@ -121,12 +215,21 @@ string tpTo (string room, int x, int y) {
     ";
 }
 
+/// <summary>
+/// GML variable that is `1` if any of the arrow keys are currently held or `0` otherwise
+/// </summary>
 string isMoving = @"
 keyboard_check(vk_left) || keyboard_check(vk_right) || keyboard_check(vk_up) || keyboard_check(vk_down)
 ";
 
+/// <summary>
+/// GML code that teleports to the end of the leaf pile room
+/// </summary>
 string leafpileTp = tpTo(12, 240, 340);
 
+/// <summary>
+/// GML code that teleports to the end of the ruins long hallway
+/// </summary>
 string tpRuinsHallway = tpTo(11, 2400, 80);
 
 /******
@@ -751,7 +854,9 @@ if (stage == 13 && room != room_battle) {{
 }}
 ");
 
-// debug function
+/// <summary>
+/// Function that if called will add debug functions to the game
+/// </summary>
 void useDebug () {
     // updating it every frame is just a lazy way of doing it since it can't be done in obj_time's create event
     // since it gets overwritten by gamestart
