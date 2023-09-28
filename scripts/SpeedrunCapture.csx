@@ -562,6 +562,8 @@ if (obj_time.fast_encounters) {{
     // if we want fast encounters, we are probably killing things, so setting kills to 0 is
     // a control method to not go over the limit which is manually set always 
     global.flag[argument3] = 0;
+    // max hp for the user convenience due to unusual amount of encounters and frog skips
+    global.hp = global.maxhp;
     steps = argument0;
 }} else {{
     // practically disabling encounters with an arbitrarily high number since GMS1 does not have infinity
@@ -1087,14 +1089,19 @@ if (stage == {(int)Stages.PreFirstGrind} && room == 14) {{
 // rigging attacks for froggit
 // it is placed right after mycommand declaration
 place(froggitAlarm, "0))", @$"
+// as a means to speed up practice, all of them will have frog skip by default
+var use_frogskip = 1;
+// find the only case to not use frogskip (when we are measuring the speed of not having frogskip)
 if ({isFirstGrind}) {{
     {firstHalfCurrentEncounter}
     if (encounter_name == 'N') {{
-
-        mycommand = 100;
-    }} else {{ // as a means to speed up practice, all of them will have frog skip by default
-        mycommand = 0;
+        use_frogskip = 0;
     }}
+}}
+if (use_frogskip) {{
+    mycommand = 0;
+}} else {{
+    mycommand = 100;
 }}
 ");
 
