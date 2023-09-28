@@ -569,22 +569,22 @@ append(step, @"
 if (is_downtime_mode) {
     if (is_downtime_running) {
         // being greater means it has incremented
-        // but there is a frame delay transmitting the message
-        // and we want to stop the downtime one frame before the movement actually happened (when the movement was granted)
+        // but it also means that last frame was the first one incrementing, thus use previous time
         if (global.encounter > step_count) {
-            downtime += prevprev_time - downtime_start;
+            downtime += previous_time - downtime_start;
             is_downtime_running = 0;
         }
     } else {
         // being equals means global.encounter did not increment, thus downtime has begun
-        // but there is a frame delay transmitting the message
+        // but it also means that it stopped incrementing last frame, thus use previous_time
+        // also, the frame it goes above optimal steps is when downtime begins (since we're using is previous_time it also
+        // means we use step_count instead of global.encounter)
         if (global.encounter == step_count || step_count > optimal_steps) {
             downtime_start = previous_time;
             is_downtime_running = 1;
         }
     }
 }
-prevprev_time = previous_time;
 previous_time = get_timer();
 step_count = global.encounter;
 ");
@@ -1140,7 +1140,11 @@ void useDebug () {
         "segment_name",
         "is_downtime_mode",
         "is_downtime_running",
-        "downtime_name"
+        "downtime_name",
+        "global.encounter", 
+        "step_count",
+        "get_timer()",
+        "previous_time"
     };
 
     // start just with line break just to not interefere with anything
