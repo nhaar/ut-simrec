@@ -62,7 +62,7 @@ string assignNonTakenIndex (string arr, string index, string value) {
 /// <returns></returns>
 string appendNewTime (string name, string time) {
     return @$"
-    var file = file_text_open_append('recording_' + string(obj_time.session_name));
+    var file = file_text_open_append('recordings/recording_' + string(obj_time.session_name));
     file_text_write_string(file, {name} + '=' + string({time}) + ';');
     file_text_close(file);
     ";
@@ -73,7 +73,7 @@ string appendNewTime (string name, string time) {
 /// </summary>
 var startSession = @"
 obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
-var file = file_text_open_write('recording_' + string(obj_time.session_name));
+var file = file_text_open_write('recordings/recording_' + string(obj_time.session_name));
 file_text_close(file);
 ";
 
@@ -430,6 +430,9 @@ Data.GameObjects.ByName("obj_time").Visible = true;
 
 // initializing
 append(create, $@"
+// where recording text files will be saved
+directory_create('recordings');
+
 session_name = 0;
 
 stage = 0;
