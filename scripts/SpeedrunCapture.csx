@@ -773,10 +773,15 @@ if (previous_room == 11 && current_room == 12) {{
     }} else if (stage == {(int)Stages.PreOneRock}) {{
         {startDowntime("ruins-one-rock", 10000, (int)Stages.OneRockDowntime)}
     }}
+// ending second half transition
+}} else if (previous_room == 18 && current_room == 17 && {isSecondHalf}) {{
+    // stop the transition timer
+    if (current_encounter == 1 || current_encounter == 2) {{
+        {stopTime}
+    }}
 // ending second half grind
 }} else if (previous_room == 17 && current_room == 18 && stage == {(int)Stages.PreEnd}) {{
     {startSegment("ruins-napsta", (int)Stages.NobodyCame)}
-    
 // exit leaf maze
 }} else if (previous_room == 16 && current_room == 17) {{
     // end leaf maze segment
@@ -881,7 +886,7 @@ if (previous_room == 11 && current_room == 12) {{
 // starting a segment post a battle
 append(step, @$"
 if (prevprev_room == room_battle && previous_room != room_battle) {{
-    if ({isFirstHalf}) {{
+    if ({isFirstGrind}) {{
         // the first one means we have the transition from the leafpile to the right
         if (current_encounter == 1) {{
             {startSegment("ruins-leafpile-transition")}
@@ -895,6 +900,14 @@ if (prevprev_room == room_battle && previous_room != room_battle) {{
     }} else if (stage == {(int)Stages.OneRockEncounter}) {{
         // leaf maze segment
         {startSegment("ruins-maze", (int)Stages.InLeafMaze)}
+    }} else if ({isSecondHalf}) {{
+        // first one means we are coming from the incomplete transition from three rock
+        if (current_encounter == 1) {{
+            {startSegment("three-rock-transition")}
+        // second one for measuring the condition that happens for any given one
+        }} else if (current_encounter == 2) {{
+            {startSegment("ruins-second-transition")}
+        }}
     }}
 }}
 ");
