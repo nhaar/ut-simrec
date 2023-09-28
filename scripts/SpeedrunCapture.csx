@@ -155,38 +155,46 @@ if (obj_time.is_downtime_mode) {{
 ";
 
 /// <summary>
-/// GML variable that is `1` if the current stage corresponds to any of the ones in the
-/// first half grind and `0` otherwise
+/// Number of encounters in the first half array
 /// </summary>
-string isFirstHalfStage = "obj_time.stage > 6 && obj_time.stage < 13";
+int firstHalfLength = 6;
 
 /// <summary>
-/// GML code that assigns a `var` `current_encounter` the value of the current first half encounter
+/// GML code that assigns a `var` `encounter_name` the value of the current first half encounter
 /// </summary>
-// 7 is the first possible encounter here
-string firstHalfCurrentEncounter = "var current_encounter = obj_time.first_half_encounters[obj_time.stage - 7];";
+string firstHalfCurrentEncounter = "var encounter_name = obj_time.first_half_encounters[obj_time.current_encounter];";
 
 /// <summary>
-/// GML variable that is `1` if the current stage is any of the ones in the second half without fleeing grind
-/// and `0` otherwise
+/// GML variable that is `1` if the current stage is the first grind and `0` otherwise
 /// </summary>
-string isSecondHalfNoFleeStage = "obj_time.stage > 26 && obj_time.stage < 32";
+string isFirstGrind = $"(obj_time.stage == {(int)Stages.InFirstGrind})";
 
 /// <summary>
-/// GML code that assigns a `var` `current_encounter` the value of the current second half no flee encounter
+/// GML variable that is `1` if the current stage is in the second half grind and `0` otherwise
 /// </summary>
-string secondHalfNoFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 27];";
+string isSecondHalf = $"(obj_time.stage == {(int)Stages.InSecondGrind} || obj_time.stage == {(int)Stages.InFleeGrind})";
 
 /// <summary>
-/// GML variable that is `1` if the current stage is any of the ones in the second half with fleeing grind
-/// and `0` otherwise
+/// GML variable that is `1` if the current stage is the second half grind with flee and `0` otherwise
 /// </summary>
-string isSecondHalfFleeStage = "obj_time.stage > 32 && obj_time.stage < 37";
+string isFleeGrind = $"(obj_time.stage == {(int)Stages.InFleeGrind})";
 
 /// <summary>
-/// GML code that assigns a `var` `current_encounter` the value of the current second half with flee encounter
+/// Length of the second half encounters array up to elements in the without flee grind
 /// </summary>
-string secondHalfFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 28];";
+// currently it is just equal to number of unique encounters in the second half
+int noFleeLength = 5;
+
+/// <summary>
+/// Length of the second half encounters array excluding the last element
+/// </summary>
+// because with fleeing is just one encounter less
+int secondHalfLength = noFleeLength * 2 - 1;
+
+/// <summary>
+/// GML code that assigns a `var` `encounter_name` the value of the current second half encounter
+/// </summary>
+string secondHalfCurrentEncounter = "var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];";
 
 /// <summary>
 /// Generate GML code that teleports the player to a room and in a given position inside the room
@@ -231,6 +239,152 @@ string leafpileTp = tpTo(12, 240, 340);
 /// GML code that teleports to the end of the ruins long hallway
 /// </summary>
 string tpRuinsHallway = tpTo(11, 2400, 80);
+
+/// <summary>
+/// Contains all the stages used in the ruins session
+/// </summary>
+enum Stages {
+    /// <summary>
+    /// Before the session begins
+    /// </summary>
+    Offline,
+
+    /// <summary>
+    /// Normal run from the start up to the first froggit
+    /// </summary>
+    Start,
+
+    /// <summary>
+    /// Normal run from first froggit up to long hallway exit
+    /// </summary>
+    Hallway,
+
+    /// <summary>
+    /// Explanation before leaf pile
+    /// </summary>
+    PreLeafPile,
+
+    /// <summary>
+    /// Walking across the leaf pile room
+    /// </summary>
+    LeafPileDowntime,
+
+    /// <summary>
+    /// Explanation before first half grind
+    /// </summary>
+    PreFirstGrind,
+
+    /// <summary>
+    /// Minified version of the first half grind
+    /// </summary>
+    InFirstGrind,
+
+    /// <summary>
+    /// Explanation after the first half grind
+    /// </summary>
+    PostFirstGrind,
+
+    /// <summary>
+    /// Walking across the leaf fall room
+    /// </summary>
+    LeafFallDowntime,
+
+    /// <summary>
+    /// Explanation after leaf fall downtime
+    /// </summary>
+    PreFallEncounter,
+
+    /// <summary>
+    /// Grinding encounter in the leaf fall room
+    /// </summary>
+    InFallEncounter,
+
+    /// <summary>
+    /// Exitting leaf fall room
+    /// </summary>
+    LeafFallTransition,
+
+    /// <summary>
+    /// Explanation before one rock room
+    /// </summary>
+    PreOneRock,
+
+    /// <summary>
+    /// Walking across the one rock room
+    /// </summary>
+    OneRockDowntime,
+
+    /// <summary>
+    /// Explanation before the leaf maze
+    /// </summary>
+    PreLeafMaze,
+
+    /// <summary>
+    /// Grinding encounter at the end of one rock room
+    /// </summary>
+    OneRockEncounter,
+
+    /// <summary>
+    /// Walking across the leaf maze room
+    /// </summary>
+    InLeafMaze,
+
+    /// <summary>
+    /// Explanation before three rock room
+    /// </summary>
+    PreThreeRock,
+
+    /// <summary>
+    /// Walking across three rock room
+    /// </summary>
+    ThreeRockDowntime,
+
+    /// <summary>
+    /// Explanation before second half grinding
+    /// </summary>
+    PreSecondGrind,
+
+    /// <summary>
+    /// Grinding encounters (killing every enemy) in the second half
+    /// </summary>
+    InSecondGrind,
+
+    /// <summary>
+    /// Explanation before second half grinding with fleeing
+    /// </summary>
+    PreFleeGrind,
+
+    /// <summary>
+    /// Grinding encounters (killing one enemy and fleeing) in the second half
+    /// </summary>
+    InFleeGrind,
+
+    /// <summary>
+    /// Explanation before triple moldsmal
+    /// </summary>
+    PreTripleMold,
+
+    /// <summary>
+    /// Battling triple moldsmal killing two enemies and fleeing
+    /// </summary>
+    InTripleMold,
+
+    /// <summary>
+    /// Explanation before the end
+    /// </summary>
+    PreEnd,
+
+    /// <summary>
+    /// Walking across rooms with "But nobody came"
+    /// </summary>
+    NobodyCame,
+
+    /// <summary>
+    /// Going to the end of the Ruins
+    /// </summary>
+    End
+
+}
 
 /******
 start of main script
@@ -302,6 +456,9 @@ prevprev_room = 0;
 previous_room = 0;
 current_room = 0;
 
+// counter variable for the end segment
+nobody_came = 0;
+
 // see in step for explanation on tp
 tp_flag = 0;
 tp_x = 0;
@@ -310,6 +467,10 @@ lock_player = 0;
 
 //randomize call is in gamestart, which only runs after obj_time
 randomize();
+
+// save the index for the current encounter, is used during the grinds
+// that access the encounter arrays bellow
+current_encounter = 0;
 
 // finding the order of encounters
 
@@ -432,44 +593,44 @@ draw_text(20, 20, current_msg);
 
 // message check
 append(step, @$"
-if (stage == 0) {{
+if (stage == {(int)Stages.Offline}) {{
     current_msg = 'RECORDING SESSION WAITING TO START
 To start it, begin a normal run,
 and keep playing until the mod stops you';
-}} else if (stage == 3) {{
+}} else if (stage == {(int)Stages.PreLeafPile}) {{
     current_msg = 'Next, walk through the next room
 as quickly as possible';
-}} else if (stage == 6) {{
+}} else if (stage == {(int)Stages.PreFirstGrind}) {{
     current_msg = 'Now, go through the next room
 and proceed as if you were in a normal
 run until the mod stops you';
-}} else if (stage == 14) {{
+}} else if (stage == {(int)Stages.PostFirstGrind}) {{
     current_msg = ""Now, walk to the right room
 and simply cross it (don't grind)
 "";
-}} else if (stage == 16) {{
+}} else if (stage == {(int)Stages.PreFallEncounter}) {{
     current_msg = 'Now, grind an encounter at
 the end of this room and proceed as if it
 were a normal run until you are stopped
 ';
-}} else if (stage == 19) {{
+}} else if (stage == {(int)Stages.PreOneRock}) {{
     current_msg = 'Now, go through the next room
 from beginning to end as if it was a
 normal run but without grinding an encounter
 at the end
 ';
-}} else if (stage == 21) {{
+}} else if (stage == {(int)Stages.PreLeafMaze}) {{
     current_msg = 'Now grind at the
 end of the room, and proceed as a normal
 run until you are stopped
 ';
-}} else if (stage == 24) {{
+}} else if (stage == {(int)Stages.PreThreeRock}) {{
     current_msg = 'Now, go through the next
 room from begining to end as if it was
 a normal run but without grinding an encounter
 at the end
 ';
-}} else if (stage == 26) {{
+}} else if (stage == {(int)Stages.PreSecondGrind}) {{
     current_msg = 'Now, grind an
 encounter at the end of the room,
 and proceed grinding and killing
@@ -477,20 +638,20 @@ encounters until you are stopped
 Grind as you would in a normal
 run
 ';
-}} else if (stage == 32) {{
+}} else if (stage == {(int)Stages.PreFleeGrind}) {{
     current_msg = 'Now, continue grinding
 just the same, but as if you had 19 kills,
 that is, flee after killing the
 first enemy for ALL encounters
 ';
-}} else if (stage == 37) {{
+}} else if (stage == {(int)Stages.PreTripleMold}) {{
     current_msg = 'Finally, kill one last encounter
 it will be a triple mold, and you must only
 kill TWO monsters, then flee
 Feel free to still attack second one
 to simulate the Froggit Whimsun attacks
 ';
-}} else if (stage == 39) {{
+}} else if (stage == {(int)Stages.PreEnd}) {{
     current_msg = 'Finally, walk to the right as if
 you have finished killing all
 monsters and play normally until
@@ -505,15 +666,15 @@ the end of Ruins
 append(step, @$"
 // from ruins hallway to leafpile
 if (previous_room == 11 && current_room == 12) {{
-    if (stage == 2) {{
-        {newStage(3)}
+    if (stage == {(int)Stages.Hallway}) {{
+        {newStage((int)Stages.PreLeafPile)}
         {tpRuinsHallway}
         // crank up kill count just high enough so it will not give an encounter in the next room
         global.flag[202] = 4;
-    }} else if (stage == 3) {{
-        {startDowntime("ruins-leafpile", 97, 4)}
-    }} else if (stage == 6) {{
-        {newStage(7)}
+    }} else if (stage == {(int)Stages.PreLeafPile}) {{
+        {startDowntime("ruins-leafpile", 97, (int)Stages.LeafPileDowntime)}
+    }} else if (stage == {(int)Stages.PreFirstGrind}) {{
+        {newStage((int)Stages.InFirstGrind)}
     }}
 // exitting leafpile room
 }} else if (previous_room == 12 && current_room == 14) {{
@@ -521,9 +682,9 @@ if (previous_room == 11 && current_room == 12) {{
     if (stage == 8) {{
         {stopTime}
     // starting leaf fall downtime 
-    }} else if (stage == 14) {{
+    }} else if (stage == {(int)Stages.PostFirstGrind}) {{
         // arbitrarily high steps because it doesn't matter
-        {startDowntime("ruins-leaf-fall", 1000, 15)}
+        {startDowntime("ruins-leaf-fall", 1000, (int)Stages.LeafFallDowntime)}
     }}
 // ruins first half transition
 }} else if (previous_room == 14 && current_room == 12 && stage == 9) {{
@@ -531,112 +692,113 @@ if (previous_room == 11 && current_room == 12) {{
 // exit leaf fall room
 }} else if (previous_room == 14 && current_room == 15) {{
     // end leaf fall transition
-    if (stage == 18) {{
+    if (stage == {(int)Stages.LeafFallTransition}) {{
         {stopTime}
-        stage = 19;
+        stage = {(int)Stages.PreOneRock};
         {tpTo(14, 200, 80)}
     // start one rock downtime
-    }} else if (stage == 19) {{
-        {startDowntime("ruins-one-rock", 10000, 20)}
+    }} else if (stage == {(int)Stages.PreOneRock}) {{
+        {startDowntime("ruins-one-rock", 10000, (int)Stages.OneRockDowntime)}
     }}
 // ending second half grind
-}} else if (previous_room == 17 && current_room == 18 && stage == 39) {{
-    {startSegment("ruins-napsta", 40)}
+}} else if (previous_room == 17 && current_room == 18 && stage == {(int)Stages.PreEnd}) {{
+    {startSegment("ruins-napsta", (int)Stages.NobodyCame)}
     
 // exit leaf maze
 }} else if (previous_room == 16 && current_room == 17) {{
     // end leaf maze segment
-    if (stage == 23) {{
+    if (stage == {(int)Stages.InLeafMaze}) {{
         {stopTime}
-        stage = 24;
+        stage = {(int)Stages.PreThreeRock};
         {tpTo(16, 520, 220)}
     // start three rock downtime
-    }} else if (stage == 24) {{
-        {startDowntime("ruins-three-rock", 10000, 25)}
+    }} else if (stage == {(int)Stages.PreThreeRock}) {{
+        {startDowntime("ruins-three-rock", 10000, (int)Stages.ThreeRockDowntime)}
     }}
 // exit ruins (end ruins segment)
-}} else if (previous_room == 41 && current_room == 42 && stage == 46) {{
+}} else if (previous_room == 41 && current_room == 42 && stage == {(int)Stages.End}) {{
     {stopTime}
 // entering battle
 }} else if (previous_room != room_battle && current_room == room_battle) {{
     // first half segments for encounters
-    if ({isFirstHalfStage}) {{ 
+    if ({isFirstGrind}) {{ 
         {firstHalfCurrentEncounter}
         name = 0;
-        if (current_encounter == '2') {{
+        if (encounter_name == '2') {{
             name = 'froggit-lv2';
-        }} else if (current_encounter == '3') {{
+        }} else if (encounter_name == '3') {{
             name = 'froggit-lv3';
-        }} else if (current_encounter == 'W') {{
+        }} else if (encounter_name == 'W') {{
             name = 'whim';
         }}
         //filtering out frogskip related ones
         if (name != 0) {{
             {startSegment("name", -1, true)}
         }}
-    }} else if ({isSecondHalfNoFleeStage}) {{
-        {secondHalfNoFleeEncounter}
+    }} else if ({isSecondHalf}) {{
+        {secondHalfCurrentEncounter}
         var name = 0;
-        if (current_encounter == 'W') {{
+        if (encounter_name == 'W') {{
             name = 'frog-whim';
-        }} else if (current_encounter == 'F') {{
+        }} else if (encounter_name == 'F') {{
             name = 'dbl-frog';
-        }} else if (current_encounter == 'A') {{
+        }} else if (encounter_name == 'A') {{
             name = 'sgl-mold';
-        }} else if (current_encounter == 'B') {{
+        }} else if (encounter_name == 'B') {{
             name = 'dbl-mold';
-        }} else if (current_encounter == 'C') {{
+        }} else if (encounter_name == 'C') {{
             name = 'tpl-mold';
         }}
-        {startSegment("name", -1, true)}
-    }} else if ({isSecondHalfFleeStage}) {{
-        {secondHalfFleeEncounter}
-        var name = 0;
-        if (current_encounter == 'W') {{
-            name = 'frog-whim-19';
-        }} else if (current_encounter == 'F') {{
-            name = 'dbl-frog-19';
-        }} else if (current_encounter == 'A') {{
-            name = 'sgl-mold-19';
-        }} else if (current_encounter == 'B') {{
-            name = 'dbl-mold-19';
-        }} else if (current_encounter == 'C') {{
-            name = 'tpl-mold-19';
+        if ({isFleeGrind}) {{
+            name += '-19';
         }}
         {startSegment("name", - 1, true)}
-    }} else if (stage == 38) {{
+    }} else if (stage == {(int)Stages.InTripleMold}) {{
         {startSegment("tpl-mold-18")}
     }}
 // exitting out of a battle
 }} else if (previous_room == room_battle && current_room != room_battle) {{
     // exitting too early requires manually setting off persistence
     room_persistent = false;
-    if ({isFirstHalfStage}) {{
+    if ({isFirstGrind}) {{
         {firstHalfCurrentEncounter}
         // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
-        if (current_encounter == '2') {{
+        if (encounter_name == '2') {{
             global.xp = 29;
         }}
         // 'F' is the only encounter that by its end we don't have a timer happening
         // for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
         // so it just leaves F for having no reason to stop time here
-        if (current_encounter != 'F') {{ 
+        if (encounter_name != 'F') {{ 
             {stopTime}
         }}
         // increment for BOTH the in turn and the whole battle segments 
-        obj_time.stage++;
-    }} else if (({isSecondHalfFleeStage})  || ({isSecondHalfNoFleeStage})) {{
+        obj_time.current_encounter++;
+        show_debug_message({firstHalfLength});
+        show_debug_message(obj_time.current_encounter);
+        if (obj_time.current_encounter == {firstHalfLength}) {{
+            show_debug_message('INCREMENTED');
+            {newStage((int)Stages.PostFirstGrind)}
+        }}
+    }} else if (stage == {(int)Stages.PostFirstGrind}) {{
+        {leafpileTp}
+    }} else if ({isSecondHalf}) {{
         {stopTime}
         // last ones so we TP for explanation
-        if (obj_time.stage == 31 || obj_time.stage == 36) {{
+        obj_time.current_encounter++;
+        if (obj_time.current_encounter == {noFleeLength} || obj_time.current_encounter == {secondHalfLength}) {{
             {tpTo(18, 40, 110)}
+            if (obj_time.current_encounter == {noFleeLength}) {{
+                {newStage((int)Stages.PreFleeGrind)}
+            }} else {{
+                {newStage((int)Stages.PreTripleMold)}
+            }}
             global.flag[202] = 0;
         }}
-        obj_time.stage++;
-    }} else if (stage == 38) {{
+    }} else if (stage == {(int)Stages.InTripleMold}) {{
         {stopTime}
         // TP back for final explanation
-        stage = 39;
+        stage = {(int)Stages.PreEnd};
         {tpTo(17, 500, 110)}
         global.flag[202] = 20;
     }}
@@ -652,12 +814,12 @@ if (prevprev_room == room_battle && previous_room != room_battle) {{
     }} else if (stage == 9) {{
         // this one is for any given first half grind transition (but measured in the second one)  
         {startSegment("ruins-first-transition")}
-    }} else if (stage == 17) {{
+    }} else if (stage == {(int)Stages.InFallEncounter}) {{
         // transition from the end of the encounter in room 14
-        {startSegment("leaf-fall-transition", 18)}
-    }} else if (stage == 22) {{
+        {startSegment("leaf-fall-transition", (int)Stages.LeafFallTransition)}
+    }} else if (stage == {(int)Stages.OneRockEncounter}) {{
         // leaf maze segment
-        {startSegment("ruins-maze", 23)}
+        {startSegment("ruins-maze", (int)Stages.InLeafMaze)}
     }}
 }}
 ");
@@ -665,7 +827,7 @@ if (prevprev_room == room_battle && previous_room != room_battle) {{
 // naming screen time start
 replace(naming, "naming = 4", @$" {{
     naming = 4;
-    {startSegment("ruins-start", 1)}
+    {startSegment("ruins-start", (int)Stages.Start)}
     {startSession}
 }}
 ");
@@ -675,73 +837,75 @@ replace(naming, "naming = 4", @$" {{
 
 // everything at the start the start of blcon; end of ruins start
 append(blcon, @$"
-if (global.battlegroup == 3 || obj_time.stage >= 40) {{
-    // end of ruins start or reached nobody came in ruins
+if (obj_time.stage == {(int)Stages.Start} || obj_time.stage == {(int)Stages.NobodyCame}) {{
     {stopTime}
-}} else if (
-    obj_time.stage == 16 ||
-    obj_time.stage == 21 ||
-    obj_time.stage == 26 ||
-    obj_time.stage == 32 ||
-    obj_time.stage == 37
-) {{ // stages used just to remove the message
-    obj_time.stage++;
+// all stages below are mostly used just to remove the message
+}} else if (obj_time.stage == {(int)Stages.PreFallEncounter}) {{
+    {newStage((int)Stages.InFallEncounter)}
+}} else if (obj_time.stage == {(int)Stages.PreLeafMaze}) {{
+    {newStage((int)Stages.OneRockEncounter)}
+}} else if (obj_time.stage == {(int)Stages.PreSecondGrind}) {{
+    obj_time.current_encounter = 0;
+    {newStage((int)Stages.InSecondGrind)}
+}} else if (obj_time.stage == {(int)Stages.PreFleeGrind}) {{
+    {newStage((int)Stages.InFleeGrind)}
+}} else if (obj_time.stage == {(int)Stages.PreTripleMold}) {{
+    {newStage((int)Stages.InTripleMold)};
 }}");
 
 // everything at the end of the blcon
 
 place(blconAlarm, "battle = 1", @$"
 // end of ruins-hallway
-if (global.battlegroup == 3) {{
-    {startSegment("ruins-hallway", 2)}
-}} else if (obj_time.stage == 40) {{
-    {startSegment("ruins-switches", 41)}
-}} else if (obj_time.stage == 41) {{
-    {startSegment("perspective-a", 42)}
-}} else if (obj_time.stage == 42) {{
-    {startSegment("perspective-b", 43)}
-}} else if (obj_time.stage == 43) {{
-    {startSegment("perspective-c", 44)}
-}} else if (obj_time.stage == 44) {{
-    {startSegment("perspective-d", 45)}
-}} else if (obj_time.stage == 45) {{
-    {startSegment("ruins-end", 46)}
+if (obj_time.stage == {(int)Stages.Start}) {{
+    {startSegment("ruins-hallway", (int)Stages.Hallway)}
+}} else if (obj_time.stage == {(int)Stages.NobodyCame}) {{
+    if (obj_time.nobody_came == 0) {{
+        {startSegment("ruins-switches")}
+    }} else if (obj_time.nobody_came == 1) {{
+       {startSegment("perspective-a")}
+    }} else if (obj_time.nobody_came == 2) {{
+        {startSegment("perspective-b")}
+    }} else if (obj_time.nobody_came == 3) {{
+        {startSegment("perspective-c")}
+    }} else if (obj_time.nobody_came == 4) {{
+        {startSegment("perspective-d")}
+    }} else {{
+        {startSegment("ruins-end", (int)Stages.End)}
+    }}
+    obj_time.nobody_came++;
 }}
 
 // rigging encounters
-if ({isFirstHalfStage}) {{ 
+if ({isFirstGrind}) {{ 
     {firstHalfCurrentEncounter}
     // only 'A' is not rigged
-    if (current_encounter != 'A') {{
+    if (encounter_name != 'A') {{
         // default to froggit, since it's the most probable
         var to_battle = 4;
-        if (current_encounter == 'W') {{
+        if (encounter_name == 'W') {{
             // whimsun battlegroup
             to_battle = 5;
         }}
         global.battlegroup = to_battle;
     }}
-}} else if (obj_time.stage == 17 || obj_time.stage == 22) {{ // rigging to whimsun just to speed things up
+// rigging to whimsun just to speed things up
+}} else if (obj_time.stage == {(int)Stages.InFallEncounter} || obj_time.stage == {(int)Stages.OneRockEncounter}) {{ 
     global.battlegroup = 5;
-}} else if (({isSecondHalfFleeStage}) || ({isSecondHalfNoFleeStage})) {{
-    var current_encounter;
-    if ({isSecondHalfNoFleeStage}) {{
-        current_encounter = obj_time.second_half_encounters[obj_time.stage - 27];
-    }} else {{
-        current_encounter = obj_time.second_half_encounters[obj_time.stage - 28];
-    }}
-    if (current_encounter == 'W') {{
+}} else if ({isSecondHalf}) {{
+    {secondHalfCurrentEncounter}
+    if (encounter_name == 'W') {{
         global.battlegroup = 6;
-    }} else if (current_encounter == 'F') {{
+    }} else if (encounter_name == 'F') {{
         global.battlegroup = 9;
-    }} else if (current_encounter == 'A') {{
+    }} else if (encounter_name == 'A') {{
         global.battlegroup = 7;
-    }} else if (current_encounter == 'B') {{
+    }} else if (encounter_name == 'B') {{
         global.battlegroup = 10;
-    }} else if (current_encounter == 'C') {{
+    }} else if (encounter_name == 'C') {{
         global.battlegroup = 8;
     }}
-}} else if (obj_time.stage == 38) {{
+}} else if (obj_time.stage == {(int)Stages.InTripleMold}) {{
     global.battlegroup = 8;
 }}
 ");
@@ -749,39 +913,38 @@ if ({isFirstHalfStage}) {{
 // DOOR C ACCESS
 append(doorC, @$"
 // stop leafpile downtime
-if (obj_time.stage == 4 && room == 12) {{
+if (obj_time.stage == {(int)Stages.LeafPileDowntime} && room == 12) {{
     {stopDowntime}
-    {newStage(5)}
+    {newStage((int)Stages.PreFirstGrind)}
 }}
 ");
 
 // DOOR A ACCESS
 append(doorA, @$"
-if (obj_time.stage == 15 && room == 14) {{
+if (obj_time.stage == {(int)Stages.LeafFallDowntime} && room == 14) {{
     // end leaf fall downtime
     {stopDowntime}
-    {newStage(16)}
-}} else if (obj_time.stage == 20 && room == 15) {{
+    {newStage((int)Stages.PreFallEncounter)}
+}} else if (obj_time.stage == {(int)Stages.OneRockDowntime} && room == 15) {{
     // end one rock downtime
     {stopDowntime}
-    {newStage(21)}
-}} else if (obj_time.stage == 25 && room == 17) {{
+    {newStage((int)Stages.PreLeafMaze)}
+}} else if (obj_time.stage == {(int)Stages.ThreeRockDowntime} && room == 17) {{
     // end three rock downtime
     {stopDowntime}
-    {newStage(26)}
+    {newStage((int)Stages.PreSecondGrind)}
 }}
 ");
 
 // teleporting at the end of downtimes
 append(step, @$"
-if (stage == 5 && room > 12) {{ 
+if (stage == {(int)Stages.PreFirstGrind} && room > 12) {{ 
     {tpRuinsHallway}
-    {newStage(6)}
-}} else if (stage == 16 && room == 15) {{
+}} else if (stage == {(int)Stages.PreFallEncounter} && room == 15) {{
     {tpTo(14, 210, 100)}
-}} else if (stage == 21 && room == 16) {{
+}} else if (stage == {(int)Stages.PreLeafMaze} && room == 16) {{
     {tpTo(15, 340, 100)}
-}} else if (stage == 26 && room == 18) {{
+}} else if (stage == {(int)Stages.PreSecondGrind} && room == 18) {{
     {tpTo(17, 430, 110)}
     // reset kills to make things quick
     global.flag[202] = 0;
@@ -791,9 +954,9 @@ if (stage == 5 && room > 12) {{
 // rigging attacks for froggit
 // it is placed right after mycommand declaration
 place(froggitAlarm, "0))", @$"
-if ({isFirstHalfStage}) {{
+if ({isFirstGrind}) {{
     {firstHalfCurrentEncounter}
-    if (current_encounter == 'N') {{
+    if (encounter_name == 'N') {{
         mycommand = 100;
     }} else {{ // as a means to speed up practice, all of them will have frog skip by default
         mycommand = 0;
@@ -803,10 +966,10 @@ if ({isFirstHalfStage}) {{
 
 // start the first half segments for the froggit attacks
 place(froggitStep, "if (global.mnfight == 2)\n{", @$"
-if ({isFirstHalfStage}) {{
+if ({isFirstGrind}) {{
     {firstHalfCurrentEncounter}
     var name = 0;
-    switch (current_encounter) {{
+    switch (encounter_name) {{
         case 'F':
             name = 'frogskip';
             break;
@@ -823,9 +986,9 @@ if ({isFirstHalfStage}) {{
 // end first half segments for froggit attacks
 place(froggitStep, "attacked = 0", @$" {{
     attacked = 0;
-    if ({isFirstHalfStage}) {{
+    if ({isFirstGrind}) {{
         {firstHalfCurrentEncounter}
-        if (current_encounter == 'F' || current_encounter == 'N') {{
+        if (encounter_name == 'F' || encounter_name == 'N') {{
             {stopTime}
         }}
     }}
@@ -834,24 +997,16 @@ place(froggitStep, "attacked = 0", @$" {{
 
 // start count for the "YOU WON!" text
 place(battlecontrol, "earned \"", @$"
-    if ({isFirstHalfStage}) {{
+    if ({isFirstGrind}) {{
         {firstHalfCurrentEncounter}
         // for 'A', we are starting time for the LV up text
-        if (current_encounter == 'A') {{
+        if (encounter_name == 'A') {{
             {startSegment("lv-up")}
-        }} else if (current_encounter == 'N') {{
+        }} else if (encounter_name == 'N') {{
             // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
             {startSegment("you-won")}
         }}
     }}
-");
-
-// get out of first half (beginning interlude stage)
-append(step, @$"
-if (stage == 13 && room != room_battle) {{
-    stage = 14;
-    {leafpileTp}
-}}
 ");
 
 /// <summary>
@@ -867,7 +1022,7 @@ void useDebug () {
     append(step, @$"
     if (keyboard_check_pressed(ord('Q'))) {{
         is_timer_running = 0;
-        stage = 6;
+        stage = {(int)Stages.PreFirstGrind};
         global.xp = 10;
         global.flag[202] = 4;
         script_execute(scr_levelup);
@@ -880,7 +1035,7 @@ void useDebug () {
     append(step, @$"
     if (keyboard_check_pressed(ord('E'))) {{
         is_timer_running = 0;
-        stage = 14;
+        stage = {(int)Stages.PostFirstGrind};
         global.xp = 30;
         global.flag[202] = 11;
         script_execute(scr_levelup);
@@ -898,7 +1053,7 @@ void useDebug () {
         "tp_x",
         "tp_y",
         "global.interact",
-        "global.entrance"
+        "current_encounter"
     };
 
     // start just with line break just to not interefere with anything
@@ -916,8 +1071,6 @@ void useDebug () {
     if (instance_exists(obj_mainchara)) {{
         draw_text(20, {(110 + i * 25)}, 'x:' +  string(obj_mainchara.x));
         draw_text(20, {(110 + (i + 1) * 25)}, 'y:' + string(obj_mainchara.y));
-        draw_text(20, {(110 + (i + 2) * 25)}, 'xprevious:' +  string(obj_mainchara.x));
-        draw_text(20, {(110 + (i + 3) * 25)}, 'yprevious:' + string(obj_mainchara.y));
     }}
     ");
 }
