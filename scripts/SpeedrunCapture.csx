@@ -881,12 +881,14 @@ if (previous_room == 11 && current_room == 12) {{
 // starting a segment post a battle
 append(step, @$"
 if (prevprev_room == room_battle && previous_room != room_battle) {{
-    if (stage == 8) {{
-        // stage 8 (first one) means we have the transition from the leafpile to the right
-        {startSegment("ruins-leafpile-transition")}
-    }} else if (stage == 9) {{
+    if ({isFirstHalf}) {{
+        // the first one means we have the transition from the leafpile to the right
+        if (current_encounter == 1) {{
+            {startSegment("ruins-leafpile-transition")}
         // this one is for any given first half grind transition (but measured in the second one)  
-        {startSegment("ruins-first-transition")}
+        }} else if (current_encounter == 2) {{
+            {startSegment("ruins-first-transition")}
+        }}
     }} else if (stage == {(int)Stages.InFallEncounter}) {{
         // transition from the end of the encounter in room 14
         {startSegment("leaf-fall-transition", (int)Stages.LeafFallTransition)}
