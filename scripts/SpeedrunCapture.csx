@@ -33,10 +33,7 @@ string appendNewTime (string name, string time) {
     ";
 }
 
-string tpRuinsHallway = @"
-    room = 11;
-    obj_mainchara.x = 2400;
-";
+
 
 var startSession = @"
 obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
@@ -110,11 +107,27 @@ string isSecondHalfFleeStage = "obj_time.stage > 32 && obj_time.stage < 37";
 
 string secondHalfFleeEncounter = "var current_encounter = obj_time.second_half_encounters[obj_time.stage - 28];";
 
-string leafpileTp = @"
-room = 12;
-obj_mainchara.x = 240;
-obj_mainchara.y = 340;
+
+string tpTo (int room, int x, int y) {
+    return tpTo(room.ToString(), x, y);
+}
+
+string tpTo (string room, int x, int y) {
+    return @$"
+    obj_time.tp_flag = 1;
+    room = {room};
+    obj_time.tp_x = {x};
+    obj_time.tp_y = {y};
+    ";
+}
+
+string isMoving = @"
+keyboard_check(vk_left) || keyboard_check(vk_right) || keyboard_check(vk_up) || keyboard_check(vk_down)
 ";
+
+string leafpileTp = tpTo(12, 240, 340);
+
+string tpRuinsHallway = tpTo(11, 2400, 80);
 
 /******
 start of main script
@@ -186,6 +199,12 @@ prevprev_room = 0;
 previous_room = 0;
 current_room = 0;
 
+// see in step for explanation on tp
+tp_flag = 0;
+tp_x = 0;
+tp_y = 0;
+lock_player = 0;
+
 //randomize call is in gamestart, which only runs after obj_time
 randomize();
 
@@ -244,6 +263,31 @@ append(step, @"
 prevprev_room = previous_room;
 previous_room = current_room;
 current_room = room;
+");
+
+// in order to tp to the proper places, will be using the tp flag which notifies the
+// next frame that a room teleportation was carried out last frame
+// and we have a specific x,y position to go to
+append(step, @$"
+// use two flags to wait a frame
+// wait a frame to overwrite the default position
+if (tp_flag) {{
+    tp_flag = 0;
+    // to avoid the player moving to places they don't want to
+    // player will be locked until they stop moving after teleporting
+    if ({isMoving}) {{
+        lock_player = 1;
+        global.interact = 1;
+    }}
+    obj_mainchara.x = tp_x;
+    obj_mainchara.y = tp_y;
+    // previous x and y must be updated too due to how obj_mainchara's collision events work
+    obj_mainchara.xprevious = tp_x;
+    obj_mainchara.yprevious = tp_y;
+}} else if (lock_player && !({isMoving})) {{
+    lock_player = 0;
+    global.interact = 0;
+}}
 ");
 
 // downtime timer api
@@ -387,9 +431,7 @@ if (previous_room == 11 && current_room == 12) {{
     if (stage == 18) {{
         {stopTime}
         stage = 19;
-        room = 14;
-        obj_mainchara.x = 200;
-        obj_mainchara.y = 80;
+        {tpTo(14, 200, 80)}
     // start one rock downtime
     }} else if (stage == 19) {{
         {startDowntime("ruins-one-rock", 10000, 20)}
@@ -404,9 +446,7 @@ if (previous_room == 11 && current_room == 12) {{
     if (stage == 23) {{
         {stopTime}
         stage = 24;
-        room = 16;
-        obj_mainchara.x = 520;
-        obj_mainchara.y = 220;
+        {tpTo(16, 520, 220)}
     // start three rock downtime
     }} else if (stage == 24) {{
         {startDowntime("ruins-three-rock", 10000, 25)}
@@ -486,10 +526,7 @@ if (previous_room == 11 && current_room == 12) {{
         {stopTime}
         // last ones so we TP for explanation
         if (obj_time.stage == 31 || obj_time.stage == 36) {{
-
-            room = 18;
-            obj_mainchara.x = 40;
-            obj_mainchara.y = 100;
+            {tpTo(18, 40, 110)}
             global.flag[202] = 0;
         }}
         obj_time.stage++;
@@ -497,9 +534,7 @@ if (previous_room == 11 && current_room == 12) {{
         {stopTime}
         // TP back for final explanation
         stage = 39;
-        room = 17;
-        obj_mainchara.x = 480;
-        obj_mainchara.y = 100;
+        {tpTo(17, 500, 110)}
         global.flag[202] = 20;
     }}
 }}
@@ -640,17 +675,11 @@ if (stage == 5 && room > 12) {{
     {tpRuinsHallway}
     {newStage(6)}
 }} else if (stage == 16 && room == 15) {{
-    room = 14;
-    obj_mainchara.x = 210;
-    obj_mainchara.y = 81;
+    {tpTo(14, 210, 100)}
 }} else if (stage == 21 && room == 16) {{
-    room = 15;
-    obj_mainchara.x = 340;
-    obj_mainchara.y = 80;
+    {tpTo(15, 340, 100)}
 }} else if (stage == 26 && room == 18) {{
-    room = 17;
-    obj_mainchara.x = 480;
-    obj_mainchara.y = 100;
+    {tpTo(17, 430, 110)}
     // reset kills to make things quick
     global.flag[202] = 0;
 }}
@@ -758,11 +787,13 @@ void useDebug () {
     string[] watchVars = {
         "is_timer_running",
         "obj_time.stage",
-        "previous_room",
-        "current_room",
-        "global.battlegroup",
         "is_downtime_mode",
-        "is_downtime_running"
+        "is_downtime_running",
+        "tp_flag",
+        "tp_x",
+        "tp_y",
+        "global.interact",
+        "global.entrance"
     };
 
     // start just with line break just to not interefere with anything
@@ -780,6 +811,8 @@ void useDebug () {
     if (instance_exists(obj_mainchara)) {{
         draw_text(20, {(110 + i * 25)}, 'x:' +  string(obj_mainchara.x));
         draw_text(20, {(110 + (i + 1) * 25)}, 'y:' + string(obj_mainchara.y));
+        draw_text(20, {(110 + (i + 2) * 25)}, 'xprevious:' +  string(obj_mainchara.x));
+        draw_text(20, {(110 + (i + 3) * 25)}, 'yprevious:' + string(obj_mainchara.y));
     }}
     ");
 }
