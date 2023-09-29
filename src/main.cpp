@@ -20,7 +20,6 @@ public:
     }
 };
 
-
 // handle methods specific to the undertale engine
 class Undertale {
 private:
@@ -32,12 +31,12 @@ private:
     }
 
     // simulating the round random generator from Mr Tobias
-    int roundrandom (int max) {
+    static int roundrandom (int max) {
         return round(Random::random_number() * max);
     }
 public:
     // replica of the undertale code, with no optimization in mind
-    int src_steps (int min_steps, int steps_delta, int max_kills, int kills) {
+    static int src_steps (int min_steps, int steps_delta, int max_kills, int kills) {
         double populationfactor = (double) max_kills / (double) (max_kills - kills);
         if (populationfactor > 8) {
             populationfactor = 8;
@@ -49,19 +48,19 @@ public:
     // encounterer for first half
     // 0 = froggit
     // 1 = whimsun
-    int ruins1 () {
+    static int ruins1 () {
         double roll = Random::random_number();
         if (roll < 0.5) return 0;
         return 1;
     }
 
-    // encounterer for ruins second half
+    // encounterer for ruins second half (called ruins3 because in-game it is the third encounterer)
     // 0 = frog whimsun
     // 1 = 1x mold
     // 2 = 3x mold
     // 3 = 2x froggit
     // 4 = 2x mold
-    int ruins3 () {
+    static int ruins3 () {
         double roll = Random::random_number();
         if (roll < 0.25) return 0;
         if (roll < 0.5) return 1;
@@ -73,16 +72,34 @@ public:
     // random odds for a frog skip
     // 1 = no frogskip
     // 0 = gets frogskip
-    int frogskip () {
+    // choice of these numbers comes from how the simulator and recorder work (by default frogskip is assumed)
+    static int frogskip () {
         double roll = Random::random_number();
         if (roll < 0.405) return 0;
         return 1;
     }
 
-    // total time required to encounter + blcon
-    int encounter_time () {
-        return 47 + roundrandom(5);
+    // total time it takes after the "!" disappears for the battle to begin (with the heart flick animation)
+    static const int heart_flick = 47;
 
+    // total time required to enter an encounter (blcon + flick) using random values
+    static int encounter_time_random () {
+        return encounter_time_random(1);
+    }
+
+    // total time required to enter an encounter (blcon + flick) a number of times using random values
+    static int encounter_time_random(int number_of_times) {
+        int total = heart_flick * number_of_times;
+        for (int i = 0; i < number_of_times; i++) {
+            total += roundrandom(5);
+        }
+        return total;
+    }
+
+    // total time required to enter an encounter (blcon + flick) a certain number of times using average values
+    static int encounter_time_average_total (int number_of_times) {
+        // 2.5 is the avg of roundrandom(5)
+        return static_cast<int>(std::round(2.5 * number_of_times));
     }
 };
 
@@ -279,14 +296,12 @@ public:
 // handles the method for simulating a ruins run
 class Ruins {
     int time = 0;
-    Undertale& undertale;
     Times& times;
 
 public:
     // assigning undertale from the constructor so that the randomizer won't be reconstructed and such
-    Ruins (Undertale& undertale_engine, Times& execution_times)
-    : undertale(undertale_engine),
-    times(execution_times)
+    Ruins (Times& execution_times)
+    : times(execution_times)
     {}
 
     int simulate () {
@@ -297,9 +312,7 @@ public:
         int kills = 0;
 
         // add all static blcons (6x nobody came, 1x first froggit, 13x first half)
-        for (int i = 0; i < 20; i++) {
-            time += undertale.encounter_time();
-        }
+        time += Undertale::encounter_time_random(20);
 
         // lv and exp are like this since the grind begins after killing first frog
         int lv = 2;
@@ -314,20 +327,20 @@ public:
             }
 
             // first half step counting
-            int steps = undertale.src_steps(80, 40, 20, kills);
+            int steps = Undertale::src_steps(80, 40, 20, kills);
             // for first encounter, you need to at least get to the enter, imposing a higher minimum step count
             if (kills == 0 && steps < times.leaf_pile_steps) {
                 steps = times.leaf_pile_steps;
             }
             time += steps;
 
-            int encounter = undertale.ruins1();
+            int encounter = Undertale::ruins1();
             // for the froggit encounter
             if (encounter == 0) {
                 exp += 4;
                 // do arithmetic on the lv for a slight optimization based on how the array is built
                 time += times.single_froggit[lv - 2];
-                time += times.frog_skip_save * undertale.frogskip();
+                time += times.frog_skip_save * Undertale::frogskip();
             } else {
                 time += times.whimsun;
                 exp += 3;
@@ -336,7 +349,7 @@ public:
         }
 
         while (kills < 20) {
-            int encounter = undertale.ruins3();
+            int encounter = Undertale::ruins3();
             
             // define variables as being "1" because of how the time arrays are made, this can be
             // used to sum the index
@@ -349,8 +362,8 @@ public:
             }
             // general encounter times
             time += times.ruins_second_half_transition +
-                undertale.src_steps(60, 60, 20, kills) +
-                undertale.encounter_time();
+                Undertale::src_steps(60, 60, 20, kills) +
+                Undertale::encounter_time_random();
 
             bool is_encounter_0 = encounter == 0;
             if (is_encounter_0 || encounter > 2) { // 2 monster encounters
@@ -362,7 +375,7 @@ public:
                     }
                     // number of frog skips achievable depends on how many it is being fought
                     for (int max = 2 - at_19, i = 0; i < max; i++) {
-                        time += times.frog_skip_save * undertale.frogskip();
+                        time += times.frog_skip_save * Undertale::frogskip();
                     }
                 } else { // for 2x mold
                     time += times.double_moldsmal[at_19];
@@ -493,7 +506,6 @@ public:
 // handles methods for gathering results from simulations
 class Simulator {
     Times times;
-    Undertale undertale;
 public:
     Simulator (Times times_arg) {
         times = times_arg;
@@ -503,7 +515,7 @@ public:
     ProbabilityDistribution get_dist (int simulations) {
         int* results = new int[simulations];
         for (int i = 0; i < simulations; i++) {
-            Ruins ruins(undertale, times);
+            Ruins ruins(times);
             results[i] = ruins.simulate();
         }
 
@@ -522,7 +534,6 @@ int main () {
     std::srand(time(0));
 
     // // testing all chances
-    // Undertale undertale;
     int simulations = 1'000'000;
 
     RecordingReader reader(".\\recordings");
