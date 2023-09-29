@@ -7,19 +7,11 @@
 #include <sstream>
 #include <filesystem>
 #include <shlobj.h>
+#include "random.hpp"
 
 namespace fs = std::filesystem;
 using namespace std;
 
-
-// handle methods for generating random numbers
-class Random {
-public:
-    // get a random double between 0 and 1
-    static double random_number () {
-        return (double)(rand()) / (double)(RAND_MAX);
-    }
-};
 
 // handle methods specific to the undertale engine
 class Undertale {
