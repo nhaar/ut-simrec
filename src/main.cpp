@@ -196,6 +196,37 @@ public:
         dir = dirPath;
     }
 
+    Times get_average () {
+        std::unordered_map<std::string, int> avg_map;
+
+        bool is_first = true;
+        int total = 0;
+        for (const auto& entry : fs::directory_iterator(dir)) {
+            total++;
+            if (fs::is_regular_file(entry)) {
+                auto cur_map = read_file(entry.path().string());
+                if (is_first) {
+                    avg_map = cur_map;
+                    is_first = false;
+                } else {
+                    for (const auto& pair : cur_map) {
+                        const std::string& key = pair.first;
+                        if (key == "froggit-lv2") {
+                            std::cout << "HERE WE ARE " << avg_map[key] << " " << cur_map[key] << std::endl;
+                        }
+                        avg_map[key] += cur_map[key];
+                    }
+                }
+            }
+        }
+        // divide everything by total
+        for (const auto& pair : avg_map) {
+            const std::string& key = pair.first;
+            avg_map[key] = static_cast<int>(std::round((double)avg_map[key] / (double)total));
+        }
+        return avg_map;
+    }
+
     Times get_max () {
         std::unordered_map<std::string, int> max_map;
 
@@ -203,8 +234,10 @@ public:
         for (const auto& entry : fs::directory_iterator(dir)) {
             if (fs::is_regular_file(entry)) {
                 auto cur_map = read_file(entry.path().string());
-                if (is_first) max_map = cur_map;
-                else {
+                if (is_first) {
+                    max_map = cur_map;
+                    is_first = false;
+                } else {
                     for (const auto& pair : cur_map) {
                         const std::string& key = pair.first;
                         int cur_time = cur_map[key];
@@ -484,13 +517,15 @@ int main () {
     int simulations = 1'000'000;
 
     RecordingReader reader(".\\recordings");
-    Times times = reader.get_max();
-    Simulator simulator(times);
+    Times times = reader.get_average();
+    
+    cout << times.single_froggit[0] << endl;
+    // Simulator simulator(times);
 
-    ProbabilityDistribution dist = simulator.get_dist(simulations, 8 * 60 * 30, 13 * 60 * 30);
-    cout << dist.get_average() << endl;
-    cout << dist.get_stdev() << endl;
-    cout << dist.get_chance(8 * 60 * 30, 10 * 60 * 30);
+    // ProbabilityDistribution dist = simulator.get_dist(simulations, 8 * 60 * 30, 13 * 60 * 30);
+    // cout << dist.get_average() << endl;
+    // cout << dist.get_stdev() << endl;
+    // cout << dist.get_chance(8 * 60 * 30, 10 * 60 * 30);
 
     return 0;
 }
