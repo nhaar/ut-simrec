@@ -2,7 +2,12 @@
 #include <cmath>
 #include <string>
 #include <fstream>
+#include <unordered_map>
+#include <vector>
+#include <sstream>
+#include <filesystem>
 
+namespace fs = std::filesystem;
 using namespace std;
 
 
@@ -73,12 +78,12 @@ public:
     }
 
     // random odds for a frog skip
-    // 0 = no frogskip
-    // 1 = gets frogskip
+    // 1 = no frogskip
+    // 0 = gets frogskip
     int frogskip () {
         double roll = random.random_number();
-        if (roll < 0.405) return 1;
-        return 0;
+        if (roll < 0.405) return 0;
+        return 1;
     }
 
     // total time required to encounter + blcon
@@ -90,29 +95,160 @@ public:
 
 class Times {
 public:
+
+    int whimsun;
+    int single_moldsmal;
+
+    // last term is for the number of transitions in the first half which is static
+    int ruins_second_half_transition;
+    int ruins_general;
+
+    int leaf_pile_steps = 97;
+    int frog_skip_save;
+
     int single_froggit [2];
-    int whimsun = 101;
-    int single_moldsmal = 368;
     int double_moldsmal [2];
     int triple_moldsmal [3];
     int froggit_whimsun [2];
     int double_froggit [2];
 
-    // last term is for the number of transitions in the first half which is static
-    int ruins_first_half_transition = 9;
-    int ruins_second_half_transition = 19;
-    int ruins_general = 4057 + 28 + 90 + 50 + 31 + 33 + 5 + 12 * ruins_first_half_transition + 244 + 116 + 27 - ruins_second_half_transition + 4565;
+    Times () {}
 
-    int leaf_pile_steps = 97;
-    int frog_skip_save = 90;
+    Times (std::unordered_map<string, int> map) {
+        ruins_general = 0;
+        int lv_up_msg = 0;
+        int you_won_msg = 0;
+        int frogskip_turn = 0;
+        int not_frogskip_turn = 0;
+        for (const auto& pair : map) {
+            const std::string& key = pair.first;
+            int time = map[key];
+            if (
+                key == "ruins-start" ||
+                key == "ruins-hallway" ||
+                key == "ruins-leafpile" ||
+                key == "ruins-leafpile-transition" ||
+                key == "ruins-leaf-fall" ||
+                key == "leaf-fall-transition" ||
+                key == "ruins-one-rock" ||
+                key == "ruins-maze" ||
+                key == "ruins-three-rock" ||
+                key == "three-rock-transition" ||
+                key == "ruins-napsta" ||
+                key == "ruins-switches" ||
+                key == "ruins-perspective-a" ||
+                key == "ruins-perspective-b" ||
+                key == "ruins-perspective-c" ||
+                key == "ruins-perspective-d" ||
+                key == "ruins-end"
+            ) {
+                ruins_general += time;
+            } else if (key == "ruins-first-transition") {
+                ruins_general += 10 * time;
+            } else if (key == "froggit-lv2") {
+                single_froggit[0] = time;
+            } else if (key == "froggit-lv3") {
+                single_froggit[1] = time;
+            } else if (key == "frogskip") {
+                frogskip_turn = time;
+            } else if (key == "not-frogskip") {
+                not_frogskip_turn = time;
+            } else if (key == "whim") {
+                whimsun = time;
+            } else if (key == "lv-up") {
+                lv_up_msg = time;
+            } else if (key == "you-won") {
+                you_won_msg = time;
+            } else if (key == "sgl-mold") {
+                single_moldsmal = time;
+            } else if (key == "dbl-mold") {
+                double_moldsmal[0] = time;
+            } else if (key == "dbl-mold-19") {
+                double_moldsmal[1] = time;
+            } else if (key == "tpl-mold") {
+                triple_moldsmal[0] = time;
+            } else if (key == "tpl-mold-18") {
+                triple_moldsmal[1] = time;
+            } else if (key == "tpl-mold-19") {
+                triple_moldsmal[2] = time;
+            } else if (key == "frog-whim") {
+                froggit_whimsun[0] = time;
+            } else if (key == "frog-whim-19") {
+                froggit_whimsun[1] = time;
+            } else if (key == "dbl-frog") {
+                double_froggit[0] = time;
+            } else if (key == "dbl-frog-19") {
+                double_froggit[1] = time;
+            } else if (key == "ruins-second-transition") {
+                ruins_second_half_transition = time;
+            }
+        }
+        // add "relative" times
+        ruins_general += lv_up_msg - you_won_msg;
+        frog_skip_save = not_frogskip_turn - frogskip_turn;
+    }
+};
 
-    Times ()
-    : single_froggit { 343, 328 },
-    double_moldsmal { 845, 518 },
-    triple_moldsmal { 1326, 998, 516 },
-    froggit_whimsun { 527, 248 },
-    double_froggit { 765, 486} {
+class RecordingReader {
+    std::string dir;
+public:
+    RecordingReader (std::string dirPath) {
+        dir = dirPath;
+    }
 
+    Times get_max () {
+        std::unordered_map<std::string, int> max_map;
+
+        bool is_first = true;
+        for (const auto& entry : fs::directory_iterator(dir)) {
+            if (fs::is_regular_file(entry)) {
+                auto cur_map = read_file(entry.path().string());
+                if (is_first) max_map = cur_map;
+                else {
+                    for (const auto& pair : cur_map) {
+                        const std::string& key = pair.first;
+                        int cur_time = cur_map[key];
+                        if (cur_time > max_map[key]) max_map[key] = cur_time;
+                    }
+                }
+            }
+        }
+
+        Times times(max_map);
+
+        return times;
+    }
+
+    std::unordered_map<std::string, int> read_file (std::string filePath) {
+        std::ifstream file(filePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+
+        std::unordered_map<std::string, int> map;
+        std::string key = "";
+        std::string value = "";
+        bool is_key = true;
+
+        for (char c : content) {
+            if (is_key) {
+                if (c == '=') is_key = false;
+                else key += c;
+            } else {
+                if (c == ';') {
+                    is_key = true;
+                    // `value` is in microseconds
+                    // then round to nearest 30fps frame
+                    int time = static_cast<int>(std::round(std::stod(value) / 1e6 * 30));
+                    map[key] = time;
+                    key = "";
+                    value = "";
+                }
+                else value += c;
+            }
+        }
+
+        return map;
     }
 
 };
@@ -137,6 +273,11 @@ public:
         time = times.ruins_general;
         int kills = 0;
 
+        // add all static blcons (6x nobody came, 1x first froggit, 13x first half)
+        for (int i = 0; i < 20; i++) {
+            time += undertale.encounter_time();
+        }
+
         // lv and exp are like this since the grind begins after killing first frog
         int lv = 2;
         int exp = 10;
@@ -155,7 +296,7 @@ public:
             if (kills == 0 && steps < times.leaf_pile_steps) {
                 steps = times.leaf_pile_steps;
             }
-            time += steps + undertale.encounter_time();
+            time += steps;
 
             int encounter = undertale.ruins1();
             // for the froggit encounter
@@ -163,7 +304,7 @@ public:
                 exp += 4;
                 // do arithmetic on the lv for a slight optimization based on how the array is built
                 time += times.single_froggit[lv - 2];
-                time -= times.frog_skip_save * undertale.frogskip();
+                time += times.frog_skip_save * undertale.frogskip();
             } else {
                 time += times.whimsun;
                 exp += 3;
@@ -179,6 +320,10 @@ public:
             int at_18 = kills >= 18 ? 1 : 0; 
             int at_19 = kills >= 19 ? 1 : 0;
 
+            // don't add on first since it's included in general
+            if (kills != 13) {
+                time += times.ruins_second_half_transition;
+            }
             // general encounter times
             time += times.ruins_second_half_transition +
                 undertale.src_steps(60, 60, 20, kills) +
@@ -194,7 +339,7 @@ public:
                     }
                     // number of frog skips achievable depends on how many it is being fought
                     for (int max = 2 - at_19, i = 0; i < max; i++) {
-                        time -= times.frog_skip_save * undertale.frogskip();
+                        time += times.frog_skip_save * undertale.frogskip();
                     }
                 } else { // for 2x mold
                     time += times.double_moldsmal[at_19];
@@ -310,6 +455,10 @@ class Simulator {
     Times times;
     Undertale undertale;
 public:
+    Simulator (Times times_arg) {
+        times = times_arg;
+    }
+
     // get the distribution for ruins runs
     ProbabilityDistribution get_dist (int simulations, int min, int max) {
         int* results = new int[simulations];
@@ -332,17 +481,16 @@ public:
 int main () {
     // // testing all chances
     // Undertale undertale;
-    Simulator simulator;
     int simulations = 1'000'000;
 
+    RecordingReader reader(".\\recordings");
+    Times times = reader.get_max();
+    Simulator simulator(times);
 
-    int values[] = { 1, 4, 3, 3, 5, 9, 10, 5, 5, 5, 3, 1, 10, 8, 9, 7, 1, 1 };
-    int length = sizeof(values) / sizeof(values[0]);
     ProbabilityDistribution dist = simulator.get_dist(simulations, 8 * 60 * 30, 13 * 60 * 30);
     cout << dist.get_average() << endl;
     cout << dist.get_stdev() << endl;
     cout << dist.get_chance(8 * 60 * 30, 10 * 60 * 30);
-    dist.export_dist("testing.txt");
 
     return 0;
 }

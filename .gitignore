@@ -2,3 +2,4 @@ main.exe
 scripts/*
 !scripts/SpeedrunCapture.csx
 Undertale CLEAN
+recordings
