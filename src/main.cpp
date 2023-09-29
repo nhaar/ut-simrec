@@ -101,25 +101,60 @@ public:
         // 2.5 is the avg of roundrandom(5)
         return static_cast<int>(std::round(2.5 * number_of_times));
     }
+
+    // minimal number of steps needed to walk through the ruins leaf pile room
+    static const int leaf_pile_steps = 97;
 };
 
+// class stores all the times that rely on execution
+// comments below refer to the name of the segments in the recorder
 class Times {
 public:
-
+    // whim
     int whimsun;
+    
+    // sgl-mold
     int single_moldsmal;
-
-    // last term is for the number of transitions in the first half which is static
+    
+    // ruins-second-transition
     int ruins_second_half_transition;
+    
+    // ruins-start +
+    // ruins-hallway +
+    // ruins-leafpile +
+    // ruins-leafpile-transition +
+    // 10 * ruins-first-transition +
+    // ruins-leaf-fall +
+    // leaf-fall-transition +
+    // ruins-one-rock +
+    // ruins-maze +
+    // ruins-three-rock +
+    // ruins-naspta +
+    // ruins-switches +
+    // ruins-perspective-a +
+    // ruins-perspective-b +
+    // ruins-perspective-c +
+    // ruins-perspective-d +
+    // ruins-end +
+    // you-won - lv-up
     int ruins_general;
 
-    int leaf_pile_steps = 97;
+    // not_frogskip - frogskip
     int frog_skip_save;
 
+    // { froggit-lv2, froggit-lv3 }
     int single_froggit [2];
+
+    // { dbl-mold, dbl-mold-19 }
     int double_moldsmal [2];
+
+    // { tpl-mold, tpl-mold-18, tpl-mold-19 }
     int triple_moldsmal [3];
+
+    // { frog-whim, frog-whim-19 }
     int froggit_whimsun [2];
+
+    // { dbl-frog, dbl-frog-19 }
     int double_froggit [2];
 
     Times () {}
@@ -199,13 +234,14 @@ public:
     }
 };
 
+// class that handles reading the recording files outputted by the mod
 class RecordingReader {
+    // path to directory where recording files are stored
     std::string dir;
 public:
-    RecordingReader (std::string dirPath) {
-        dir = dirPath;
-    }
+    RecordingReader (std::string dir_path) : dir(dir_path) {}
 
+    // create an object with the average times of all files in the directory
     Times get_average () {
         std::unordered_map<std::string, int> avg_map;
 
@@ -226,40 +262,44 @@ public:
                 }
             }
         }
-        // divide everything by total
+        // divide everything by total to get average
         for (const auto& pair : avg_map) {
             const std::string& key = pair.first;
             avg_map[key] = static_cast<int>(std::round((double)avg_map[key] / (double)total));
         }
+
         return avg_map;
     }
 
-    Times get_max () {
-        std::unordered_map<std::string, int> max_map;
+    // create an object with the fastest times in the directory
+    Times get_best () {
+        std::unordered_map<std::string, int> best_map;
 
         bool is_first = true;
         for (const auto& entry : fs::directory_iterator(dir)) {
             if (fs::is_regular_file(entry)) {
                 auto cur_map = read_file(entry.path().string());
                 if (is_first) {
-                    max_map = cur_map;
+                    best_map = cur_map;
                     is_first = false;
                 } else {
                     for (const auto& pair : cur_map) {
                         const std::string& key = pair.first;
                         int cur_time = cur_map[key];
-                        if (cur_time > max_map[key]) max_map[key] = cur_time;
+                        if (cur_time < best_map[key]) best_map[key] = cur_time;
                     }
                 }
             }
         }
 
-        Times times(max_map);
+        Times times(best_map);
 
         return times;
     }
 
+    // read a file and generate a map with all its segments pointing to their time
     std::unordered_map<std::string, int> read_file (std::string filePath) {
+        // getting all file content as a string
         std::ifstream file(filePath);
         std::stringstream buffer;
         buffer << file.rdbuf();
@@ -329,8 +369,8 @@ public:
             // first half step counting
             int steps = Undertale::src_steps(80, 40, 20, kills);
             // for first encounter, you need to at least get to the enter, imposing a higher minimum step count
-            if (kills == 0 && steps < times.leaf_pile_steps) {
-                steps = times.leaf_pile_steps;
+            if (kills == 0 && steps < Undertale::leaf_pile_steps) {
+                steps = Undertale::leaf_pile_steps;
             }
             time += steps;
 
@@ -537,7 +577,7 @@ int main () {
     int simulations = 1'000'000;
 
     RecordingReader reader(".\\recordings");
-    Times times = reader.get_max();
+    Times times = reader.get_best();
     
     Simulator simulator(times);
 
