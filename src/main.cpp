@@ -1,10 +1,4 @@
 #include <iostream>
-#include <cmath>
-#include <string>
-#include <fstream>
-#include <unordered_map>
-#include <vector>
-#include <sstream>
 #include <filesystem>
 #include <shlobj.h>
 #include "random.hpp"
