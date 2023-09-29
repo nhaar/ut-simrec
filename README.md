@@ -32,6 +32,12 @@ These are the available arguments for the program.
 | -x arg  | Set the maximum time in the range for the probability.                                                                                           |
 | -b      | If included, the program will use the best times it finds in the recordings directory. By default, it uses the average of the recordings.        |
 
+An example use would be in windows shell:
+
+```./simulator.exe -c -s 100000 -a -e -x 18000 -b```
+
+Which for 100 thousand simulations, gets the chance of all sub 10 minute runs and prints the average and standard deviation.
+
 # Build
 
 To build the simulator, use Visual Studio Code and run the build task with `mingw64` installed.
