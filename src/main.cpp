@@ -211,9 +211,6 @@ public:
                 } else {
                     for (const auto& pair : cur_map) {
                         const std::string& key = pair.first;
-                        if (key == "froggit-lv2") {
-                            std::cout << "HERE WE ARE " << avg_map[key] << " " << cur_map[key] << std::endl;
-                        }
                         avg_map[key] += cur_map[key];
                     }
                 }
@@ -403,36 +400,53 @@ class ProbabilityDistribution {
     int length;
     int total = 0;
 
-public:
-    ProbabilityDistribution (int min_value, int max_value, int interval_value, int* values, int size)
-        : min(min_value),
-        max(max_value),
-        interval(interval_value) {
-            // add +1 to include the maximum value as well, due to 0-indexing
-            // length is calculated from the range and bin size
-            length = (max + 1 - min) / interval;
+    void build_dist (int* values, int size) {
+        // add +1 to include the maximum value as well, due to 0-indexsng
+        // length is calculated from the range and bin size
+        length = (max + 1 - min) / interval;
 
-            // actual distribution is just an array where each element of the array represents a "x" position
-            // and the value is the number of time it appears in that "x" position
-            distribution = new int[length] {0};
-            for (int i = 0; i < size; i++) {
-                int pos = get_distribution_pos(values[i]);
-                distribution[pos]++;
-                total++;
-            }
+        // actual distribution is just an array where each element of the array represents a "x" position
+        // and the value is the number of time it appears in that "x" position
+        distribution = new int[length] {0};
+        for (int i = 0; i < size; i++) {
+            int pos = get_distribution_pos(values[i]);
+            distribution[pos]++;
+            total++;
+        }
+    }
+
+public:
+    ProbabilityDistribution (int interval_value, int* values, int size)
+    : interval(interval_value), max(0), min(std::numeric_limits<int>::max()) {
+        // determine max and minimum values in the distribution
+        for (int i = 0; i < size; i++) {
+            int current = values[i];
+            if (current > max) max = current;
+            else if (current < min) min = current;
+        }
+        std::cout << max << std::endl;
+        std::cout << min << std::endl;
+        build_dist(values, size);
+    }
+
+    ProbabilityDistribution (int min_value, int max_value, int interval_value, int* values, int size)
+        : min(min_value), max(max_value), interval(interval_value) {
+            build_dist(values, size);
         }
 
     // get the "x" position for a value in the distribution
     int get_distribution_pos (int value) {
+        if (value < min) return 0;
+        if (value > max) return length;
         return (value - min) / interval;
     }
 
-    // get the chance a value is in the inclusive interval min to max
+    // get the chance a value is in the interval min (including) to max (excluding)
     double get_chance (int min, int max) {
         int favorable = 0;
         int lower_pos = get_distribution_pos(min);
         int higher_pos = get_distribution_pos(max);
-        for (int i = lower_pos; i < higher_pos + 1; i++) {
+        for (int i = lower_pos; i < higher_pos; i++) {
             favorable += distribution[i];
         }
         return (double) favorable / (double) total;
@@ -493,7 +507,7 @@ public:
     }
 
     // get the distribution for ruins runs
-    ProbabilityDistribution get_dist (int simulations, int min, int max) {
+    ProbabilityDistribution get_dist (int simulations) {
         int* results = new int[simulations];
         for (int i = 0; i < simulations; i++) {
             Ruins ruins(undertale, times);
@@ -501,8 +515,7 @@ public:
         }
 
         int size = sizeof(results) / sizeof(results[0]);
-        ProbabilityDistribution dist(min, max, 1, results, simulations);
-        return dist;
+        return ProbabilityDistribution (1, results, simulations);
     }
 
     // uses a mathematical formula to calculate the marging of error from a calculated probability
@@ -519,13 +532,12 @@ int main () {
     RecordingReader reader(".\\recordings");
     Times times = reader.get_average();
     
-    cout << times.single_froggit[0] << endl;
-    // Simulator simulator(times);
+    Simulator simulator(times);
 
-    // ProbabilityDistribution dist = simulator.get_dist(simulations, 8 * 60 * 30, 13 * 60 * 30);
-    // cout << dist.get_average() << endl;
-    // cout << dist.get_stdev() << endl;
-    // cout << dist.get_chance(8 * 60 * 30, 10 * 60 * 30);
+    ProbabilityDistribution dist = simulator.get_dist(simulations);
+    cout << dist.get_average() << endl;
+    cout << dist.get_stdev() << endl;
+    cout << dist.get_chance(5 * 60 * 30, 6 * 60 * 30);
 
     return 0;
 }
