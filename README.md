@@ -7,7 +7,7 @@ This project aims to simulate and calculate the probabilities of Undertale speed
 
 The recorder is a mod that outputs files that are then read by the simulator to generate the probability results.
 
-* How to install and use the recorder mod
+# How to install and use the recorder mod
 
 To install the mod, download the patch in the releases and apply it to an unmodified `data.win` for the linux version 1.001.
 To apply the patch you can use resources such as [this website](https://www.marcrobledo.com/RomPatcher.js/). Replace the
@@ -15,7 +15,7 @@ old `data.win` with the patched one and the mod will be ready to play.
 
 To use it, follow the instructions given in-game.
 
-* How to instal and use the simulator program
+# How to instal and use the simulator program
 
 ***NO RELEASE AVAILABLE FOR THE PROGRAM YET***
 
