@@ -44,19 +44,3 @@ To build the simulator, use Visual Studio Code and run the build task with `ming
 
 To build the recorder you can open a `data.win` in Undertale mod tool and run the script, then save.
 The script is developed for the *linux version 1.001*, but it may be compatible with other versions.
-
-# Development progress and plans
-
-So far, the programs only have been developed up to Ruins (in Genocide). Before expanding to the rest of the game
-(and possibly for categories besides Genocide), the following are desired:
-
-* Possibly set up a declarative system for defining the stages in the recording, since they follow patterns. Then
-expanding would be simpler
-* Not sure if UTMT can let the script be split into different files, would ease organization if possible
-
-Plans for the simulator:
-
-* Create a GUI
-* Have more ways to use the segments instead of just taking the "BEST" and "AVERAGE". One idea is to use the average and
-standard deviations to simulate a random distribution for each segment.
-* Graphical visualization of distributions
