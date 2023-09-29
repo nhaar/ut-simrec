@@ -24,10 +24,10 @@ Times::Times (std::unordered_map<std::string, int> map) {
             key == "three-rock-transition" ||
             key == "ruins-napsta" ||
             key == "ruins-switches" ||
-            key == "ruins-perspective-a" ||
-            key == "ruins-perspective-b" ||
-            key == "ruins-perspective-c" ||
-            key == "ruins-perspective-d" ||
+            key == "perspective-a" ||
+            key == "perspective-b" ||
+            key == "perspective-c" ||
+            key == "perspective-d" ||
             key == "ruins-end"
         ) {
             ruins_general += time;
