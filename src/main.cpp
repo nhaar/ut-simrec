@@ -14,13 +14,8 @@ using namespace std;
 // handle methods for generating random numbers
 class Random {
 public:
-    Random () {
-        // seeding; exact seeding is not important
-        srand(time(0));
-    }
-
     // get a random double between 0 and 1
-    double random_number () {
+    static double random_number () {
         return (double)(rand()) / (double)(RAND_MAX);
     }
 };
@@ -29,18 +24,16 @@ public:
 // handle methods specific to the undertale engine
 class Undertale {
 private:
-    Random random;
-
     // including this method since technically Undertale's rounding at halfway rounds to nearest even number
-    // will leave it here for easy of changing that but the different is technically negligible considering
+    // will leave it here for easy of changing that but the difference is technically negligible considering
     // halfway is not something that will be generated from random anyways
     static int round (double number) {
         return std::round(number);
     }
 
-    // simulating the round random generator from gamemaker
+    // simulating the round random generator from Mr Tobias
     int roundrandom (int max) {
-        return round(random.random_number() * max);
+        return round(Random::random_number() * max);
     }
 public:
     // replica of the undertale code, with no optimization in mind
@@ -57,7 +50,7 @@ public:
     // 0 = froggit
     // 1 = whimsun
     int ruins1 () {
-        double roll = random.random_number();
+        double roll = Random::random_number();
         if (roll < 0.5) return 0;
         return 1;
     }
@@ -69,7 +62,7 @@ public:
     // 3 = 2x froggit
     // 4 = 2x mold
     int ruins3 () {
-        double roll = random.random_number();
+        double roll = Random::random_number();
         if (roll < 0.25) return 0;
         if (roll < 0.5) return 1;
         if (roll < 0.75) return 2;
@@ -81,7 +74,7 @@ public:
     // 1 = no frogskip
     // 0 = gets frogskip
     int frogskip () {
-        double roll = random.random_number();
+        double roll = Random::random_number();
         if (roll < 0.405) return 0;
         return 1;
     }
@@ -525,12 +518,15 @@ public:
 };
 
 int main () {
+    // seed program
+    std::srand(time(0));
+
     // // testing all chances
     // Undertale undertale;
     int simulations = 1'000'000;
 
     RecordingReader reader(".\\recordings");
-    Times times = reader.get_average();
+    Times times = reader.get_max();
     
     Simulator simulator(times);
 
