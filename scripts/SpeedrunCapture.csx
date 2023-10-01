@@ -1035,6 +1035,7 @@ void useDebug () {
     append(step, @$"
     if (keyboard_check_pressed(ord('Q'))) {{
         is_timer_running = 0;
+        stage = 3;
         global.xp = 10;
         script_execute(scr_levelup);
         global.plot = 9;
@@ -1091,432 +1092,363 @@ void useDebug () {
 main script
 **/
 
-var script = @"
-STAGE
-PickName {
-    StartSegment(ruins-start);
-    Next;
-}
-STAGE
-Blcon {
-    StopTime;
-}
-EnterBattle(3) {
-    StartSegment(ruins-hallway);
-    Next;
-}
-STAGE
-RoomTransition(11, 12) {
-    StopTime;
-    Next;
-    TP(11, 2400, 80);
-}
-STAGE
-RoomTransition(11, 12) {
-    StartDowntime(ruins-leafpile, 97);
-    Next;
-}
-STAGE
-Door(C, 12) {
-    StopDowntime;
-    EnableEncounters;
-    Next;
-}
-STAGE
-Room(14) {
-    TP(12, 180, 260);
-}
-Blcon {
-    Next;
-}
-STAGE
-RoomTransition(12, 14) {
-    FirstHalfTransition(1);
-}
-RoomTransition(14, 12) {
-    FirstHalfTransition(2);
-}
-EnterBattle {
-    FirstHalfEncounter;
-}
-LeaveBattle {
-    FirstHalfVictory;
-}
-BeforeBattle {
-    RigFirstHalf;
-}
-FroggitAttack {
-    UnrigFrogskip;
-}
-FroggitTurnStart {
-    TimeFrogTurn;
-}
-FroggitTurnEnd {
-    EndFrogTime;
-}
-YouWon {
-    TimeYouWon;
-}
-STAGE
-LeaveBattle {
-    TP(12, 240, 340);
-}
-RoomTransition(12, 14) {
-    StartDowntime(ruins-leaf-fall, 1000);
-    Next;
-}
-STAGE
-Door(A, 14) {
-    StopDowntime;
-    EnableEncounters;
-    Next;
-}
-STAGE
-Room(15) {
-    TP(14, 210, 100);
-}
-Blcon {
-    Next;
-}
-STAGE
-BeforeBattle {
-    RigWhimsun;
-}
-LeaveBattle {
-    StartSegment(leaf-fall-transition);
-    Next;
-}
-STAGE
-RoomTransition(14, 15) {
-    StopTime;
-    DisableEncounters;
-    TP(14, 200, 80);
-    Next;
-}
-STAGE
-RoomTransition(14, 15) {
-    StartDowntime(ruins-one-rock, 10000);
-    Next;
-}
-STAGE
-Door(A, 15) {
-    StopDowntime;
-    EnableEncounters;
-    Next;
-}
-STAGE
-Room(16) {
-    TP(15, 340, 100);
-}
-Blcon {
-    Next;
-}
-STAGE
-BeforeBattle {
-    RigWhimsun;
-}
-LeaveBattle {
-    DisableEncounters;
-    StartSegment(ruins-maze);
-    Next;
-}
-STAGE
-RoomTransition(16, 17) {
-    StopTime;
-    DisableEncounters;
-    TP(16, 520, 220);
-    Next;
-}
-STAGE
-RoomTransition(16, 17) {
-    StartDowntime(ruins-three-rock, 10000);
-    Next;
-}
-STAGE
-Door(A, 17) {
-    StopDowntime;
-    EnableEncounters;
-    Next;
-}
-STAGE
-Room(18) {
-    TP(17, 430, 110);
-}
-Blcon {
-    SecondHalfSetup;
-    Next;
-}
-STAGE
-RoomTransition(18, 17) {
-    SecondHalfTransition;
-}
-BeforeBattle {
-    SecondHalfRig;
-}
-EnterBattle {
-    SecondHalfEncounter(0);
-}
-LeaveBattle {
-    SecondHalfVictory;
-}
-STAGE
-Blcon {
-    Next;
-}
-STAGE
-BeforeBattle {
-    SecondHalfRig;
-}
-EnterBattle {
-    SecondHalfEncounter(1);
-}
-LeaveBattle {
-    SecondHalfVictory;
-}
-STAGE
-Blcon {
-    Next;
-}
-STAGE
-BeforeBattle {
-    RigTripleMold;
-}
-EnterBattle {
-    StartSegment(tpl-mold-18);
-}
-LeaveBattle {
-    StopTime;
-    TP(17, 500, 110);
-    MaxRuinsKills;
-    Next;
-}
-STAGE
-Door(A, 17) {
-    StartSegment(ruins-napsta);
-    Next;
-}
-STAGE
-Blcon {
-    StopTime;
-}
-EnterBattle {
-    RuinsNobodyCame;
-}
-STAGE
-Door(Amusic, 41) {
-    StopTime;
-    Next;
-}
-";
 
-// 1st step is to break into stages
+// so this is how the program works
+// script -> defines everything
+// break the script into stages
+// break the stages into events
+// group all listeners for each event by their stage
+// place the code for the listeners inside the respective events
 
-string[] stageStatements = script.Split(new string[] { "STAGE" }, StringSplitOptions.None);
+// IDEA
+// have events be part of enum
+// create event handler to handle each event
+//
 
-// 2nd step is to break into events
-Dictionary<string, Dictionary<int, List<string>>> events = new Dictionary<string, Dictionary<int, List<string>>>();
+// EVENT CLASSES (not sure if I like this!!)
 
-int stage = -1;
-foreach (string statement in stageStatements) {
-    MatchCollection eventStatements = Regex.Matches(statement, @"\w+(?:\(.*?\))?\s*{[\s\S]*?}");
+abstract class UndertaleEvent {
+    public abstract string EventId ();
+}
 
-    foreach (Match eventStatement in eventStatements) {
-        string eventName = (Regex.Match(eventStatement.Value, @"\w+(?:\(.*?\))?(?=\s*{[\s\S]*})").Value);
-        string eventResult = (Regex.Match(eventStatement.Value, @"(?<={)[\s\S]*(?=})").Value);
-        MatchCollection functionCalls = Regex.Matches(eventResult, @"\w+(?:\(.*?\))?(?=;)");
-        List<string> functions = new List<string>();
-        foreach (Match functionCall in functionCalls) {
-            functions.Add(functionCall.Value);
-        }
-        
-        if (!events.ContainsKey(eventName)) {
-            events[eventName] = new Dictionary<int, List<string>>();
-        }
-        events[eventName][stage] = functions;
+enum EventName {
+    PickName,
+    Blcon,
+    BeforeBattle,
+    EnterBattle,
+    LeaveBattle,
+    RoomTransition,
+    Room,
+    FroggitAttack,
+    FroggitTurnStart,
+    FroggitTurnEnd,
+    YouWon,
+    Door
+
+
+}
+
+class PickName : UndertaleEvent {
+    public override string EventId () {
+        return EventName.PickName.ToString();
     }
-    stage++;
 }
 
-// 3rd step is to define the functions
-Dictionary<string, string> functions = new Dictionary<string, string> {
-    {
-        "StartSegment",
-        @$"
-        {startSegment("{s0}", false, true)}
-        "
-    },
-    {
-        "Next",
-        @"
-        obj_time.stage++;
-        "
-    },
-    {
-        "StopTime",
-        stopTime
-    },
-    {
-        "TP",
-        tpTo("{i0}", "{i1}", "{i2}")
-    },
-    {
-        "StartDowntime",
-        startDowntime("{s0}", "{i1}")
-    },
-    {
-        "StopDowntime",
-        stopDowntime
-    },
-    {
-        "EnableEncounters",
-        enableEncounters
-    },
-    {
-        "FirstHalfTransition",
-        $@"
-        if (current_encounter == {{i0}}) {{
-            {stopTime}
-        }}
-        "
-    },
-    {
-        "FirstHalfEncounter",
-        $@"
-        {firstHalfCurrentEncounter}
-        name = 0;
-        if (encounter_name == '2') {{
-            name = 'froggit-lv2';
-        }} else if (encounter_name == '3') {{
-            name = 'froggit-lv3';
-        }} else if (encounter_name == 'W') {{
-            name = 'whim';
-        }}
-        //filtering out frogskip related ones
-        if (name != 0) {{
-            {startSegment("name", false, true)}
-        }}
-        "
-    },
-    {
-        "FirstHalfVictory",
-        $@"
-        {firstHalfCurrentEncounter}
-        // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
-        if (encounter_name == '2') {{
-            global.xp = 29;
-        }}
-        // 'F' is the only encounter that by its end we don't have a timer happening
-        // for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
-        // so it just leaves F for having no reason to stop time here
-        if (encounter_name != 'F') {{ 
-            {stopTime}
-        }}
-        // increment for BOTH the in turn and the whole battle segments 
-        obj_time.current_encounter++;
-        if (obj_time.current_encounter == {firstHalfLength}) {{
-            {disableEncounters}
-            obj_time.stage++
-        }}
+class Blcon : UndertaleEvent {
+    public override string EventId () {
+        return EventName.Blcon.ToString();
+    }
+}
 
-        // the first one means we have the transition from the leafpile to the right
-        if (current_encounter == 1) {{
-            {startSegment("ruins-leafpile-transition")}
-        // this one is for any given first half grind transition (but measured in the second one)  
-        }} else if (current_encounter == 2) {{
-            {startSegment("ruins-first-transition")}
+class EnterBattle : UndertaleEvent {
+    public int Battlegroup;
+    
+    public EnterBattle () {
+        Battlegroup = -1;
+    }
+
+    public EnterBattle (int battlegroup) {
+        Battlegroup = battlegroup;
+    }
+
+    public override string EventId () {
+        string group = Battlegroup > -1 ? $",{Battlegroup.ToString()}" : "";
+        return $"{EventName.EnterBattle}{group}";
+    }
+}
+
+class RoomTransition : UndertaleEvent {
+    public int PreviousRoom;
+
+    public int CurrentRoom;
+
+    public RoomTransition (int prev, int cur) {
+        PreviousRoom = prev;
+        CurrentRoom = cur;
+    }
+
+    public override string EventId () {
+        return $"{EventName.RoomTransition},{PreviousRoom},{CurrentRoom}";
+    }
+}
+
+class Room : UndertaleEvent {
+    public int RoomId;
+
+    public Room (int room) {
+        RoomId = room;
+    }
+
+    public override string EventId () {
+        return $"{EventName.Room},{RoomId}";
+    }
+}
+class LeaveBattle : UndertaleEvent {
+    public override string EventId () {
+        return EventName.LeaveBattle.ToString();
+    }
+}
+
+class BeforeBattle : UndertaleEvent {
+    public override string EventId () {
+        return EventName.BeforeBattle.ToString();
+    }
+}
+
+class FroggitAttack : UndertaleEvent {
+    public override string EventId () {
+        return EventName.FroggitAttack.ToString();
+    }
+}
+
+class FroggitTurnEnd : UndertaleEvent {
+    public override string EventId () {
+        return EventName.FroggitTurnEnd.ToString();
+    }
+}
+
+class FroggitTurnStart : UndertaleEvent {
+    public override string EventId () {
+        return EventName.FroggitTurnStart.ToString();
+    }
+}
+
+class YouWon : UndertaleEvent {
+    public override string EventId () {
+        return EventName.YouWon.ToString();
+    }
+}
+
+class Door : UndertaleEvent {
+    public string Name;
+
+    public int Room;
+    
+    public Door (string name, int room) {
+        Name = name;
+        Room = room;
+    }
+
+    public override string EventId () {
+        return $"{EventName.Door},{Name},{Room}";
+    }
+}
+
+
+class Stage {
+    public Listener[] Listeners;
+
+    public Stage (params Listener[] listeners) {
+        Listeners = listeners;
+    }
+}
+
+class Session {
+    public Stage[] Stages;
+
+    public Session (params Stage[] stages) {
+        Stages = stages;
+    }
+}
+
+class GMLFunctions {
+    public static string StartSession = @"
+    obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
+    var file = file_text_open_write('recordings/recording_' + string(obj_time.session_name));
+    file_text_close(file);
+    ";
+
+    public static string StartSegment (string segmentName, bool isVarName = false) {
+        string nameString = isVarName ? segmentName : $"'{segmentName}'";
+        return @$"
+        if (!obj_time.is_timer_running) {{
+            obj_time.is_timer_running = 1;
+            obj_time.time_start = get_timer();
+            obj_time.segment_name = {nameString};
         }}
-        "
-    },
-    {
-        "RigFirstHalf",
-        $@"
-        {firstHalfCurrentEncounter}
-        // only 'A' is not rigged
-        if (encounter_name != 'A') {{
-            // default to froggit, since it's the most probable
-            var to_battle = 4;
-            if (encounter_name == 'W') {{
-                // whimsun battlegroup
-                to_battle = 5;
-            }}
-            global.battlegroup = to_battle;
+        ";
+    }
+
+    public static string Next = @"
+    obj_time.stage++;
+    ";
+
+    public static string AppendNewTime (string name, string time) {
+    return @$"
+    var file = file_text_open_append('recordings/recording_' + string(obj_time.session_name));
+    file_text_write_string(file, {name} + '=' + string({time}) + ';');
+    file_text_close(file);
+    ";
+}
+
+    public static string StopTime = @$"
+    if (obj_time.is_timer_running) {{
+        obj_time.is_timer_running = 0;
+        {AppendNewTime("obj_time.segment_name", "get_timer() - obj_time.time_start")}
+    }}
+    ";
+
+    public static string TP (int room, int x, int y) {
+        return @$"
+        obj_time.tp_flag = 1;
+        room = {room};
+        obj_time.tp_x = {x};
+        obj_time.tp_y = {y};
+        ";
+    }
+
+    public static string StartDowntime (string downtimeName, int steps) {
+        return @$"
+        if (!obj_time.is_downtime_mode) {{
+            obj_time.is_downtime_mode = 1;
+            obj_time.downtime = 0;
+            obj_time.downtime_start = 0;
+            obj_time.step_count = global.encounter;
+            obj_time.optimal_steps = {steps}
+            obj_time.downtime_name = '{downtimeName}';
         }}
-        "
-    },
-    {
-        "UnrigFrogskip",
-        $@"
-        {firstHalfCurrentEncounter}
-        if (encounter_name == 'N') {{
-            use_frogskip = 0;
+        ";
+    }
+
+    public static string EnableEncounters = @"
+    obj_time.fast_encounters = 1;
+    ";
+    
+    public static string DisableEncounters = @"
+    obj_time.fast_encounters = 0;
+    ";
+
+    public static string FirstHalfCurrentEncounter = "var encounter_name = obj_time.first_half_encounters[obj_time.current_encounter];";
+
+    public static string FirstHalfTransition (int encounter) {
+        return @$"
+        {FirstHalfCurrentEncounter}
+        if (current_encounter == {encounter}) {{
+            {StopTime}
         }}
-        "
-    },
-    {
-        "TimeFrogTurn",
-        $@"
-        {firstHalfCurrentEncounter}
-        var name = 0;
-        switch (encounter_name) {{
-            case 'F':
-                name = 'frogskip';
-                break;
-            case 'N':
-                name = 'not-frogskip';
-                break;
+        ";
+    }
+
+
+    public static string FirstHalfLength = "6";
+
+    public static string FirstHalfEncounter = $@"
+    {FirstHalfCurrentEncounter}
+    name = 0;
+    if (encounter_name == '2') {{
+        name = 'froggit-lv2';
+    }} else if (encounter_name == '3') {{
+        name = 'froggit-lv3';
+    }} else if (encounter_name == 'W') {{
+        name = 'whim';
+    }}
+    //filtering out frogskip related ones
+    if (name != 0) {{
+        {StartSegment("name", true)}
+    }}
+    ";
+
+    public static string FirstHalfVictory = $@"
+    {FirstHalfCurrentEncounter}
+    // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
+    if (encounter_name == '2') {{
+        global.xp = 29;
+    }}
+    // 'F' is the only encounter that by its end we don't have a timer happening
+    // for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
+    // so it just leaves F for having no reason to stop time here
+    if (encounter_name != 'F') {{ 
+        {StopTime}
+    }}
+    // increment for BOTH the in turn and the whole battle segments 
+    obj_time.current_encounter++;
+    show_debug_message(obj_time.current_encounter)
+    show_debug_message({FirstHalfLength})
+    if (obj_time.current_encounter == {FirstHalfLength}) {{
+        {DisableEncounters}
+        obj_time.stage++
+    }}
+
+    // the first one means we have the transition from the leafpile to the right
+    if (current_encounter == 1) {{
+        {StartSegment("ruins-leafpile-transition")}
+    // this one is for any given first half grind transition (but measured in the second one)  
+    }} else if (current_encounter == 2) {{
+        {StartSegment("ruins-first-transition")}
+    }}
+    ";
+
+    public static string RigFirstHalf = $@"
+    {FirstHalfCurrentEncounter}
+    // only 'A' is not rigged
+    if (encounter_name != 'A') {{
+        // default to froggit, since it's the most probable
+        var to_battle = 4;
+        if (encounter_name == 'W') {{
+            // whimsun battlegroup
+            to_battle = 5;
         }}
-        if (name != 0) {{
-            {startSegment("name", false, true)}
-        }}
-        "
-    },
-    {
-        "EndFrogTime",
-        $@"
-        attacked = 0;
-        {firstHalfCurrentEncounter}
-        if (encounter_name == 'F' || encounter_name == 'N') {{
-            {stopTime}
-        }}
-        "
-    },
-    {
-        "TimeYouWon",
-        @$"
-        {firstHalfCurrentEncounter}
-        // for 'A', we are starting time for the LV up text
-        if (encounter_name == 'A') {{
-            {startSegment("lv-up")}
-        }} else if (encounter_name == 'N') {{
-            // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
-            {startSegment("you-won")}
-        }}
-        "
-    },
-    {
-        "RigWhimsun",
-        @$"
-        global.battlegroup = 5;
-        "
-    },
-    {
-        "SecondHalfSetup",
-        @$"
-        obj_time.current_encounter = 0;
-        "
-    },
-    {
-        "SecondHalfTransition",
-        @$"
-        if (current_encounter == 1 || current_encounter == 2) {{
-            {stopTime}
-        }}
-        "
-    },
-    {
-        "SecondHalfEncounter",
-        @$"
-        {secondHalfCurrentEncounter}
+        global.battlegroup = to_battle;
+    }}
+    ";
+
+    public static string UnrigFrogskip = $@"
+    {FirstHalfCurrentEncounter}
+    if (encounter_name == 'N') {{
+        use_frogskip = 0;
+    }}
+    ";
+
+    public static string TimeFrogTurn = $@"
+    {FirstHalfCurrentEncounter}
+    var name = 0;
+    switch (encounter_name) {{
+        case 'F':
+            name = 'frogskip';
+            break;
+        case 'N':
+            name = 'not-frogskip';
+            break;
+    }}
+    if (name != 0) {{
+        {StartSegment("name", true)}
+    }}
+    ";
+
+    public static string EndFrogTime = $@"
+    {FirstHalfCurrentEncounter}
+    if (encounter_name == 'F' || encounter_name == 'N') {{
+        {StopTime}
+    }}
+    ";
+
+    public static string TimeYouWon = @$"
+    {FirstHalfCurrentEncounter}
+    // for 'A', we are starting time for the LV up text
+    if (encounter_name == 'A') {{
+        {StartSegment("lv-up")}
+    }} else if (encounter_name == 'N') {{
+        // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
+        {StartSegment("you-won")}
+    }}
+    ";
+
+    public static string RigWhimsun = @$"
+    global.battlegroup = 5;
+    ";
+
+    public static string SecondHalfTransition = @$"
+    if (current_encounter == 1 || current_encounter == 2) {{
+        {StopTime}
+    }}
+    ";
+
+    public static string SecondHalfCurrentEncounter = "var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];";
+
+    public static string SecondHalfEncounter (bool isFleeGrind) {
+        int gmlBool = isFleeGrind ? 1 : 0;
+        return @$"
+        {SecondHalfCurrentEncounter}
         var name = 0;
         if (encounter_name == 'W') {{
             name = 'frog-whim';
@@ -1529,181 +1461,601 @@ Dictionary<string, string> functions = new Dictionary<string, string> {
         }} else if (encounter_name == 'C') {{
             name = 'tpl-mold';
         }}
-        if ({{i0}}) {{
+        if ({gmlBool}) {{
             name += '-19';
         }}
-        {startSegment("name", false, true)}
-        "
-    },
-    {
-        "SecondHalfVictory",
-        @$"
-        {stopTime}
-        // last ones so we TP for explanation
-        obj_time.current_encounter++;
-        if (obj_time.current_encounter == {noFleeLength} || obj_time.current_encounter == {secondHalfLength}) {{
-            {tpTo(18, 40, 110)}
-            obj_time.stage++;
-        }}
-
-        // first one means we are coming from the incomplete transition from three rock
-        if (current_encounter == 1) {{
-            {startSegment("three-rock-transition")}
-        // second one for measuring the condition that happens for any given one
-        }} else if (current_encounter == 2) {{
-            {startSegment("ruins-second-transition")}
-        }}
-        "
-    },
-    {
-        "SecondHalfRig",
-        @$"
-        {secondHalfCurrentEncounter}
-        if (encounter_name == 'W') {{
-            global.battlegroup = 6;
-        }} else if (encounter_name == 'F') {{
-            global.battlegroup = 9;
-        }} else if (encounter_name == 'A') {{
-            global.battlegroup = 7;
-        }} else if (encounter_name == 'B') {{
-            global.battlegroup = 10;
-        }} else if (encounter_name == 'C') {{
-            global.battlegroup = 8;
-        }}
-        "
-    },
-    {
-        "MaxRuinsKills",
-        @$"
-        global.flag[202] = 20;
-        "
-    },
-    {
-        "RigTripleMold",
-        @$"
-        global.battlegroup = 8;
-        "
-    },
-    {
-        "RuinsNobodyCame",
-        @$"
-        if (obj_time.nobody_came == 0) {{
-            {startSegment("ruins-switches")}
-        }} else if (obj_time.nobody_came == 1) {{
-            {startSegment("perspective-a")}
-        }} else if (obj_time.nobody_came == 2) {{
-            {startSegment("perspective-b")}
-        }} else if (obj_time.nobody_came == 3) {{
-            {startSegment("perspective-c")}
-        }} else if (obj_time.nobody_came == 4) {{
-            {startSegment("perspective-d")}
-        }} else {{
-            {startSegment("ruins-end")}
-            obj_time.stage++;
-        }}
-        obj_time.nobody_came++;
-        "
-    },
-    {
-        "DisableEncounters",
-        disableEncounters
-    }
-};
-
-// 4th step: define variables to use in each event listener
-
-Dictionary<string, string> roomTransitions = new Dictionary<string, string>();
-
-Dictionary<string, string> enterBattles = new Dictionary<string, string>();
-
-string leaveBattle;
-
-Dictionary<string, string> doorTouches = new Dictionary<string, string>();
-
-Dictionary<string, string> roomPresent = new Dictionary<string, string>();
-
-// step 5: assemble the code that goes in each event and place it
-
-
-foreach (string eventName in events.Keys) {
-    bool isFirst = true;
-    string eventCode = "";
-    // Dictionary<string, Dictionary<int, List<string>>> events
-    Dictionary<int, List<string>> eventListeners = events[eventName];
-    foreach (int stage in eventListeners.Keys) {
-        string stageCode = "";
-        List<string> functionCalls = eventListeners[stage];
-        foreach (string functionCall in functionCalls) {
-            string functionName = Regex.Match(functionCall, @"\w+(?=(?:\([\s\S]*?\))?)").Value;
-            Match argsMatch = Regex.Match(functionCall, @"(?<=\()[\s\S]*?(?=\))");
-            string[] args = new string[] {};
-            if (argsMatch.Success) {
-                args = argsMatch.Value.Split(new string[] { "," }, StringSplitOptions.None);
-            }
-            string functionCode = functions[functionName];
-            for (int i = 0; i < args.Length; i++) {
-                functionCode = functionCode.Replace($"{{i{i}}}", $"{args[i]}");
-                functionCode = functionCode.Replace($"{{s{i}}}", $"\"{args[i]}\"");
-            }
-            stageCode += functionCode;
-        }
-        if (isFirst) {
-            isFirst = false;
-        } else {
-            eventCode += "else";
-        }
-        eventCode += @$"
-        if (obj_time.stage == {stage}) {{
-            {stageCode}
-        }}
+        {StartSegment("name", true)}
         ";
     }
 
-    if (eventName == "PickName") {
-        placeInIf(naming, "naming = 4", eventCode);
-    } else if (eventName == "Blcon") {
-        append(blcon, eventCode);
-    } else if (eventName.Contains("EnterBattle")) {
-        enterBattles[eventName] = eventCode;
-    } else if (eventName == "LeaveBattle") {
-        leaveBattle = eventCode;
-    } else if (eventName.Contains("RoomTransition")) {
-        roomTransitions[eventName] = eventCode;
-    } else if (eventName.Contains("Door")) {
-        doorTouches[eventName] = eventCode;
-    } else if (eventName == "Room" || eventName.Contains("Room(")) {
-        roomPresent[eventName] = eventCode;
-    } else if (eventName == "BeforeBattle") {
-        place(blconAlarm, "battle = 1", eventCode);
-    } else if (eventName == "FroggitAttack") {
-        place(froggitAlarm, "use_frogskip = 1", eventCode);
-    } else if (eventName == "FroggitTurnStart") {
-        place(froggitStep, "if (global.mnfight == 2)\n{", eventCode);
-    } else if (eventName == "FroggitTurnEnd") {
-        placeInIf(froggitStep, "attacked = 0", eventCode);
-    } else if (eventName == "YouWon") {
-        place(battlecontrol, "earned \"", eventCode);
+    public static string NoFleeLength = "5";
+
+    public static string SecondHalfLength = (Int32.Parse(NoFleeLength) * 2 - 1).ToString();
+
+    public static string SecondHalfVictory = @$"
+    {StopTime}
+    // last ones so we TP for explanation
+    obj_time.current_encounter++;
+    if (obj_time.current_encounter == {NoFleeLength} || obj_time.current_encounter == {SecondHalfLength}) {{
+        {TP(18, 40, 110)}
+        obj_time.stage++;
+    }}
+
+    // first one means we are coming from the incomplete transition from three rock
+    if (current_encounter == 1) {{
+        {StartSegment("three-rock-transition")}
+    // second one for measuring the condition that happens for any given one
+    }} else if (current_encounter == 2) {{
+        {StartSegment("ruins-second-transition")}
+    }}
+    ";
+
+    public static string SecondHalfRig = @$"
+    {SecondHalfCurrentEncounter}
+    if (encounter_name == 'W') {{
+        global.battlegroup = 6;
+    }} else if (encounter_name == 'F') {{
+        global.battlegroup = 9;
+    }} else if (encounter_name == 'A') {{
+        global.battlegroup = 7;
+    }} else if (encounter_name == 'B') {{
+        global.battlegroup = 10;
+    }} else if (encounter_name == 'C') {{
+        global.battlegroup = 8;
+    }}
+    ";
+
+    public static string MaxRuinsKills = @$"
+    global.flag[202] = 20;
+    ";
+
+    public static string RigTripleMold = @$"
+    global.battlegroup = 8;
+    ";
+
+    public static string RuinsNobodyCame = @$"
+    if (obj_time.nobody_came == 0) {{
+        {StartSegment("ruins-switches")}
+    }} else if (obj_time.nobody_came == 1) {{
+        {StartSegment("perspective-a")}
+    }} else if (obj_time.nobody_came == 2) {{
+        {StartSegment("perspective-b")}
+    }} else if (obj_time.nobody_came == 3) {{
+        {StartSegment("perspective-c")}
+    }} else if (obj_time.nobody_came == 4) {{
+        {StartSegment("perspective-d")}
+    }} else {{
+        {StartSegment("ruins-end")}
+        obj_time.stage++;
+    }}
+    obj_time.nobody_came++;
+    ";
+
+
+    public static string StopDowntime = @$"
+    // in case the downtime ends during a downtime, must not lose the time being counted
+    if (obj_time.is_downtime_mode) {{
+        if (obj_time.is_downtime_running) {{
+            obj_time.downtime += get_timer() + obj_time.downtime_start
+        }}
+        obj_time.is_downtime_mode = 0;
+        {AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
+    }}
+    ";
+
+    public static string SecondHalfSetup = @$"
+    obj_time.current_encounter = 0;
+    ";
+}
+
+class Callback {
+    public string GMLCode;
+
+    public Callback (params string[] code) {
+        GMLCode = "\n" + String.Join("\n", code) + "\n";
     }
 }
 
-string[] getArgs (string eventName) {
-    string argString = Regex.Match(eventName, @"(?<=\().*(?=\))").Value;
-    string[] args = argString.Split(new string[] { "," }, StringSplitOptions.None);
-    return args;
+class Listener {
+    public UndertaleEvent Event;
+
+    public Callback ListenerCallback; 
+
+    public Listener (UndertaleEvent undertaleEvent, Callback callback) {
+        Event = undertaleEvent;
+        ListenerCallback = callback;
+    }
 }
 
-// room related code
-List<string> roomCode = new List<string>();
+var offline = new Stage(
+    new Listener(
+        new PickName(),
+        new Callback(
+            GMLFunctions.StartSession,
+            GMLFunctions.StartSegment("ruins-start"),
+            GMLFunctions.Next
+        )
+    )
+);
 
-// text for being in a room
-foreach (string roomEvent in roomPresent.Keys) {
-    string room = getArgs(roomEvent)[0];
-    roomCode.Add($@"
-    if (room == {room}) {{
-        {roomPresent[roomEvent]}
-    }}
-    ");
+var ruinsStart = new Stage(
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.StopTime
+        )
+    ),
+    new Listener(
+        new EnterBattle(3),
+        new Callback(
+            GMLFunctions.StartSegment("ruins-hallway"),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var ruinsHallway = new Stage(
+    new Listener(
+        new RoomTransition(11, 12),
+        new Callback(
+            GMLFunctions.StopTime,
+            GMLFunctions.Next,
+            GMLFunctions.TP(11, 2400, 80)
+        )
+    )
+);
+
+var preLeafPile = new Stage(
+    new Listener(
+        new RoomTransition(11, 12),
+        new Callback(
+            GMLFunctions.StartDowntime("ruins-leafpile", 97),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var leafPileDowntime = new Stage(
+    new Listener(
+        new Door("C", 12),
+        new Callback(
+            GMLFunctions.StopDowntime,
+            GMLFunctions.EnableEncounters,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var preFirstGrind = new Stage(
+    new Listener(
+        new Room(14),
+        new Callback(
+            GMLFunctions.TP(12, 180, 260)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.Next
+        )
+    )
+);
+
+var inFirstGrind = new Stage(
+    new Listener(
+        new RoomTransition(12, 14),
+        new Callback(
+            GMLFunctions.FirstHalfTransition(1)
+        )
+    ),
+    new Listener(
+        new RoomTransition(14, 12),
+        new Callback(
+            GMLFunctions.FirstHalfTransition(2)
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            GMLFunctions.FirstHalfEncounter
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.FirstHalfVictory
+        )
+    ),
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            GMLFunctions.RigFirstHalf
+        )
+    ),
+    new Listener(
+        new FroggitAttack(),
+        new Callback(
+            GMLFunctions.TimeFrogTurn
+        )
+    ),
+    new Listener(
+        new FroggitTurnStart(),
+        new Callback(
+            GMLFunctions.TimeFrogTurn
+        )
+    ),
+    new Listener(
+        new FroggitTurnEnd(),
+        new Callback(
+            GMLFunctions.EndFrogTime
+        )
+    ),
+    new Listener(
+        new YouWon(),
+        new Callback(
+            GMLFunctions.TimeYouWon
+        )
+    )
+);
+
+var postFirstGrind = new Stage(
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.TP(12, 240, 340)
+        )
+    ),
+    new Listener(
+        new RoomTransition(12, 14),
+        new Callback(
+            GMLFunctions.StartDowntime("ruins-leaf-fall", 1000),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var leafFallDowntime = new Stage(
+    new Listener(
+        new Door("A", 14),
+        new Callback(
+            GMLFunctions.StopDowntime,
+            GMLFunctions.EnableEncounters,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var preFalLEncounter = new Stage(
+    new Listener(
+        new Room(15),
+        new Callback(
+            GMLFunctions.TP(14, 210, 100)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.Next
+        )
+    )
+);
+
+var inFalLEncounter = new Stage(
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            GMLFunctions.RigWhimsun
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.StartSegment("leaf-fall-transition"),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var leafFallTransition = new Stage(
+    new Listener(
+        new RoomTransition(14, 15),
+        new Callback(
+            GMLFunctions.StopTime,
+            GMLFunctions.DisableEncounters,
+            GMLFunctions.TP(14, 200, 80),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var preOneRock = new Stage(
+    new Listener(
+        new RoomTransition(14, 15),
+        new Callback(
+            GMLFunctions.StartDowntime("ruins-one-rock", 10000),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var oneRockDowntime = new Stage(
+    new Listener(
+        new Door("A", 15),
+        new Callback(
+            GMLFunctions.StopDowntime,
+            GMLFunctions.EnableEncounters,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var preLeafMaze = new Stage(
+    new Listener(
+        new Room(16),
+        new Callback(
+            GMLFunctions.TP(15, 340, 100)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.Next
+        )
+    )
+);
+
+var oneRockEncounter = new Stage(
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            GMLFunctions.RigWhimsun
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.DisableEncounters,
+            GMLFunctions.StartSegment("ruins-maze"),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var inLeafMaze = new Stage(
+    new Listener(
+        new RoomTransition(16, 17),
+        new Callback(
+            GMLFunctions.StopTime,
+            GMLFunctions.DisableEncounters,
+            GMLFunctions.TP(16, 520, 220),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var preThreeRock = new Stage(
+    new Listener(
+        new RoomTransition(16, 17),
+        new Callback(
+            GMLFunctions.StartDowntime("ruins-three-rock", 10000),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var threeRockDowntime = new Stage(
+    new Listener(
+        new Door("A", 17),
+        new Callback(
+            GMLFunctions.StopDowntime,
+            GMLFunctions.EnableEncounters,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var preSecondGrind = new Stage(
+    new Listener(
+        new Room(18),
+        new Callback(
+            GMLFunctions.TP(17, 430, 110)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.SecondHalfSetup,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var inSecondGrind = new Stage(
+    new Listener(
+        new RoomTransition(18, 17),
+        new Callback(
+            GMLFunctions.SecondHalfTransition
+        )
+    ),
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            GMLFunctions.SecondHalfRig
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            GMLFunctions.SecondHalfEncounter(false)
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.SecondHalfVictory
+        )
+    )
+);
+
+var preFleeGrind = new Stage(
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.Next
+        )
+    )
+);
+
+var inFleeGrind = new Stage(
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            GMLFunctions.SecondHalfRig
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            GMLFunctions.SecondHalfEncounter(true)
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.SecondHalfVictory
+        )
+    )
+);
+
+var preTripleMold = new Stage(
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.Next
+        )
+    )
+);
+
+var inTripleMold = new Stage(
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            GMLFunctions.RigTripleMold
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            GMLFunctions.StartSegment("tpl-mold-18")
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            GMLFunctions.StopTime,
+            GMLFunctions.TP(17, 500, 110),
+            GMLFunctions.MaxRuinsKills,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var ruinsPreEnd = new Stage(
+    new Listener(
+        new Door("A", 17),
+        new Callback(
+            GMLFunctions.StartSegment("ruins-napsta"),
+            GMLFunctions.Next
+        )
+    )
+);
+
+var ruinsNobodyCame = new Stage(
+    new Listener(
+        new Blcon(),
+        new Callback(
+            GMLFunctions.StopTime
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            GMLFunctions.RuinsNobodyCame
+        )
+    )
+);
+
+var ruinsEnd = new Stage(
+    new Listener(
+        new Door("Amusic", 41),
+        new Callback(
+            GMLFunctions.StopTime,
+            GMLFunctions.Next
+        )
+    )
+);
+
+var ruinsScript = new Session(
+    offline,
+    ruinsStart,
+    ruinsHallway,
+    preLeafPile,
+    leafPileDowntime,
+    preFirstGrind,
+    inFirstGrind,
+    postFirstGrind,
+    leafFallDowntime,
+    preFalLEncounter,
+    inFalLEncounter,
+    leafFallTransition,
+    preOneRock,
+    oneRockDowntime,
+    preLeafMaze,
+    oneRockEncounter,
+    inLeafMaze,
+    preThreeRock,
+    threeRockDowntime,
+    preSecondGrind,
+    inSecondGrind,
+    preFleeGrind,
+    inFleeGrind,
+    preTripleMold,
+    inTripleMold,
+    ruinsPreEnd,
+    ruinsNobodyCame,
+    ruinsEnd
+);
+
+// 1st step is to break into stages
+
+
+// 2nd step is to break into events
+var events = new Dictionary<string, Dictionary<int, Callback>>();
+
+int i = 0;
+foreach (Stage stage in ruinsScript.Stages) {
+    foreach (Listener listener in stage.Listeners) {
+        if (!events.ContainsKey(listener.Event.EventId())) {
+            events[listener.Event.EventId()] = new Dictionary<int, Callback>();
+        }
+        events[listener.Event.EventId()][i] = listener.ListenerCallback;
+    }
+    i++;
 }
+
+
+// 4th step: define variables to use in each event listener
+
+var roomTransitions = new Dictionary<string, string>();
+
+var enterBattles = new Dictionary<string, string>();
+
+string leaveBattle;
+
+var doorTouches = new Dictionary<string, string>();
+
+var roomPresent = new Dictionary<string, string>();
+
 
 string generateIfElseBlock (List<string> ifBlocks) {
     return generateIfElseBlock(ifBlocks.ToArray());
@@ -1711,8 +2063,8 @@ string generateIfElseBlock (List<string> ifBlocks) {
 
 string generateIfElseBlock (string[] ifBlocks) {
     string code = "";
+    bool isFirst = true;
     for (int i = 0; i < ifBlocks.Length; i++) {
-        bool isFirst = true;
         if (isFirst) {
             isFirst = false;
         } else code += "else";
@@ -1721,17 +2073,79 @@ string generateIfElseBlock (string[] ifBlocks) {
     return code;
 }
 
-// place text for room transitions
-bool isFirst = true;
-foreach (string roomEvent in roomTransitions.Keys) {
-    int origin;
-    int dest;
-    string[] args = getArgs(roomEvent);
-    origin = Int32.Parse(args[0].Trim());
-    dest = Int32.Parse(args[1].Trim());
+// step 5: assemble the code that goes in each event and place it
 
+foreach (string eventId in events.Keys) {
+    var stageCodeBlocks = new List<string>();
+    Dictionary<int, Callback> eventStages = events[eventId];
+    foreach (int stage in eventStages.Keys) {
+        stageCodeBlocks.Add(@$"
+        if (obj_time.stage == {stage}) {{
+            {eventStages[stage].GMLCode}
+        }}
+        ");
+
+    }
+    string eventCode = generateIfElseBlock(stageCodeBlocks);
+
+    bool isEvent (EventName eventName) {
+        var split = splitString(eventId);
+        return split[0] == eventName.ToString();
+    }
+
+    if (isEvent(EventName.PickName)) {
+        placeInIf(naming, "naming = 4", eventCode);
+    } else if (isEvent(EventName.Blcon)) {
+        append(blcon, eventCode);
+    } else if (isEvent(EventName.EnterBattle)) {
+        enterBattles[eventId] = eventCode;
+    } else if (isEvent(EventName.LeaveBattle)) {
+        leaveBattle = eventCode;
+    } else if (isEvent(EventName.RoomTransition)) {
+        roomTransitions[eventId] = eventCode;
+    } else if (isEvent(EventName.Door)) {
+        doorTouches[eventId] = eventCode;
+    } else if (isEvent(EventName.Room)) {
+        roomPresent[eventId] = eventCode;
+    } else if (isEvent(EventName.BeforeBattle)) {
+        place(blconAlarm, "battle = 1", eventCode);
+    } else if (isEvent(EventName.FroggitAttack)) {
+        place(froggitAlarm, "use_frogskip = 1", eventCode);
+    } else if (isEvent(EventName.FroggitTurnStart)) {
+        place(froggitStep, "if (global.mnfight == 2)\n{", eventCode);
+    } else if (isEvent(EventName.FroggitTurnEnd)) {
+        placeInIf(froggitStep, "attacked = 0", eventCode);
+    } else if (isEvent(EventName.YouWon)) {
+        place(battlecontrol, "earned \"", eventCode);
+    }
+}
+
+string[] splitString (string str) {
+    string[] args = str.Split(new string[] { "," }, StringSplitOptions.None);
+    return args;
+}
+
+// room related code
+List<string> roomCode = new List<string>();
+
+var staticRoomCode = new List<string>();
+// text for being in a room
+foreach (string roomEvent in roomPresent.Keys) {
+    string[] args = splitString(roomEvent);
+    staticRoomCode.Add($@"
+    if (room == {args[1]}) {{
+        {roomPresent[roomEvent]}
+    }}
+    ");
+}
+
+
+// place text for room transitions
+// bool isFirst = true;
+foreach (string roomEvent in roomTransitions.Keys) {
+    string[] split = splitString(roomEvent);
     roomCode.Add(@$"
-    if (obj_time.previous_room == {origin} && room == {dest}) {{
+    if (obj_time.previous_room == {split[1]} && room == {split[2]}) {{
         {roomTransitions[roomEvent]}
     }}
     ");
@@ -1740,12 +2154,12 @@ foreach (string roomEvent in roomTransitions.Keys) {
 List<string> withBattlegroup = new List<string>();
 string battlegroupless = "";
 foreach (string battle in enterBattles.Keys) {
-    string[] args = getArgs(battle);
-    if (args[0] == "") {
+    string[] args = splitString(battle);
+    if (args.Length == 1) {
         battlegroupless = enterBattles[battle];
     } else {
         withBattlegroup.Add(@$"
-        if (global.battlegroup == {args[0]}) {{
+        if (global.battlegroup == {args[1]}) {{
             {enterBattles[battle]}
         }}
         ");
@@ -1790,21 +2204,19 @@ roomCode.Add(
 
 
 append(step, generateIfElseBlock(roomCode));
+append(step, generateIfElseBlock(staticRoomCode));
 
 Dictionary<string, Dictionary<string, List<string>>> doorCodes = new Dictionary<string, Dictionary<string, List<string>>>();
 
 foreach (string doorTouch in doorTouches.Keys) {
-    Console.WriteLine(doorTouch);
-    string[] args = getArgs(doorTouch);
-    string doorName = args[0].Trim();
-    string room = args[1].Trim();
-    if (!doorCodes.ContainsKey(doorName)) {
-        doorCodes[doorName] = new Dictionary<string, List<string>>();
+    string[] args = splitString(doorTouch);
+    if (!doorCodes.ContainsKey(args[1])) {
+        doorCodes[args[1]] = new Dictionary<string, List<string>>();
     }
-    if (!doorCodes[doorName].ContainsKey(room)) {
-        doorCodes[doorName][room] = new List<string>();
+    if (!doorCodes[args[1]].ContainsKey(args[2])) {
+        doorCodes[args[1]][args[2]] = new List<string>();
     }
-    doorCodes[doorName][room].Add(doorTouches[doorTouch]);
+    doorCodes[args[1]][args[2]].Add(doorTouches[doorTouch]);
 }
 
 foreach (string door in doorCodes.Keys) {
