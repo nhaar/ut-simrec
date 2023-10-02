@@ -1,79 +1,181 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
 /******
 helper variables and functions
 ******/
 
-/*
-CODE ENTRIES
-*/
+// Class for a GML if-else code block
+class IfElseBlock {
+    /// <summary>
+    /// List of strings of GML code of the form `if (CONDITION) {CODE}`
+    /// </summary>
+    private List<string> IfBlocks = new List<string>();
 
-// will be using obj_time for the API of the mod
+    /// <summary>
+    /// Code that should go at the `else` part of the block (after all `if`s and `else if`s)
+    /// </summary>
+    private string ElseBlock = "";
+
+    /// <summary>
+    /// Add all if blocks from an array of blocks
+    /// </summary>
+    /// <param name="blocks"></param>
+    public void AddBlocks (string[] blocks) {
+        foreach (string block in blocks) AddIfBlock(block);
+    }
+
+    /// <summary>
+    /// Add all if blocks from a list of blocks
+    /// </summary>
+    /// <param name="blocks"></param>
+    public void AddBlocks(List<string> blocks) {
+        AddBlocks(blocks.ToArray());
+    }
+
+    /// <summary>
+    /// Add a block from a string
+    /// </summary>
+    /// <param name="code"></param>
+    public void AddIfBlock (string code) {
+        IfBlocks.Add(code);
+    } 
+
+    /// <summary>
+    /// Set the value of the `else` block
+    /// </summary>
+    /// <param name="code"></param>
+    public void SetElseBlock (string code) {
+        ElseBlock = code;
+    }
+
+    /// <summary>
+    /// Get the final GML code for the block
+    /// </summary>
+    /// <returns></returns>
+    public string GetCode () {
+        // if there are no if statements, then the `else` block should not be wrapped on anything
+        if (IfBlocks.Any()) {
+            return String.Join("else ", IfBlocks) + $"else {{ {ElseBlock} }}";
+        } else return ElseBlock;
+    }
+
+    /// <summary>
+    /// Create an empty if-else block
+    /// </summary>
+    public IfElseBlock () {}
+
+    /// <summary>
+    /// Create an if-else block with if statements from a list
+    /// </summary>
+    /// <param name="blocks"></param>
+    public IfElseBlock (List<string> blocks) {
+        AddBlocks(blocks);
+    }
+
+    /// <summary>
+    /// Create an if-else block with if statements from an array
+    /// </summary>
+    /// <param name="blocks"></param>
+    public IfElseBlock (string[] blocks) {
+        AddBlocks(blocks);
+    }
+
+    /// <summary>
+    /// Get the if else block GML code from an array of if blocks
+    /// </summary>
+    /// <param name="blocks"></param>
+    /// <returns></returns>
+    public static string GetIfElseBlock (string[] blocks) {
+        var block = new IfElseBlock(blocks);
+        return block.GetCode();
+    }
+
+    /// <summary>
+    /// Get the if else block GML code from a list of if blocks
+    /// </summary>
+    /// <param name="blocks"></param>
+    /// <returns></returns>
+    public static string GetIfElseBlock (List<string> blocks) {
+        return GetIfElseBlock(blocks.ToArray());
+    }
+}
 
 /// <summary>
-/// `Create` script for `obj_time`
+/// Contains the name of all code entries that will be used
 /// </summary>
-var create = "gml_Object_obj_time_Create_0";
+public static class CodeEntryClass {
+    // will be using obj_time for the API of the mod
 
-/// <summary>
-/// `BeginStep` script for `obj_time`
-/// </summary>
-var step = "gml_Object_obj_time_Step_1";
+    /// <summary>
+    /// `Create` script for `obj_time`
+    /// </summary>
+    public static string create = "gml_Object_obj_time_Create_0";
 
-/// <summary>
-/// `Draw` script for `obj_time`
-/// </summary>
-var draw = "gml_Object_obj_time_Draw_64";
+    /// <summary>
+    /// `BeginStep` script for `obj_time`
+    /// </summary>
+    public static string step = "gml_Object_obj_time_Step_1";
 
-/// <summary>
-/// Code that runs at the start of "blcon"s
-/// </summary>
-var blcon = "gml_Object_obj_battleblcon_Create_0";
+    /// <summary>
+    /// `Draw` script for `obj_time`
+    /// </summary>
+    public static string draw = "gml_Object_obj_time_Draw_64";
 
-/// <summary>
-/// Code that runs at the end of "blcon"s
-/// </summary>
-var blconAlarm = "gml_Object_obj_battleblcon_Alarm_0";
+    /// <summary>
+    /// Code that runs at the start of "blcon"s
+    /// </summary>
+    public static string blcon = "gml_Object_obj_battleblcon_Create_0";
 
-/// <summary>
-/// Code for picking how many steps are needed for an encounter
-/// </summary>
-var scrSteps = "gml_Script_scr_steps";
+    /// <summary>
+    /// Code that runs at the end of "blcon"s
+    /// </summary>
+    public static string blconAlarm = "gml_Object_obj_battleblcon_Alarm_0";
 
-/// <summary>
-/// Code where the player picks the name for the game
-/// </summary>
-var naming = "gml_Script_scr_namingscreen";
+    /// <summary>
+    /// Code for picking how many steps are needed for an encounter
+    /// </summary>
+    public static string scrSteps = "gml_Script_scr_steps";
 
-/// <summary>
-/// Step code that contains the "YOU WON" screen
-/// </summary>
-var battlecontrol = "gml_Object_obj_battlecontroller_Step_0";
+    /// <summary>
+    /// Code where the player picks the name for the game
+    /// </summary>
+    public static string naming = "gml_Script_scr_namingscreen";
 
-/// <summary>
-/// Step code for Froggit
-/// </summary>
-var froggitStep = "gml_Object_obj_froggit_Step_0";
+    /// <summary>
+    /// Step code that contains the "YOU WON" screen
+    /// </summary>
+    public static string battlecontrol = "gml_Object_obj_battlecontroller_Step_0";
 
-/// <summary>
-/// Froggit enemy alarm used to decide the attacks
-/// </summary>
-var froggitAlarm = "gml_Object_obj_froggit_Alarm_6";
+    /// <summary>
+    /// Step code for Froggit
+    /// </summary>
+    public static string froggitStep = "gml_Object_obj_froggit_Step_0";
 
-// code for the room transition doors being touched
+    /// <summary>
+    /// Froggit enemy alarm used to decide the attacks
+    /// </summary>
+    public static string froggitAlarm = "gml_Object_obj_froggit_Alarm_6";
 
-/// <summary>
-/// Code for touching `doorA`
-/// </summary>
-var doorA = "gml_Object_obj_doorA_Other_19";
+    // code for the room transition doors being touched
 
-/// <summary>
-/// Code for touching `doorAmusic`
-/// </summary>
-var doorAmusic = "gml_Object_obj_doorAmusicfade_Other_19";
+    /// <summary>
+    /// Code for touching `doorA`
+    /// </summary>
+    public static string doorA = "gml_Object_obj_doorA_Other_19";
 
-/// <summary>
-/// Code for touching `doorC`
-/// </summary>
-var doorC = "gml_Object_obj_doorC_Other_19";
+    /// <summary>
+    /// Code for touching `doorAmusic`
+    /// </summary>
+    public static string doorAmusic = "gml_Object_obj_doorAmusicfade_Other_19";
+
+    /// <summary>
+    /// Code for touching `doorC`
+    /// </summary>
+    public static string doorC = "gml_Object_obj_doorC_Other_19";
+}
 
 /*
 UNDERTALE CODE MANIPULATION
@@ -147,32 +249,6 @@ string randomPopulateArray (string arr, params string[] elements) {
         }}
         {arrAccess} = '{elements[i]}';
         ";
-    }
-    return code;
-}
-
-/// <summary>
-/// Generate GML code from joinining a list of if statements to create an if-else block
-/// </summary>
-/// <param name="ifBlocks">All if statements</param>
-/// <returns></returns>
-string generateIfElseBlock (List<string> ifBlocks) {
-    return generateIfElseBlock(ifBlocks.ToArray());
-}
-
-/// <summary>
-/// Generate GML code from joinining an array of if statements to create an if-else block
-/// </summary>
-/// <param name="ifBlocks">All if statements</param>
-/// <returns></returns>
-string generateIfElseBlock (string[] ifBlocks) {
-    string code = "";
-    bool isFirst = true;
-    for (int i = 0; i < ifBlocks.Length; i++) {
-        if (isFirst) {
-            isFirst = false;
-        } else code += "else";
-        code += ifBlocks[i];
     }
     return code;
 }
@@ -604,10 +680,10 @@ obj_time.current_encounter = 0;
 void useDebug () {
     // updating it every frame is just a lazy way of doing it since it can't be done in obj_time's create event
     // since it gets overwritten by gamestart
-    append(step, "global.debug = 1;");
+    append(CodeEntryClass.step, "global.debug = 1;");
 
     // stage skip keybinds
-    append(step, @$"
+    append(CodeEntryClass.step, @$"
     if (keyboard_check_pressed(ord('Q'))) {{
         is_timer_running = 0;
         stage = 3;
@@ -618,7 +694,7 @@ void useDebug () {
     }}
     ");
 
-    append(step, @$"
+    append(CodeEntryClass.step, @$"
     if (keyboard_check_pressed(ord('E'))) {{
         is_timer_running = 0;
         obj_time.stage = 7;
@@ -651,15 +727,21 @@ void useDebug () {
         code += $"draw_text(20, {110 + i * 25}, '{watchVar}: ' + string({watchVar}));";
         i++;
     }
-    append(draw, code);
+    append(CodeEntryClass.draw, code);
 
     // coordinates
-    append(draw, @$"
+    append(CodeEntryClass.draw, @$"
     if (instance_exists(obj_mainchara)) {{
         draw_text(20, {(110 + i * 25)}, 'x:' +  string(obj_mainchara.x));
         draw_text(20, {(110 + (i + 1) * 25)}, 'y:' + string(obj_mainchara.y));
     }}
     ");
+}
+
+enum PlaceMethod {
+    Append,
+    Place,
+    PlaceInIf
 }
 
 /*
@@ -676,49 +758,97 @@ abstract class UndertaleEvent {
     /// <returns></returns>
     public abstract string EventArgs ();
 
+    /// <summary>
+    /// Generate GML code for the condition needed for this event.
+    /// 
+    /// If none in particular exist, the method should return "1"
+    /// </summary>
+    /// <returns></returns>
+    public virtual string GMLCondition () {
+        return "1";
+    }
+
+    /// <summary>
+    /// GML place method this event will use
+    /// </summary>
+    public abstract PlaceMethod Method { get; }
+    
+    /// <summary>
+    /// If applicable, the `replacement` string to give to the method that will place the GML
+    /// </summary>
+    public virtual string Replacement { get; }
+
+    /// <summary>
+    /// Should return the code that will be executed when this event is fired 
+    /// </summary>
+    /// <param name="code">Base code</param>
+    /// <returns></returns>
+    public virtual string Placement (string code) {
+        return code;
+    }
+
+    /// <summary>
+    /// Should return the GML code entry where the code for this event is placed
+    /// </summary>
+    /// <returns></returns>
+    public abstract string CodeEntry ();
+
+    /// <summary>
+    /// Get a unique identifier for this event and its arguments
+    /// </summary>
+    /// <returns></returns>
     public string EventId () {
         var type = this.GetType().Name;
         var args = EventArgs();
         return args == "" ? type : $"{type},{args}";
     }
+
+    // the two methods below are for using this class inside dictionaries
+
+    public override int GetHashCode () {
+        return EventId().GetHashCode();
+    }
+
+    public override bool Equals (object obj) {
+        if (obj is UndertaleEvent otherObj) {
+            return otherObj.EventId() == this.EventId();
+        }
+        return false;
+    }
 }
 
-abstract class UniqueEvent : UndertaleEvent {
+/// <summary>
+/// Class for a Undertale Event that takes no arguments (is unique)
+/// </summary>
+abstract class UniqueEvent : UndertaleEvent {    
     public override string EventArgs () {
         return "";
     }
 }
 
 /// <summary>
-/// Name of the events used, equal to the respective classes
-/// </summary>
-// NOTE: Not sure if the redundancy is very good, not sure how to improve it though
-enum EventName {
-    PickName,
-    Blcon,
-    BeforeBattle,
-    EnterBattle,
-    LeaveBattle,
-    RoomTransition,
-    Room,
-    FroggitAttack,
-    FroggitTurnStart,
-    FroggitTurnEnd,
-    YouWon,
-    Door
-
-
-}
-
-/// <summary>
 /// Event for picking the name
 /// </summary>
-class PickName : UniqueEvent {}
+class PickName : UniqueEvent {   
+    public override PlaceMethod Method => PlaceMethod.PlaceInIf;
+
+    public override string Replacement => "naming = 4";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.naming;
+    }
+}
 
 /// <summary>
 /// Event for when the blcon shows up in the screen
 /// </summary>
-class Blcon : UniqueEvent {}
+class Blcon : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Append;
+
+    public override string CodeEntry() {
+        return CodeEntryClass.blcon;
+    }
+}
 
 /// <summary>
 /// Event for when a battle starts
@@ -742,6 +872,27 @@ class EnterBattle : UndertaleEvent {
     /// <param name="battlegroup">Battlegroup id that will be watched</param>
     public EnterBattle (int battlegroup) {
         Battlegroup = battlegroup;
+    }
+
+    public override PlaceMethod Method => PlaceMethod.Append;
+
+    public override string Placement (string code) {
+        Console.WriteLine("Hello!");
+        return @$"
+        if (obj_time.previous_room != room_battle && room == room_battle) {{
+            {code}
+        }}
+        ";
+    }
+
+    public override string GMLCondition () {
+        if (Battlegroup < 0) {
+            return "1";
+        } else return $"global.battlegroup == {Battlegroup}";
+    }
+
+    public override string CodeEntry() {
+        return CodeEntryClass.step;
     }
 
     public override string EventArgs () {
@@ -772,6 +923,16 @@ class RoomTransition : UndertaleEvent {
         PreviousRoom = prev;
         CurrentRoom = cur;
     }
+    
+    public override PlaceMethod Method => PlaceMethod.Append;
+
+    public override string GMLCondition () {
+        return $"obj_time.previous_room == {PreviousRoom} && room == {CurrentRoom}";
+    }
+    
+    public override string CodeEntry() {
+        return CodeEntryClass.step;
+    }
 
     public override string EventArgs () {
         return $"{PreviousRoom},{CurrentRoom}";
@@ -795,6 +956,16 @@ class Room : UndertaleEvent {
         RoomId = room;
     }
 
+    public override PlaceMethod Method => PlaceMethod.Append;
+
+    public override string GMLCondition () {
+        return $"room == {RoomId}";
+    }
+    
+    public override string CodeEntry() {
+        return CodeEntryClass.step;
+    }
+
     public override string EventArgs () {
         return RoomId.ToString();
     }
@@ -803,32 +974,88 @@ class Room : UndertaleEvent {
 /// <summary>
 /// Event for leaving a battle
 /// </summary>
-class LeaveBattle : UniqueEvent {}
+class LeaveBattle : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Append;
+
+    public override string Placement (string code) {
+        return @$"
+        if (obj_time.previous_room == room_battle && room != room_battle) {{
+            // prevent player from getting locked if they TP out of battle
+            room_persistent = false;
+            {code}
+        }}
+        ";
+    }
+
+    public override string CodeEntry() {
+        return CodeEntryClass.step;
+    }
+}
 
 /// <summary>
 /// Event for before entering a battle
 /// </summary>
-class BeforeBattle : UniqueEvent {}
+class BeforeBattle : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "battle = 1";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.blconAlarm;
+    }
+}
 
 /// <summary>
 /// Event for when Froggit's attack is decided
 /// </summary>
-class FroggitAttack : UniqueEvent {}
+class FroggitAttack : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "use_frogskip = 0";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.froggitAlarm;
+    }
+}
 
 /// <summary>
 /// Event for when Froggit's turn ends
 /// </summary>
-class FroggitTurnEnd : UniqueEvent {}
+class FroggitTurnEnd : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.PlaceInIf;
+
+    public override string Replacement => "attacked = 0";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.froggitStep;
+    }
+}
 
 /// <summary>
 /// Event for when Froggit's turn starts
 /// </summary>
-class FroggitTurnStart : UniqueEvent {}
+class FroggitTurnStart : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "if (global.mnfight == 2)\n{";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.froggitStep;
+    }
+}
 
 /// <summary>
 /// Event for when the "YOU WON" message in battle begins
 /// </summary>
-class YouWon : UniqueEvent {}
+class YouWon : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "earned \"";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.battlecontrol;
+    }
+}
 
 /// <summary>
 /// Event for when a door is touched
@@ -852,6 +1079,25 @@ class Door : UndertaleEvent {
     public Door (string name, int room) {
         Name = name;
         Room = room;
+    }
+
+    public override PlaceMethod Method => PlaceMethod.Append;
+
+    public override string GMLCondition () {
+        return $"room == {Room}";
+    }
+    
+    public override string CodeEntry () {
+        if (Name == "A") {
+            return CodeEntryClass.doorA;
+        }
+        if (Name == "C") {
+            return CodeEntryClass.doorC;
+        }
+        if (Name == "Amusic") {
+            return CodeEntryClass.doorAmusic;
+        }
+        return "";
     }
 
     public override string EventArgs () {
@@ -1646,7 +1892,7 @@ if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale") {
 Data.GameObjects.ByName("obj_time").Visible = true;
 
 // initializing variables
-append(create, $@"
+append(CodeEntryClass.create, $@"
 // where recording text files will be saved
 directory_create('recordings');
 
@@ -1742,7 +1988,7 @@ for (var i = 0; i < 4; i++) {{
 );
 
 // add switch for enabling and disabling encounters
-replace(scrSteps, @"
+replace(CodeEntryClass.scrSteps, @"
     populationfactor = (argument2 / (argument2 - global.flag[argument3]))
     if (populationfactor > 8)
         populationfactor = 8
@@ -1763,7 +2009,7 @@ if (obj_time.fast_encounters) {{
 ");
 
 // room tracker, widely used for room transition events
-append(step, @"
+append(CodeEntryClass.step, @"
 previous_room = current_room;
 current_room = room;
 ");
@@ -1771,7 +2017,7 @@ current_room = room;
 // in order to tp to the proper places, will be using the tp flag which notifies the
 // next frame that a room teleportation was carried out last frame
 // and we have a specific x,y position to go to
-append(step, @$"
+append(CodeEntryClass.step, @$"
 // use two flags to wait a frame
 // wait a frame to overwrite the default position
 if (tp_flag) {{
@@ -1794,7 +2040,7 @@ if (tp_flag) {{
 ");
 
 // downtime timer api
-append(step, @"
+append(CodeEntryClass.step, @"
 // downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
 // since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
 if (is_downtime_mode) {
@@ -1821,7 +2067,7 @@ step_count = global.encounter;
 ");
 
 // message drawer
-append(draw, @"
+append(CodeEntryClass.draw, @"
 draw_set_font(fnt_main)
 draw_set_color(c_yellow);
 draw_text(20, 0, current_msg);
@@ -1838,11 +2084,11 @@ for (int i = 0; i < ruinsScript.Stages.Length; i++) {
     ");
 }
 
-append(step, generateIfElseBlock(messageList));
+append(CodeEntryClass.step, IfElseBlock.GetIfElseBlock(messageList));
 
 // rigging frogskip for all froggit encounters to speed up practice
 // it is placed right after mycommand declaration
-place(froggitAlarm, "0))", @$"
+place(CodeEntryClass.froggitAlarm, "0))", @$"
 // as a means to speed up practice, all of them will have frog skip by default
 var use_frogskip = 1;
 if (use_frogskip) {{
@@ -1854,38 +2100,30 @@ if (use_frogskip) {{
 
 // placing all listeners for all stages
 
-// first, create a map of all unique events that maps to a map of all stages and their respective code
-var events = new Dictionary<string, Dictionary<int, Callback>>();
+// first, create a map of all unique events mapped to a map of all stages and their respective code
+var events = new Dictionary<UndertaleEvent, Dictionary<int, Callback>>();
 
+// only ruinScript supported for now
+// TO-DO: add other session support
 for (int i = 0; i < ruinsScript.Stages.Length; i++) {
     var stage = ruinsScript.Stages[i];
     foreach (Listener listener in stage.Listeners) {
-        if (!events.ContainsKey(listener.Event.EventId())) {
-            events[listener.Event.EventId()] = new Dictionary<int, Callback>();
+        if (!events.ContainsKey(listener.Event)) {
+            events[listener.Event] = new Dictionary<int, Callback>();
         }
-        events[listener.Event.EventId()][i] = listener.ListenerCallback;
+        events[listener.Event][i] = listener.ListenerCallback;
     }
 }
 
-// events that use arguments will need specific code placement
+// then, group all the event types and their unique events
 
-var roomTransitions = new Dictionary<string, string>();
+// this is a map of event names to a map of unique events and their respective code
+var eventCodes = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
 
-var enterBattles = new Dictionary<string, string>();
-
-string leaveBattle;
-
-var doorTouches = new Dictionary<string, string>();
-
-var roomPresent = new Dictionary<string, string>();
-
-
-
-// step 5: assemble the code that goes in each event and place it
-
-foreach (string eventId in events.Keys) {
+// the code for each unique event is just an if-else block separating each of the stages
+foreach (UndertaleEvent undertaleEvent in events.Keys) {
     var stageCodeBlocks = new List<string>();
-    Dictionary<int, Callback> eventStages = events[eventId];
+    Dictionary<int, Callback> eventStages = events[undertaleEvent];
     foreach (int stage in eventStages.Keys) {
         stageCodeBlocks.Add(@$"
         if (obj_time.stage == {stage}) {{
@@ -1894,159 +2132,61 @@ foreach (string eventId in events.Keys) {
         ");
 
     }
-    string eventCode = generateIfElseBlock(stageCodeBlocks);
+    string eventCode = IfElseBlock.GetIfElseBlock(stageCodeBlocks);
+    var eventName = undertaleEvent.GetType().Name;
 
-    bool isEvent<Type> () {
-        var split = splitString(eventId);
-        return split[0] == typeof(Type).Name;
-    }
-
-    if (isEvent<PickName>()) {
-        placeInIf(naming, "naming = 4", eventCode);
-    } else if (isEvent<Blcon>()) {
-        append(blcon, eventCode);
-    } else if (isEvent<EnterBattle>()) {
-        enterBattles[eventId] = eventCode;
-    } else if (isEvent<LeaveBattle>()) {
-        leaveBattle = eventCode;
-    } else if (isEvent<RoomTransition>()) {
-        roomTransitions[eventId] = eventCode;
-    } else if (isEvent<Door>()) {
-        doorTouches[eventId] = eventCode;
-    } else if (isEvent<Room>()) {
-        roomPresent[eventId] = eventCode;
-    } else if (isEvent<BeforeBattle>()) {
-        place(blconAlarm, "battle = 1", eventCode);
-    } else if (isEvent<FroggitAttack>()) {
-        place(froggitAlarm, "use_frogskip = 1", eventCode);
-    } else if (isEvent<FroggitTurnStart>()) {
-        place(froggitStep, "if (global.mnfight == 2)\n{", eventCode);
-    } else if (isEvent<FroggitTurnEnd>()) {
-        placeInIf(froggitStep, "attacked = 0", eventCode);
-    } else if (isEvent<YouWon>()) {
-        place(battlecontrol, "earned \"", eventCode);
-    }
+    if (!eventCodes.ContainsKey(eventName)) eventCodes[eventName] = new Dictionary<UndertaleEvent, string>();
+    eventCodes[eventName][undertaleEvent] = eventCode;
 }
 
-string[] splitString (string str) {
-    string[] args = str.Split(new string[] { "," }, StringSplitOptions.None);
-    return args;
-}
+// finally, go through each event type, and determine how the code will be placed
+foreach (string eventName in eventCodes.Keys) {
+    // get the map of unique events to their code
+    var eventMap = eventCodes[eventName];
+    
+    // pick any of the events (in this case the first) to access the general methods of this event type
+    // regarding how to place the code
+    UndertaleEvent baseEvent = eventMap.Keys.ToList()[0];
 
-// room related code
-List<string> roomCode = new List<string>();
+    // split the events based on the code entries they edit
+    // so create a map of code entries to the if-else block for the events in the code entry
+    // in short, since the unique events are already separated, we presume that we want to access only one of them
+    // and that is filtered by doing an if-else block in all of their conditions
+    var entryMap = new Dictionary<string, IfElseBlock>();
 
-var staticRoomCode = new List<string>();
-// text for being in a room
-foreach (string roomEvent in roomPresent.Keys) {
-    string[] args = splitString(roomEvent);
-    staticRoomCode.Add($@"
-    if (room == {args[1]}) {{
-        {roomPresent[roomEvent]}
-    }}
-    ");
-}
-
-
-// place text for room transitions
-// bool isFirst = true;
-foreach (string roomEvent in roomTransitions.Keys) {
-    string[] split = splitString(roomEvent);
-    roomCode.Add(@$"
-    if (obj_time.previous_room == {split[1]} && room == {split[2]}) {{
-        {roomTransitions[roomEvent]}
-    }}
-    ");
-}
-
-List<string> withBattlegroup = new List<string>();
-string battlegroupless = "";
-foreach (string battle in enterBattles.Keys) {
-    Console.WriteLine("BVATTTTLEEEE!!!!");
-    Console.WriteLine(battle);
-    string[] args = splitString(battle);
-    if (args.Length == 1) {
-        battlegroupless = enterBattles[battle];
-    } else {
-        withBattlegroup.Add(@$"
-        if (global.battlegroup == {args[1]}) {{
-            {enterBattles[battle]}
-        }}
-        ");
-    }
-}
-roomCode.Add(
-    @$"
-    if (previous_room != room_battle && room == room_battle) {{
-        // exitting too early requires manually setting off persistence
-        {generateIfElseBlock(withBattlegroup) + @$"
-            else {{
-                {battlegroupless}
+    foreach (UndertaleEvent undertaleEvent in eventMap.Keys) {
+        var eventCode = eventMap[undertaleEvent];
+        var eventEntry = undertaleEvent.CodeEntry();
+        if (!entryMap.ContainsKey(eventEntry)) {
+            entryMap[eventEntry] = new IfElseBlock();
+        }
+        var condition = undertaleEvent.GMLCondition();
+        if (condition == "1") {
+            entryMap[eventEntry].SetElseBlock(eventCode);
+        } else {    
+            entryMap[eventEntry].AddIfBlock(@$"
+            if ({undertaleEvent.GMLCondition()}) {{
+                {eventCode}
             }}
-            "}    
-    }}
-    "
-);
-
-// string[] battleEvents = new string[] { leaveBattle };
-// for (int i = 0; i < 2; i++) {
-    string code;
-    string firstComparison;
-    string secondComparison;
-    // if (i == 0) {
-    //     code = enterBattle;
-    //     firstComparison = "!=";
-    //     secondComparison = "==";
-    // } else {
-        code = leaveBattle;
-        firstComparison = "==";
-        secondComparison = "!=";
-    // }
-
-    roomCode.Add(@$"
-    if (obj_time.previous_room {firstComparison} room_battle && room {secondComparison} room_battle) {{
-        room_persistent = false;
-        {code}
-    }}
-    ");
-// }/
-
-Console.WriteLine(generateIfElseBlock(roomCode));
-
-append(step, generateIfElseBlock(roomCode));
-append(step, generateIfElseBlock(staticRoomCode));
-
-Dictionary<string, Dictionary<string, List<string>>> doorCodes = new Dictionary<string, Dictionary<string, List<string>>>();
-
-foreach (string doorTouch in doorTouches.Keys) {
-    string[] args = splitString(doorTouch);
-    if (!doorCodes.ContainsKey(args[1])) {
-        doorCodes[args[1]] = new Dictionary<string, List<string>>();
+            ");
+        }
     }
-    if (!doorCodes[args[1]].ContainsKey(args[2])) {
-        doorCodes[args[1]][args[2]] = new List<string>();
+
+    foreach (string entry in entryMap.Keys) {
+        string code = entryMap[entry].GetCode();
+
+        switch (baseEvent.Method) {        
+            case PlaceMethod.Append:
+                append(entry, baseEvent.Placement(code));
+                break;
+            case PlaceMethod.Place:
+                place(entry, baseEvent.Replacement, baseEvent.Placement(code));
+                break;
+            case PlaceMethod.PlaceInIf:
+                placeInIf(entry, baseEvent.Replacement, baseEvent.Placement(code));
+                break;
+        }
     }
-    doorCodes[args[1]][args[2]].Add(doorTouches[doorTouch]);
 }
 
-foreach (string door in doorCodes.Keys) {
-    List<string> roomCodes = new List<string>();
-    foreach (string room in doorCodes[door].Keys ) {
-        roomCodes.Add($@"
-        if (room == {room}) {{
-            {generateIfElseBlock(doorCodes[door][room])}
-        }}
-        ");
-    }
-    string doorCodeEntry = "";
-    Console.WriteLine(doorCodeEntry);
-    if (door == "C") doorCodeEntry = doorC;
-    else if (door == "A") doorCodeEntry = doorA;
-    else if (door == "Amusic") doorCodeEntry = doorAmusic;
-    append(doorCodeEntry, generateIfElseBlock(roomCodes));
-}
-
-
-
-// debug mode - REMOVE FOR BUILD
 useDebug();
