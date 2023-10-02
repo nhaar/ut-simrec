@@ -1,6 +1,11 @@
+/******
+helper variables and functions
+******/
+
 // code entries
 
 var blcon = "gml_Object_obj_battleblcon_Create_0";
+
 var blconAlarm = "gml_Object_obj_battleblcon_Alarm_0";
 
 // code for picking how many steps are needed for an encounter
@@ -23,10 +28,6 @@ var froggitAlarm = "gml_Object_obj_froggit_Alarm_6";
 var doorA = "gml_Object_obj_doorA_Other_19";
 var doorAmusic = "gml_Object_obj_doorAmusicfade_Other_19";
 var doorC = "gml_Object_obj_doorC_Other_19";
-
-/******
-helper variables and functions
-******/
 
 /// <summary>
 /// Append GML to the end of a code entry
@@ -113,16 +114,6 @@ file_text_close(file);
 ";
 
 /// <summary>
-/// Generate GML code that reassigns the value of stage or not
-/// </summary>
-/// <param name="stage">If given, will reassign the stage to the given stage number, else it will do nothing</param>
-/// <returns></returns>
-string newStage (int stage = -1) {
-    if (stage == -1) return "";
-    return $"obj_time.stage = {stage};";
-}
-
-/// <summary>
 /// Generate GML code that starts the segment timer
 /// </summary>
 /// <param name="name">Name of the segment</param>
@@ -132,22 +123,20 @@ string newStage (int stage = -1) {
 /// and to `false` if it should be interpreted as being a GML string literal
 /// </param>
 /// <returns></returns>
-string startSegment (string name, bool advance = false, bool isVarName = false) {
-    string nameString = isVarName ? name : $"'{name}'";
-    string stageString = advance ? "obj_time.stage++;" : "";
+string startSegment (string segmentName, bool isVarName = false) {
+    string nameString = isVarName ? segmentName : $"'{segmentName}'";
     return @$"
     if (!obj_time.is_timer_running) {{
         obj_time.is_timer_running = 1;
         obj_time.time_start = get_timer();
-        {stageString}
         obj_time.segment_name = {nameString};
     }}
     ";
 }
 
-string startDowntime (string name, int steps, int stage = -1) {
-    return startDowntime(name, steps.ToString(), stage);
-}
+var next = @"
+obj_time.stage++;
+";
 
 /// <summary>
 /// Generate GML code that starts the downtime mode
@@ -156,16 +145,15 @@ string startDowntime (string name, int steps, int stage = -1) {
 /// <param name="steps">Number of optimal steps to complete downtime</param>
 /// <param name="stage">Value to set the stage to, or `-1` if the stage should not be changed</param>
 /// <returns></returns>
-string startDowntime (string name, string steps, int stage = -1) {
+string startDowntime (string downtimeName, int steps) {
     return @$"
     if (!obj_time.is_downtime_mode) {{
         obj_time.is_downtime_mode = 1;
         obj_time.downtime = 0;
         obj_time.downtime_start = 0;
         obj_time.step_count = global.encounter;
-        obj_time.optimal_steps = {steps.ToString()}
-        {newStage(stage)}
-        obj_time.downtime_name = '{name}';
+        obj_time.optimal_steps = {steps}
+        obj_time.downtime_name = '{downtimeName}';
     }}
     ";
 }
@@ -197,14 +185,73 @@ if (obj_time.is_downtime_mode) {{
 /// <summary>
 /// Number of encounters in the first half array
 /// </summary>
-int firstHalfLength = 6;
+var firstHalfLength = 6;
 
 /// <summary>
 /// GML code that assigns a `var` `encounter_name` the value of the current first half encounter
 /// </summary>
 string firstHalfCurrentEncounter = "var encounter_name = obj_time.first_half_encounters[obj_time.current_encounter];";
 
+string firstHalfTransition (int encounter) {
+    return @$"
+    {firstHalfCurrentEncounter}
+    if (current_encounter == {encounter}) {{
+        {stopTime}
+    }}
+    ";
+}
 
+/// <summary>
+/// GML code that disables the encounters
+/// </summary>
+string disableEncounters = @"
+obj_time.fast_encounters = 0;
+";
+
+var firstHalfEncounter = $@"
+{firstHalfCurrentEncounter}
+name = 0;
+if (encounter_name == '2') {{
+    name = 'froggit-lv2';
+}} else if (encounter_name == '3') {{
+    name = 'froggit-lv3';
+}} else if (encounter_name == 'W') {{
+    name = 'whim';
+}}
+//filtering out frogskip related ones
+if (name != 0) {{
+    {startSegment("name", true)}
+}}
+";
+
+var firstHalfVictory = $@"
+{firstHalfCurrentEncounter}
+// leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
+if (encounter_name == '2') {{
+    global.xp = 29;
+}}
+// 'F' is the only encounter that by its end we don't have a timer happening
+// for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
+// so it just leaves F for having no reason to stop time here
+if (encounter_name != 'F') {{ 
+    {stopTime}
+}}
+// increment for BOTH the in turn and the whole battle segments 
+obj_time.current_encounter++;
+show_debug_message(obj_time.current_encounter)
+if (obj_time.current_encounter == {firstHalfLength}) {{
+    {disableEncounters}
+    obj_time.stage++;
+}}
+
+// the first one means we have the transition from the leafpile to the right
+if (current_encounter == 1) {{
+    {startSegment("ruins-leafpile-transition")}
+// this one is for any given first half grind transition (but measured in the second one)  
+}} else if (current_encounter == 2) {{
+    {startSegment("ruins-first-transition")}
+}}
+";
 
 
 
@@ -212,18 +259,18 @@ string firstHalfCurrentEncounter = "var encounter_name = obj_time.first_half_enc
 /// Length of the second half encounters array up to elements in the without flee grind
 /// </summary>
 // currently it is just equal to number of unique encounters in the second half
-int noFleeLength = 5;
+var noFleeLength = 5;
 
 /// <summary>
 /// Length of the second half encounters array excluding the last element
 /// </summary>
 // because with fleeing is just one encounter less
-int secondHalfLength = noFleeLength * 2 - 1;
+var secondHalfLength = noFleeLength * 2 - 1;
 
 /// <summary>
 /// GML code that assigns a `var` `encounter_name` the value of the current second half encounter
 /// </summary>
-string secondHalfCurrentEncounter = "var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];";
+var secondHalfCurrentEncounter = "var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];";
 
 /// <summary>
 /// Generate GML code that teleports the player to a room and in a given position inside the room
@@ -274,12 +321,7 @@ string leafpileTp = tpTo(12, 240, 340);
 /// </summary>
 string tpRuinsHallway = tpTo(11, 2400, 80);
 
-/// <summary>
-/// GML code that disables the encounters
-/// </summary>
-string disableEncounters = @"
-obj_time.fast_encounters = 0;
-";
+
 
 /// <summary>
 /// GML code that enables the encounters
@@ -1251,302 +1293,163 @@ class Session {
     }
 }
 
-class GMLFunctions {
-    public static string StartSession = @"
-    obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
-    var file = file_text_open_write('recordings/recording_' + string(obj_time.session_name));
-    file_text_close(file);
-    ";
 
-    public static string StartSegment (string segmentName, bool isVarName = false) {
-        string nameString = isVarName ? segmentName : $"'{segmentName}'";
-        return @$"
-        if (!obj_time.is_timer_running) {{
-            obj_time.is_timer_running = 1;
-            obj_time.time_start = get_timer();
-            obj_time.segment_name = {nameString};
-        }}
-        ";
-    }
-
-    public static string Next = @"
-    obj_time.stage++;
-    ";
-
-    public static string AppendNewTime (string name, string time) {
-    return @$"
-    var file = file_text_open_append('recordings/recording_' + string(obj_time.session_name));
-    file_text_write_string(file, {name} + '=' + string({time}) + ';');
-    file_text_close(file);
-    ";
-}
-
-    public static string StopTime = @$"
-    if (obj_time.is_timer_running) {{
-        obj_time.is_timer_running = 0;
-        {AppendNewTime("obj_time.segment_name", "get_timer() - obj_time.time_start")}
-    }}
-    ";
-
-    public static string TP (int room, int x, int y) {
-        return @$"
-        obj_time.tp_flag = 1;
-        room = {room};
-        obj_time.tp_x = {x};
-        obj_time.tp_y = {y};
-        ";
-    }
-
-    public static string StartDowntime (string downtimeName, int steps) {
-        return @$"
-        if (!obj_time.is_downtime_mode) {{
-            obj_time.is_downtime_mode = 1;
-            obj_time.downtime = 0;
-            obj_time.downtime_start = 0;
-            obj_time.step_count = global.encounter;
-            obj_time.optimal_steps = {steps}
-            obj_time.downtime_name = '{downtimeName}';
-        }}
-        ";
-    }
-
-    public static string EnableEncounters = @"
-    obj_time.fast_encounters = 1;
-    ";
-    
-    public static string DisableEncounters = @"
-    obj_time.fast_encounters = 0;
-    ";
-
-    public static string FirstHalfCurrentEncounter = "var encounter_name = obj_time.first_half_encounters[obj_time.current_encounter];";
-
-    public static string FirstHalfTransition (int encounter) {
-        return @$"
-        {FirstHalfCurrentEncounter}
-        if (current_encounter == {encounter}) {{
-            {StopTime}
-        }}
-        ";
-    }
-
-
-    public static string FirstHalfLength = "6";
-
-    public static string FirstHalfEncounter = $@"
-    {FirstHalfCurrentEncounter}
-    name = 0;
-    if (encounter_name == '2') {{
-        name = 'froggit-lv2';
-    }} else if (encounter_name == '3') {{
-        name = 'froggit-lv3';
-    }} else if (encounter_name == 'W') {{
-        name = 'whim';
-    }}
-    //filtering out frogskip related ones
-    if (name != 0) {{
-        {StartSegment("name", true)}
-    }}
-    ";
-
-    public static string FirstHalfVictory = $@"
-    {FirstHalfCurrentEncounter}
-    // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
-    if (encounter_name == '2') {{
-        global.xp = 29;
-    }}
-    // 'F' is the only encounter that by its end we don't have a timer happening
-    // for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
-    // so it just leaves F for having no reason to stop time here
-    if (encounter_name != 'F') {{ 
-        {StopTime}
-    }}
-    // increment for BOTH the in turn and the whole battle segments 
-    obj_time.current_encounter++;
-    show_debug_message(obj_time.current_encounter)
-    show_debug_message({FirstHalfLength})
-    if (obj_time.current_encounter == {FirstHalfLength}) {{
-        {DisableEncounters}
-        obj_time.stage++
-    }}
-
-    // the first one means we have the transition from the leafpile to the right
-    if (current_encounter == 1) {{
-        {StartSegment("ruins-leafpile-transition")}
-    // this one is for any given first half grind transition (but measured in the second one)  
-    }} else if (current_encounter == 2) {{
-        {StartSegment("ruins-first-transition")}
-    }}
-    ";
-
-    public static string RigFirstHalf = $@"
-    {FirstHalfCurrentEncounter}
-    // only 'A' is not rigged
-    if (encounter_name != 'A') {{
-        // default to froggit, since it's the most probable
-        var to_battle = 4;
-        if (encounter_name == 'W') {{
-            // whimsun battlegroup
-            to_battle = 5;
-        }}
-        global.battlegroup = to_battle;
-    }}
-    ";
-
-    public static string UnrigFrogskip = $@"
-    {FirstHalfCurrentEncounter}
-    if (encounter_name == 'N') {{
-        use_frogskip = 0;
-    }}
-    ";
-
-    public static string TimeFrogTurn = $@"
-    {FirstHalfCurrentEncounter}
-    var name = 0;
-    switch (encounter_name) {{
-        case 'F':
-            name = 'frogskip';
-            break;
-        case 'N':
-            name = 'not-frogskip';
-            break;
-    }}
-    if (name != 0) {{
-        {StartSegment("name", true)}
-    }}
-    ";
-
-    public static string EndFrogTime = $@"
-    {FirstHalfCurrentEncounter}
-    if (encounter_name == 'F' || encounter_name == 'N') {{
-        {StopTime}
-    }}
-    ";
-
-    public static string TimeYouWon = @$"
-    {FirstHalfCurrentEncounter}
-    // for 'A', we are starting time for the LV up text
-    if (encounter_name == 'A') {{
-        {StartSegment("lv-up")}
-    }} else if (encounter_name == 'N') {{
-        // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
-        {StartSegment("you-won")}
-    }}
-    ";
-
-    public static string RigWhimsun = @$"
-    global.battlegroup = 5;
-    ";
-
-    public static string SecondHalfTransition = @$"
-    if (current_encounter == 1 || current_encounter == 2) {{
-        {StopTime}
-    }}
-    ";
-
-    public static string SecondHalfCurrentEncounter = "var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];";
-
-    public static string SecondHalfEncounter (bool isFleeGrind) {
-        int gmlBool = isFleeGrind ? 1 : 0;
-        return @$"
-        {SecondHalfCurrentEncounter}
-        var name = 0;
-        if (encounter_name == 'W') {{
-            name = 'frog-whim';
-        }} else if (encounter_name == 'F') {{
-            name = 'dbl-frog';
-        }} else if (encounter_name == 'A') {{
-            name = 'sgl-mold';
-        }} else if (encounter_name == 'B') {{
-            name = 'dbl-mold';
-        }} else if (encounter_name == 'C') {{
-            name = 'tpl-mold';
-        }}
-        if ({gmlBool}) {{
-            name += '-19';
-        }}
-        {StartSegment("name", true)}
-        ";
-    }
-
-    public static string NoFleeLength = "5";
-
-    public static string SecondHalfLength = (Int32.Parse(NoFleeLength) * 2 - 1).ToString();
-
-    public static string SecondHalfVictory = @$"
-    {StopTime}
-    // last ones so we TP for explanation
-    obj_time.current_encounter++;
-    if (obj_time.current_encounter == {NoFleeLength} || obj_time.current_encounter == {SecondHalfLength}) {{
-        {TP(18, 40, 110)}
-        obj_time.stage++;
-    }}
-
-    // first one means we are coming from the incomplete transition from three rock
-    if (current_encounter == 1) {{
-        {StartSegment("three-rock-transition")}
-    // second one for measuring the condition that happens for any given one
-    }} else if (current_encounter == 2) {{
-        {StartSegment("ruins-second-transition")}
-    }}
-    ";
-
-    public static string SecondHalfRig = @$"
-    {SecondHalfCurrentEncounter}
+var rigFirstHalf = $@"
+{firstHalfCurrentEncounter}
+// only 'A' is not rigged
+if (encounter_name != 'A') {{
+    // default to froggit, since it's the most probable
+    var to_battle = 4;
     if (encounter_name == 'W') {{
-        global.battlegroup = 6;
+        // whimsun battlegroup
+        to_battle = 5;
+    }}
+    global.battlegroup = to_battle;
+}}
+";
+
+var unrigFrogskip = $@"
+{firstHalfCurrentEncounter}
+if (encounter_name == 'N') {{
+    use_frogskip = 0;
+}}
+";
+
+var timeFrogTurn = $@"
+{firstHalfCurrentEncounter}
+var name = 0;
+switch (encounter_name) {{
+    case 'F':
+        name = 'frogskip';
+        break;
+    case 'N':
+        name = 'not-frogskip';
+        break;
+}}
+if (name != 0) {{
+    {startSegment("name", true)}
+}}
+";
+
+string endFrogTime = $@"
+{firstHalfCurrentEncounter}
+if (encounter_name == 'F' || encounter_name == 'N') {{
+    {stopTime}
+}}
+";
+
+var timeYouWon = @$"
+{firstHalfCurrentEncounter}
+// for 'A', we are starting time for the LV up text
+if (encounter_name == 'A') {{
+    {startSegment("lv-up")}
+}} else if (encounter_name == 'N') {{
+    // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
+    {startSegment("you-won")}
+}}
+";
+
+var rigWhimsun = @$"
+global.battlegroup = 5;
+";
+
+var secondHalfTransition = @$"
+if (current_encounter == 1 || current_encounter == 2) {{
+    {stopTime}
+}}
+";
+
+
+string secondHalfEncounter (bool isFleeGrind) {
+    int gmlBool = isFleeGrind ? 1 : 0;
+    return @$"
+    {secondHalfCurrentEncounter}
+    var name = 0;
+    if (encounter_name == 'W') {{
+        name = 'frog-whim';
     }} else if (encounter_name == 'F') {{
-        global.battlegroup = 9;
+        name = 'dbl-frog';
     }} else if (encounter_name == 'A') {{
-        global.battlegroup = 7;
+        name = 'sgl-mold';
     }} else if (encounter_name == 'B') {{
-        global.battlegroup = 10;
+        name = 'dbl-mold';
     }} else if (encounter_name == 'C') {{
-        global.battlegroup = 8;
+        name = 'tpl-mold';
     }}
-    ";
-
-    public static string MaxRuinsKills = @$"
-    global.flag[202] = 20;
-    ";
-
-    public static string RigTripleMold = @$"
-    global.battlegroup = 8;
-    ";
-
-    public static string RuinsNobodyCame = @$"
-    if (obj_time.nobody_came == 0) {{
-        {StartSegment("ruins-switches")}
-    }} else if (obj_time.nobody_came == 1) {{
-        {StartSegment("perspective-a")}
-    }} else if (obj_time.nobody_came == 2) {{
-        {StartSegment("perspective-b")}
-    }} else if (obj_time.nobody_came == 3) {{
-        {StartSegment("perspective-c")}
-    }} else if (obj_time.nobody_came == 4) {{
-        {StartSegment("perspective-d")}
-    }} else {{
-        {StartSegment("ruins-end")}
-        obj_time.stage++;
+    if ({gmlBool}) {{
+        name += '-19';
     }}
-    obj_time.nobody_came++;
-    ";
-
-
-    public static string StopDowntime = @$"
-    // in case the downtime ends during a downtime, must not lose the time being counted
-    if (obj_time.is_downtime_mode) {{
-        if (obj_time.is_downtime_running) {{
-            obj_time.downtime += get_timer() + obj_time.downtime_start
-        }}
-        obj_time.is_downtime_mode = 0;
-        {AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
-    }}
-    ";
-
-    public static string SecondHalfSetup = @$"
-    obj_time.current_encounter = 0;
+    {startSegment("name", true)}
     ";
 }
+
+
+
+var secondHalfVictory = @$"
+{stopTime}
+// last ones so we TP for explanation
+obj_time.current_encounter++;
+if (obj_time.current_encounter == {noFleeLength} || obj_time.current_encounter == {secondHalfLength}) {{
+    {tpTo(18, 40, 110)}
+    obj_time.stage++;
+}}
+
+// first one means we are coming from the incomplete transition from three rock
+if (current_encounter == 1) {{
+    {startSegment("three-rock-transition")}
+// second one for measuring the condition that happens for any given one
+}} else if (current_encounter == 2) {{
+    {startSegment("ruins-second-transition")}
+}}
+";
+
+var secondHalfRig = @$"
+{secondHalfCurrentEncounter}
+if (encounter_name == 'W') {{
+    global.battlegroup = 6;
+}} else if (encounter_name == 'F') {{
+    global.battlegroup = 9;
+}} else if (encounter_name == 'A') {{
+    global.battlegroup = 7;
+}} else if (encounter_name == 'B') {{
+    global.battlegroup = 10;
+}} else if (encounter_name == 'C') {{
+    global.battlegroup = 8;
+}}
+";
+
+var maxRuinsKills = @$"
+global.flag[202] = 20;
+";
+
+var rigTripleMold = @$"
+global.battlegroup = 8;
+";
+
+var nobodyCameSegments = @$"
+if (obj_time.nobody_came == 0) {{
+    {startSegment("ruins-switches")}
+}} else if (obj_time.nobody_came == 1) {{
+    {startSegment("perspective-a")}
+}} else if (obj_time.nobody_came == 2) {{
+    {startSegment("perspective-b")}
+}} else if (obj_time.nobody_came == 3) {{
+    {startSegment("perspective-c")}
+}} else if (obj_time.nobody_came == 4) {{
+    {startSegment("perspective-d")}
+}} else {{
+    {startSegment("ruins-end")}
+    obj_time.stage++;
+}}
+obj_time.nobody_came++;
+";
+
+
+
+
+var secondHalfSetup = @$"
+obj_time.current_encounter = 0;
+";
 
 class Callback {
     public string GMLCode;
@@ -1571,9 +1474,9 @@ var offline = new Stage(
     new Listener(
         new PickName(),
         new Callback(
-            GMLFunctions.StartSession,
-            GMLFunctions.StartSegment("ruins-start"),
-            GMLFunctions.Next
+            startSession,
+            startSegment("ruins-start"),
+            next
         )
     )
 );
@@ -1582,14 +1485,14 @@ var ruinsStart = new Stage(
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.StopTime
+            stopTime
         )
     ),
     new Listener(
         new EnterBattle(3),
         new Callback(
-            GMLFunctions.StartSegment("ruins-hallway"),
-            GMLFunctions.Next
+            startSegment("ruins-hallway"),
+            next
         )
     )
 );
@@ -1598,9 +1501,9 @@ var ruinsHallway = new Stage(
     new Listener(
         new RoomTransition(11, 12),
         new Callback(
-            GMLFunctions.StopTime,
-            GMLFunctions.Next,
-            GMLFunctions.TP(11, 2400, 80)
+            stopTime,
+            next,
+            tpTo(11, 2400, 80)
         )
     )
 );
@@ -1609,8 +1512,8 @@ var preLeafPile = new Stage(
     new Listener(
         new RoomTransition(11, 12),
         new Callback(
-            GMLFunctions.StartDowntime("ruins-leafpile", 97),
-            GMLFunctions.Next
+            startDowntime("ruins-leafpile", 97),
+            next
         )
     )
 );
@@ -1619,9 +1522,9 @@ var leafPileDowntime = new Stage(
     new Listener(
         new Door("C", 12),
         new Callback(
-            GMLFunctions.StopDowntime,
-            GMLFunctions.EnableEncounters,
-            GMLFunctions.Next
+            stopDowntime,
+            enableEncounters,
+            next
         )
     )
 );
@@ -1630,13 +1533,13 @@ var preFirstGrind = new Stage(
     new Listener(
         new Room(14),
         new Callback(
-            GMLFunctions.TP(12, 180, 260)
+            tpTo(12, 180, 260)
         )
     ),
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.Next
+            next
         )
     )
 );
@@ -1645,55 +1548,56 @@ var inFirstGrind = new Stage(
     new Listener(
         new RoomTransition(12, 14),
         new Callback(
-            GMLFunctions.FirstHalfTransition(1)
+            firstHalfTransition(1)
         )
     ),
     new Listener(
         new RoomTransition(14, 12),
         new Callback(
-            GMLFunctions.FirstHalfTransition(2)
+            firstHalfTransition(2)
         )
     ),
     new Listener(
         new EnterBattle(),
         new Callback(
-            GMLFunctions.FirstHalfEncounter
+            firstHalfEncounter
         )
     ),
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.FirstHalfVictory
+            firstHalfVictory
         )
     ),
     new Listener(
         new BeforeBattle(),
         new Callback(
-            GMLFunctions.RigFirstHalf
+            rigFirstHalf
         )
     ),
     new Listener(
         new FroggitAttack(),
         new Callback(
-            GMLFunctions.TimeFrogTurn
+            timeFrogTurn
         )
     ),
     new Listener(
         new FroggitTurnStart(),
         new Callback(
-            GMLFunctions.TimeFrogTurn
+            unrigFrogskip,
+            timeFrogTurn
         )
     ),
     new Listener(
         new FroggitTurnEnd(),
         new Callback(
-            GMLFunctions.EndFrogTime
+            endFrogTime
         )
     ),
     new Listener(
         new YouWon(),
         new Callback(
-            GMLFunctions.TimeYouWon
+            timeYouWon
         )
     )
 );
@@ -1702,14 +1606,14 @@ var postFirstGrind = new Stage(
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.TP(12, 240, 340)
+            tpTo(12, 240, 340)
         )
     ),
     new Listener(
         new RoomTransition(12, 14),
         new Callback(
-            GMLFunctions.StartDowntime("ruins-leaf-fall", 1000),
-            GMLFunctions.Next
+            startDowntime("ruins-leaf-fall", 1000),
+            next
         )
     )
 );
@@ -1718,9 +1622,9 @@ var leafFallDowntime = new Stage(
     new Listener(
         new Door("A", 14),
         new Callback(
-            GMLFunctions.StopDowntime,
-            GMLFunctions.EnableEncounters,
-            GMLFunctions.Next
+            stopDowntime,
+            enableEncounters,
+            next
         )
     )
 );
@@ -1729,13 +1633,13 @@ var preFalLEncounter = new Stage(
     new Listener(
         new Room(15),
         new Callback(
-            GMLFunctions.TP(14, 210, 100)
+            tpTo(14, 210, 100)
         )
     ),
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.Next
+            next
         )
     )
 );
@@ -1744,14 +1648,14 @@ var inFalLEncounter = new Stage(
     new Listener(
         new BeforeBattle(),
         new Callback(
-            GMLFunctions.RigWhimsun
+            rigWhimsun
         )
     ),
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.StartSegment("leaf-fall-transition"),
-            GMLFunctions.Next
+            startSegment("leaf-fall-transition"),
+            next
         )
     )
 );
@@ -1760,10 +1664,10 @@ var leafFallTransition = new Stage(
     new Listener(
         new RoomTransition(14, 15),
         new Callback(
-            GMLFunctions.StopTime,
-            GMLFunctions.DisableEncounters,
-            GMLFunctions.TP(14, 200, 80),
-            GMLFunctions.Next
+            stopTime,
+            disableEncounters,
+            tpTo(14, 200, 80),
+            next
         )
     )
 );
@@ -1772,8 +1676,8 @@ var preOneRock = new Stage(
     new Listener(
         new RoomTransition(14, 15),
         new Callback(
-            GMLFunctions.StartDowntime("ruins-one-rock", 10000),
-            GMLFunctions.Next
+            startDowntime("ruins-one-rock", 10000),
+            next
         )
     )
 );
@@ -1782,9 +1686,9 @@ var oneRockDowntime = new Stage(
     new Listener(
         new Door("A", 15),
         new Callback(
-            GMLFunctions.StopDowntime,
-            GMLFunctions.EnableEncounters,
-            GMLFunctions.Next
+            stopDowntime,
+            enableEncounters,
+            next
         )
     )
 );
@@ -1793,13 +1697,13 @@ var preLeafMaze = new Stage(
     new Listener(
         new Room(16),
         new Callback(
-            GMLFunctions.TP(15, 340, 100)
+            tpTo(15, 340, 100)
         )
     ),
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.Next
+            next
         )
     )
 );
@@ -1808,15 +1712,15 @@ var oneRockEncounter = new Stage(
     new Listener(
         new BeforeBattle(),
         new Callback(
-            GMLFunctions.RigWhimsun
+            rigWhimsun
         )
     ),
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.DisableEncounters,
-            GMLFunctions.StartSegment("ruins-maze"),
-            GMLFunctions.Next
+            disableEncounters,
+            startSegment("ruins-maze"),
+            next
         )
     )
 );
@@ -1825,10 +1729,10 @@ var inLeafMaze = new Stage(
     new Listener(
         new RoomTransition(16, 17),
         new Callback(
-            GMLFunctions.StopTime,
-            GMLFunctions.DisableEncounters,
-            GMLFunctions.TP(16, 520, 220),
-            GMLFunctions.Next
+            stopTime,
+            disableEncounters,
+            tpTo(16, 520, 220),
+            next
         )
     )
 );
@@ -1837,8 +1741,8 @@ var preThreeRock = new Stage(
     new Listener(
         new RoomTransition(16, 17),
         new Callback(
-            GMLFunctions.StartDowntime("ruins-three-rock", 10000),
-            GMLFunctions.Next
+            startDowntime("ruins-three-rock", 10000),
+            next
         )
     )
 );
@@ -1847,9 +1751,9 @@ var threeRockDowntime = new Stage(
     new Listener(
         new Door("A", 17),
         new Callback(
-            GMLFunctions.StopDowntime,
-            GMLFunctions.EnableEncounters,
-            GMLFunctions.Next
+            stopDowntime,
+            enableEncounters,
+            next
         )
     )
 );
@@ -1858,14 +1762,14 @@ var preSecondGrind = new Stage(
     new Listener(
         new Room(18),
         new Callback(
-            GMLFunctions.TP(17, 430, 110)
+            tpTo(17, 430, 110)
         )
     ),
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.SecondHalfSetup,
-            GMLFunctions.Next
+            secondHalfSetup,
+            next
         )
     )
 );
@@ -1874,25 +1778,25 @@ var inSecondGrind = new Stage(
     new Listener(
         new RoomTransition(18, 17),
         new Callback(
-            GMLFunctions.SecondHalfTransition
+            secondHalfTransition
         )
     ),
     new Listener(
         new BeforeBattle(),
         new Callback(
-            GMLFunctions.SecondHalfRig
+            secondHalfRig
         )
     ),
     new Listener(
         new EnterBattle(),
         new Callback(
-            GMLFunctions.SecondHalfEncounter(false)
+            secondHalfEncounter(false)
         )
     ),
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.SecondHalfVictory
+            secondHalfVictory
         )
     )
 );
@@ -1901,7 +1805,7 @@ var preFleeGrind = new Stage(
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.Next
+            next
         )
     )
 );
@@ -1910,19 +1814,19 @@ var inFleeGrind = new Stage(
     new Listener(
         new BeforeBattle(),
         new Callback(
-            GMLFunctions.SecondHalfRig
+            secondHalfRig
         )
     ),
     new Listener(
         new EnterBattle(),
         new Callback(
-            GMLFunctions.SecondHalfEncounter(true)
+            secondHalfEncounter(true)
         )
     ),
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.SecondHalfVictory
+            secondHalfVictory
         )
     )
 );
@@ -1931,7 +1835,7 @@ var preTripleMold = new Stage(
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.Next
+            next
         )
     )
 );
@@ -1940,22 +1844,22 @@ var inTripleMold = new Stage(
     new Listener(
         new BeforeBattle(),
         new Callback(
-            GMLFunctions.RigTripleMold
+            rigTripleMold
         )
     ),
     new Listener(
         new EnterBattle(),
         new Callback(
-            GMLFunctions.StartSegment("tpl-mold-18")
+            startSegment("tpl-mold-18")
         )
     ),
     new Listener(
         new LeaveBattle(),
         new Callback(
-            GMLFunctions.StopTime,
-            GMLFunctions.TP(17, 500, 110),
-            GMLFunctions.MaxRuinsKills,
-            GMLFunctions.Next
+            stopTime,
+            tpTo(17, 500, 110),
+            maxRuinsKills,
+            next
         )
     )
 );
@@ -1964,8 +1868,8 @@ var ruinsPreEnd = new Stage(
     new Listener(
         new Door("A", 17),
         new Callback(
-            GMLFunctions.StartSegment("ruins-napsta"),
-            GMLFunctions.Next
+            startSegment("ruins-napsta"),
+            next
         )
     )
 );
@@ -1974,13 +1878,13 @@ var ruinsNobodyCame = new Stage(
     new Listener(
         new Blcon(),
         new Callback(
-            GMLFunctions.StopTime
+            stopTime
         )
     ),
     new Listener(
         new EnterBattle(),
         new Callback(
-            GMLFunctions.RuinsNobodyCame
+            nobodyCameSegments
         )
     )
 );
@@ -1989,8 +1893,8 @@ var ruinsEnd = new Stage(
     new Listener(
         new Door("Amusic", 41),
         new Callback(
-            GMLFunctions.StopTime,
-            GMLFunctions.Next
+            stopTime,
+            next
         )
     )
 );
@@ -2201,7 +2105,7 @@ roomCode.Add(
     ");
 // }/
 
-
+Console.WriteLine(generateIfElseBlock(roomCode));
 
 append(step, generateIfElseBlock(roomCode));
 append(step, generateIfElseBlock(staticRoomCode));
