@@ -671,10 +671,22 @@ EVENT CLASSES
 /// </summary>
 abstract class UndertaleEvent {
     /// <summary>
-    /// Must return a unique string for the current event and its arguments
+    /// Must return a unique string with its arguments comma separated
     /// </summary>
     /// <returns></returns>
-    public abstract string EventId ();
+    public abstract string EventArgs ();
+
+    public string EventId () {
+        var type = this.GetType().Name;
+        var args = EventArgs();
+        return args == "" ? type : $"{type},{args}";
+    }
+}
+
+abstract class UniqueEvent : UndertaleEvent {
+    public override string EventArgs () {
+        return "";
+    }
 }
 
 /// <summary>
@@ -701,20 +713,12 @@ enum EventName {
 /// <summary>
 /// Event for picking the name
 /// </summary>
-class PickName : UndertaleEvent {
-    public override string EventId () {
-        return EventName.PickName.ToString();
-    }
-}
+class PickName : UniqueEvent {}
 
 /// <summary>
 /// Event for when the blcon shows up in the screen
 /// </summary>
-class Blcon : UndertaleEvent {
-    public override string EventId () {
-        return EventName.Blcon.ToString();
-    }
-}
+class Blcon : UniqueEvent {}
 
 /// <summary>
 /// Event for when a battle starts
@@ -740,9 +744,8 @@ class EnterBattle : UndertaleEvent {
         Battlegroup = battlegroup;
     }
 
-    public override string EventId () {
-        string group = Battlegroup > -1 ? $",{Battlegroup.ToString()}" : "";
-        return $"{EventName.EnterBattle}{group}";
+    public override string EventArgs () {
+        return Battlegroup > -1 ? Battlegroup.ToString() : "";
     }
 }
 
@@ -770,8 +773,8 @@ class RoomTransition : UndertaleEvent {
         CurrentRoom = cur;
     }
 
-    public override string EventId () {
-        return $"{EventName.RoomTransition},{PreviousRoom},{CurrentRoom}";
+    public override string EventArgs () {
+        return $"{PreviousRoom},{CurrentRoom}";
     }
 }
 
@@ -792,64 +795,40 @@ class Room : UndertaleEvent {
         RoomId = room;
     }
 
-    public override string EventId () {
-        return $"{EventName.Room},{RoomId}";
+    public override string EventArgs () {
+        return RoomId.ToString();
     }
 }
 
 /// <summary>
 /// Event for leaving a battle
 /// </summary>
-class LeaveBattle : UndertaleEvent {
-    public override string EventId () {
-        return EventName.LeaveBattle.ToString();
-    }
-}
+class LeaveBattle : UniqueEvent {}
 
 /// <summary>
 /// Event for before entering a battle
 /// </summary>
-class BeforeBattle : UndertaleEvent {
-    public override string EventId () {
-        return EventName.BeforeBattle.ToString();
-    }
-}
+class BeforeBattle : UniqueEvent {}
 
 /// <summary>
 /// Event for when Froggit's attack is decided
 /// </summary>
-class FroggitAttack : UndertaleEvent {
-    public override string EventId () {
-        return EventName.FroggitAttack.ToString();
-    }
-}
+class FroggitAttack : UniqueEvent {}
 
 /// <summary>
 /// Event for when Froggit's turn ends
 /// </summary>
-class FroggitTurnEnd : UndertaleEvent {
-    public override string EventId () {
-        return EventName.FroggitTurnEnd.ToString();
-    }
-}
+class FroggitTurnEnd : UniqueEvent {}
 
 /// <summary>
 /// Event for when Froggit's turn starts
 /// </summary>
-class FroggitTurnStart : UndertaleEvent {
-    public override string EventId () {
-        return EventName.FroggitTurnStart.ToString();
-    }
-}
+class FroggitTurnStart : UniqueEvent {}
 
 /// <summary>
 /// Event for when the "YOU WON" message in battle begins
 /// </summary>
-class YouWon : UndertaleEvent {
-    public override string EventId () {
-        return EventName.YouWon.ToString();
-    }
-}
+class YouWon : UniqueEvent {}
 
 /// <summary>
 /// Event for when a door is touched
@@ -875,8 +854,8 @@ class Door : UndertaleEvent {
         Room = room;
     }
 
-    public override string EventId () {
-        return $"{EventName.Door},{Name},{Room}";
+    public override string EventArgs () {
+        return $"{Name},{Room}";
     }
 }
 
@@ -1917,34 +1896,34 @@ foreach (string eventId in events.Keys) {
     }
     string eventCode = generateIfElseBlock(stageCodeBlocks);
 
-    bool isEvent (EventName eventName) {
+    bool isEvent<Type> () {
         var split = splitString(eventId);
-        return split[0] == eventName.ToString();
+        return split[0] == typeof(Type).Name;
     }
 
-    if (isEvent(EventName.PickName)) {
+    if (isEvent<PickName>()) {
         placeInIf(naming, "naming = 4", eventCode);
-    } else if (isEvent(EventName.Blcon)) {
+    } else if (isEvent<Blcon>()) {
         append(blcon, eventCode);
-    } else if (isEvent(EventName.EnterBattle)) {
+    } else if (isEvent<EnterBattle>()) {
         enterBattles[eventId] = eventCode;
-    } else if (isEvent(EventName.LeaveBattle)) {
+    } else if (isEvent<LeaveBattle>()) {
         leaveBattle = eventCode;
-    } else if (isEvent(EventName.RoomTransition)) {
+    } else if (isEvent<RoomTransition>()) {
         roomTransitions[eventId] = eventCode;
-    } else if (isEvent(EventName.Door)) {
+    } else if (isEvent<Door>()) {
         doorTouches[eventId] = eventCode;
-    } else if (isEvent(EventName.Room)) {
+    } else if (isEvent<Room>()) {
         roomPresent[eventId] = eventCode;
-    } else if (isEvent(EventName.BeforeBattle)) {
+    } else if (isEvent<BeforeBattle>()) {
         place(blconAlarm, "battle = 1", eventCode);
-    } else if (isEvent(EventName.FroggitAttack)) {
+    } else if (isEvent<FroggitAttack>()) {
         place(froggitAlarm, "use_frogskip = 1", eventCode);
-    } else if (isEvent(EventName.FroggitTurnStart)) {
+    } else if (isEvent<FroggitTurnStart>()) {
         place(froggitStep, "if (global.mnfight == 2)\n{", eventCode);
-    } else if (isEvent(EventName.FroggitTurnEnd)) {
+    } else if (isEvent<FroggitTurnEnd>()) {
         placeInIf(froggitStep, "attacked = 0", eventCode);
-    } else if (isEvent(EventName.YouWon)) {
+    } else if (isEvent<YouWon>()) {
         place(battlecontrol, "earned \"", eventCode);
     }
 }
@@ -1983,6 +1962,8 @@ foreach (string roomEvent in roomTransitions.Keys) {
 List<string> withBattlegroup = new List<string>();
 string battlegroupless = "";
 foreach (string battle in enterBattles.Keys) {
+    Console.WriteLine("BVATTTTLEEEE!!!!");
+    Console.WriteLine(battle);
     string[] args = splitString(battle);
     if (args.Length == 1) {
         battlegroupless = enterBattles[battle];
