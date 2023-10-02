@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 /******
@@ -1011,7 +1008,7 @@ class BeforeBattle : UniqueEvent {
 class FroggitAttack : UniqueEvent {
     public override PlaceMethod Method => PlaceMethod.Place;
 
-    public override string Replacement => "use_frogskip = 0";
+    public override string Replacement => "use_frogskip = 1";
 
     public override string CodeEntry() {
         return CodeEntryClass.froggitAlarm;
@@ -1386,13 +1383,12 @@ var inFirstGrind = new GrindStage(
     new Listener(
         new FroggitAttack(),
         new Callback(
-            timeFrogTurn
+            unrigFrogskip
         )
     ),
     new Listener(
         new FroggitTurnStart(),
         new Callback(
-            unrigFrogskip,
             timeFrogTurn
         )
     ),
