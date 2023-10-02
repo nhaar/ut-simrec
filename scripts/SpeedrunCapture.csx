@@ -151,10 +151,20 @@ string randomPopulateArray (string arr, params string[] elements) {
     return code;
 }
 
+/// <summary>
+/// Generate GML code from joinining a list of if statements to create an if-else block
+/// </summary>
+/// <param name="ifBlocks">All if statements</param>
+/// <returns></returns>
 string generateIfElseBlock (List<string> ifBlocks) {
     return generateIfElseBlock(ifBlocks.ToArray());
 }
 
+/// <summary>
+/// Generate GML code from joinining an array of if statements to create an if-else block
+/// </summary>
+/// <param name="ifBlocks">All if statements</param>
+/// <returns></returns>
 string generateIfElseBlock (string[] ifBlocks) {
     string code = "";
     bool isFirst = true;
@@ -168,7 +178,7 @@ string generateIfElseBlock (string[] ifBlocks) {
 }
 
 /// <summary>
-/// Generate GMl code that appends the time for a segment/downtime to the end of the current session's file
+/// Generate GML code that appends the time for a segment/downtime to the end of the current session's file
 /// </summary>
 /// <param name="name">Name for the segment/downtime</param>
 /// <param name="time">String containing the total time obtained (in microseconds)</param>
@@ -193,8 +203,7 @@ file_text_close(file);
 /// <summary>
 /// Generate GML code that starts the segment timer
 /// </summary>
-/// <param name="name">Name of the segment</param>
-/// <param name="stage">Stage to update to, or `-1` to not update the stage</param>
+/// <param name="segmentName">Name of the segment</param>
 /// <param name="isVarName">
 /// Should be set to `true` if the `name` param should be interpreted as being a GML variable name
 /// and to `false` if it should be interpreted as being a GML string literal
@@ -211,6 +220,9 @@ string startSegment (string segmentName, bool isVarName = false) {
     ";
 }
 
+/// <summary>
+/// GML code that advances the stage
+/// </summary>
 var next = @"
 obj_time.stage++;
 ";
@@ -218,11 +230,13 @@ obj_time.stage++;
 /// <summary>
 /// Generate GML code that starts the downtime mode
 /// </summary>
-/// <param name="name">Name of the downtime</param>
-/// <param name="steps">Number of optimal steps to complete downtime</param>
-/// <param name="stage">Value to set the stage to, or `-1` if the stage should not be changed</param>
+/// <param name="downtimeName">Name of the downtime</param>
+/// <param name="steps">
+/// Number of optimal steps to complete downtime. If not given, an arbitrarily high
+/// number will be given assuming it is not important
+/// </param>
 /// <returns></returns>
-string startDowntime (string downtimeName, int steps) {
+string startDowntime (string downtimeName, int steps = 10000) {
     return @$"
     if (!obj_time.is_downtime_mode) {{
         obj_time.is_downtime_mode = 1;
@@ -1209,7 +1223,7 @@ and simply cross it (don't grind)
     new Listener(
         new RoomTransition(12, 14),
         new Callback(
-            startDowntime("ruins-leaf-fall", 1000),
+            startDowntime("ruins-leaf-fall"),
             next
         )
     )
@@ -1284,7 +1298,7 @@ at the end
     new Listener(
         new RoomTransition(14, 15),
         new Callback(
-            startDowntime("ruins-one-rock", 10000),
+            startDowntime("ruins-one-rock"),
             next
         )
     )
@@ -1360,7 +1374,7 @@ at the end
     new Listener(
         new RoomTransition(16, 17),
         new Callback(
-            startDowntime("ruins-three-rock", 10000),
+            startDowntime("ruins-three-rock"),
             next
         )
     )
