@@ -2,7 +2,14 @@
 helper variables and functions
 ******/
 
-// code entries
+/*
+CODE ENTRIES
+*/
+
+// will be using obj_time for the API of the mod
+var create = "gml_Object_obj_time_Create_0";
+var step = "gml_Object_obj_time_Step_1";
+var draw = "gml_Object_obj_time_Draw_64";
 
 var blcon = "gml_Object_obj_battleblcon_Create_0";
 
@@ -28,6 +35,10 @@ var froggitAlarm = "gml_Object_obj_froggit_Alarm_6";
 var doorA = "gml_Object_obj_doorA_Other_19";
 var doorAmusic = "gml_Object_obj_doorAmusicfade_Other_19";
 var doorC = "gml_Object_obj_doorC_Other_19";
+
+/*
+UNDERTALE CODE MANIPULATION
+*/
 
 /// <summary>
 /// Append GML to the end of a code entry
@@ -67,6 +78,10 @@ void placeInIf (string codeName, string preceding, string placement) {
     ");
 }
 
+/*
+GML GENERATING/MANIPULATION/ETC.
+*/
+
 /// <summary>
 /// Generate GML code that (assuming it exists) finds the first index in an array that contains only `0`
 /// and assigns it a value
@@ -88,6 +103,23 @@ string assignNonTakenIndex (string arr, string index, string value) {
     }}
     {arrAccess} = {value};
     ";
+}
+
+
+string generateIfElseBlock (List<string> ifBlocks) {
+    return generateIfElseBlock(ifBlocks.ToArray());
+}
+
+string generateIfElseBlock (string[] ifBlocks) {
+    string code = "";
+    bool isFirst = true;
+    for (int i = 0; i < ifBlocks.Length; i++) {
+        if (isFirst) {
+            isFirst = false;
+        } else code += "else";
+        code += ifBlocks[i];
+    }
+    return code;
 }
 
 /// <summary>
@@ -342,11 +374,6 @@ if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale") {
     ScriptError("Error 0: Script must be used in Undertale");
 }
 
-// will be using obj_time for the API of the mod
-var create = "gml_Object_obj_time_Create_0";
-var step = "gml_Object_obj_time_Step_1";
-var draw = "gml_Object_obj_time_Draw_64";
-
 // code for specific game manipulation
 
 
@@ -554,515 +581,9 @@ if (use_frogskip) {{
 
 // // STEP CHECKS (every frame)
 
-// // helper dictionary that keeps all messages and is used to be iterated later
-// Dictionary<int, string> messages = new Dictionary<int, string> {
-//     { (int)Stages.Offline, @"
-// RECORDING SESSION WAITING TO START
-// To start it, begin a normal run,
-// and keep playing until the mod stops you
-//     " },
-//     { (int)Stages.Start, @"
-// PROCEED
-//     " },
-//     { (int)Stages.Hallway, @"
-// PROCEED
-//     " },
-//     { (int)Stages.PreLeafPile, @"
-// Next, walk through the next room
-// as quickly as possible
-//     " },
-//     { (int)Stages.LeafPileDowntime, @"
-// WALK
-//     " },
-//     { (int)Stages.PreFirstGrind, @"
-// Now, grind and encounter at the end of
-// the room and continue grinding as if you were
-// in a normal run
-//     " },
-//     { (int)Stages.InFirstGrind, @"
-// GRIND
-//     " },
-//     { (int)Stages.PostFirstGrind, @"
-// Now, walk to the right room
-// and simply cross it (don't grind)
-//     " },
-//     { (int)Stages.LeafFallDowntime, @"
-// WALK
-//     " },
-//     { (int)Stages.PreFallEncounter, @"
-// Now, grind an encounter at
-// the end of this room and proceed as if it
-// were a normal run until you are stopped
-//     " },
-//     { (int)Stages.InFallEncounter, @"
-// PROCEED
-//     " },
-//     { (int)Stages.LeafFallTransition, @"
-// PROCEED
-//     " },
-//     { (int)Stages.PreOneRock, @"
-// Now, go through the next room
-// from beginning to end as if it was a
-// normal run but without grinding an encounter
-// at the end
-//     " },
-//     { (int)Stages.OneRockDowntime, @"
-// WALK
-//     " },
-//     { (int)Stages.PreLeafMaze, @"
-// Now grind at the
-// end of the room, and proceed as a normal
-// run until you are stopped
-//     " },
-//     { (int)Stages.OneRockEncounter, @"
-// PROCEED
-//     " },
-//     { (int)Stages.InLeafMaze, @"
-// PROCEED
-//     " },
-//     { (int)Stages.PreThreeRock, @"
-// Now, go through the next
-// room from begining to end as if it was
-// a normal run but without grinding an encounter
-// at the end
-//     " },
-//     { (int)Stages.ThreeRockDowntime, @"
-// WALK
-//     " },
-//     { (int)Stages.PreSecondGrind, @"
-// Now, grind an
-// encounter at the end of the room,
-// and proceed grinding and killing
-// encounters until you are stopped
-// Grind as you would in a normal
-// run
-//     " },
-//     { (int)Stages.InSecondGrind, @"
-// GRIND
-//     " },
-//     { (int)Stages.PreFleeGrind, @"
-// Now, continue grinding
-// just the same, but as if you had 19 kills,
-// that is, flee after killing the
-// first enemy for ALL encounters
-//     " },
-//     { (int)Stages.InFleeGrind, @"
-// GRIND (KILL ONLY ONE)
-//     " },
-//     { (int)Stages.PreTripleMold, @"
-// Now, kill one last encounter
-// it will be a triple mold, and you must only
-// kill TWO monsters, then flee
-// Feel free to still attack second one
-// to simulate the Froggit Whimsun attacks
-//     " },
-//     { (int)Stages.InTripleMold, @"
-// GRIND (KILL ONLY TWO)
-//     " },
-//     { (int)Stages.PreEnd, @"
-// Finally, walk to the right as if
-// you have finished killing all
-// monsters and play normally until
-// the end of Ruins
-//     " },
-//     { (int)Stages.NobodyCame, @"
-// PROCEED
-//     " },
-//     { (int)Stages.End, @"
-// PROCEED
-//     " },
-//     { (int)Stages.Finished, @"
-// Session finished!
-//     " }
-// };
 
-// // building the code that assigns the `current_msg` variable
-// var currentMsgAssign = "";
-// var msgTotal = Enum.GetNames(typeof(Stages)).Length;
-// for (int i = 0; i < msgTotal; i++) {
-//     var msg = messages[i];
-//     if (i > 0) currentMsgAssign += "else";
-//     currentMsgAssign += @$"
-//     if (stage == {i}) {{
-//         current_msg = ""{msg}"";
-//     }}    
-//     ";
-// }
-// // currently all stages have a message, so this has become obsolete
-// currentMsgAssign += @$"
-// else {{
-//     current_msg = '';
-// }}
-// ";
 
-// // message check
-// append(step, currentMsgAssign);
 
-// // ROOM TRANSITIONS
-// append(step, @$"
-// // from ruins hallway to leafpile
-// if (previous_room == 11 && current_room == 12) {{
-//     if (stage == {(int)Stages.Hallway}) {{
-//         {stopTime}
-//         {newStage((int)Stages.PreLeafPile)}
-//         {tpRuinsHallway}
-//     }} else if (stage == {(int)Stages.PreLeafPile}) {{
-//         {startDowntime("ruins-leafpile", 97, (int)Stages.LeafPileDowntime)}
-//     }}
-// // exitting leafpile room
-// }} else if (previous_room == 12 && current_room == 14) {{
-//     // ending leafpile transition
-//     if ({isFirstGrind} && current_encounter == 1) {{
-//         {stopTime}
-//     // starting leaf fall downtime 
-//     }} else if (stage == {(int)Stages.PostFirstGrind}) {{
-//         // arbitrarily high steps because it doesn't matter
-//         {startDowntime("ruins-leaf-fall", 1000, (int)Stages.LeafFallDowntime)}
-//     }}
-// // ruins first half transition
-// }} else if (previous_room == 14 && current_room == 12 && {isFirstGrind} && current_encounter == 2) {{
-//     {stopTime}
-// // exit leaf fall room
-// }} else if (previous_room == 14 && current_room == 15) {{
-//     // end leaf fall transition
-//     if (stage == {(int)Stages.LeafFallTransition}) {{
-//         {stopTime}
-//         {disableEncounters}
-//         stage = {(int)Stages.PreOneRock};
-//         {tpTo(14, 200, 80)}
-//     // start one rock downtime
-//     }} else if (stage == {(int)Stages.PreOneRock}) {{
-//         {startDowntime("ruins-one-rock", 10000, (int)Stages.OneRockDowntime)}
-//     }}
-// // ending second half transition
-// }} else if (previous_room == 18 && current_room == 17 && {isSecondHalf}) {{
-//     // stop the transition timer
-//     if (current_encounter == 1 || current_encounter == 2) {{
-//         {stopTime}
-//     }}
-// // exit leaf maze
-// }} else if (previous_room == 16 && current_room == 17) {{
-//     // end leaf maze segment
-//     if (stage == {(int)Stages.InLeafMaze}) {{
-//         {stopTime}
-//         {disableEncounters}
-//         stage = {(int)Stages.PreThreeRock};
-//         {tpTo(16, 520, 220)}
-//     // start three rock downtime
-//     }} else if (stage == {(int)Stages.PreThreeRock}) {{
-//         {startDowntime("ruins-three-rock", 10000, (int)Stages.ThreeRockDowntime)}
-//     }}
-// // entering battle
-// }} else if (previous_room != room_battle && current_room == room_battle) {{
-//     if (obj_time.stage == {(int)Stages.Start}) {{
-//         {startSegment("ruins-hallway", (int)Stages.Hallway)}
-//     // first half segments for encounters
-//     }} else if ({isFirstGrind}) {{ 
-//         {firstHalfCurrentEncounter}
-//         name = 0;
-//         if (encounter_name == '2') {{
-//             name = 'froggit-lv2';
-//         }} else if (encounter_name == '3') {{
-//             name = 'froggit-lv3';
-//         }} else if (encounter_name == 'W') {{
-//             name = 'whim';
-//         }}
-//         //filtering out frogskip related ones
-//         if (name != 0) {{
-//             {startSegment("name", -1, true)}
-//         }}
-//     }} else if ({isSecondHalf}) {{
-//         {secondHalfCurrentEncounter}
-//         var name = 0;
-//         if (encounter_name == 'W') {{
-//             name = 'frog-whim';
-//         }} else if (encounter_name == 'F') {{
-//             name = 'dbl-frog';
-//         }} else if (encounter_name == 'A') {{
-//             name = 'sgl-mold';
-//         }} else if (encounter_name == 'B') {{
-//             name = 'dbl-mold';
-//         }} else if (encounter_name == 'C') {{
-//             name = 'tpl-mold';
-//         }}
-//         if ({isFleeGrind}) {{
-//             name += '-19';
-//         }}
-//         {startSegment("name", - 1, true)}
-//     }} else if (stage == {(int)Stages.InTripleMold}) {{
-//         {startSegment("tpl-mold-18")}
-//     }} else if (obj_time.stage == {(int)Stages.NobodyCame}) {{
-//         if (obj_time.nobody_came == 0) {{
-//             {startSegment("ruins-switches")}
-//         }} else if (obj_time.nobody_came == 1) {{
-//             {startSegment("perspective-a")}
-//         }} else if (obj_time.nobody_came == 2) {{
-//             {startSegment("perspective-b")}
-//         }} else if (obj_time.nobody_came == 3) {{
-//             {startSegment("perspective-c")}
-//         }} else if (obj_time.nobody_came == 4) {{
-//             {startSegment("perspective-d")}
-//         }} else {{
-//             {startSegment("ruins-end", (int)Stages.End)}
-//         }}
-//         obj_time.nobody_came++;
-//     }}
-// // exitting out of a battle
-// }} else if (previous_room == room_battle && current_room != room_battle) {{
-//     // exitting too early requires manually setting off persistence
-//     room_persistent = false;
-//     if ({isFirstGrind}) {{
-//         {firstHalfCurrentEncounter}
-//         // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
-//         if (encounter_name == '2') {{
-//             global.xp = 29;
-//         }}
-//         // 'F' is the only encounter that by its end we don't have a timer happening
-//         // for 2, 3, W we have clearly the encounter timer and for A and N we measure the 'you won' text
-//         // so it just leaves F for having no reason to stop time here
-//         if (encounter_name != 'F') {{ 
-//             {stopTime}
-//         }}
-//         // increment for BOTH the in turn and the whole battle segments 
-//         obj_time.current_encounter++;
-//         if (obj_time.current_encounter == {firstHalfLength}) {{
-//             {disableEncounters}
-//             {newStage((int)Stages.PostFirstGrind)}
-//         }}
-
-//         // the first one means we have the transition from the leafpile to the right
-//         if (current_encounter == 1) {{
-//             {startSegment("ruins-leafpile-transition")}
-//         // this one is for any given first half grind transition (but measured in the second one)  
-//         }} else if (current_encounter == 2) {{
-//             {startSegment("ruins-first-transition")}
-//         }}
-//     }} else if (stage == {(int)Stages.PostFirstGrind}) {{
-//         {leafpileTp}
-//     }} else if (stage == {(int)Stages.InFallEncounter}) {{
-//         // transition from the end of the encounter in room 14
-//         {startSegment("leaf-fall-transition", (int)Stages.LeafFallTransition)}
-//     }} else if (stage == {(int)Stages.OneRockEncounter}) {{
-//         // leaf maze segment
-//         {disableEncounters}
-//         {startSegment("ruins-maze", (int)Stages.InLeafMaze)}
-//     }} else if ({isSecondHalf}) {{
-//         {stopTime}
-//         // last ones so we TP for explanation
-//         obj_time.current_encounter++;
-//         if (obj_time.current_encounter == {noFleeLength} || obj_time.current_encounter == {secondHalfLength}) {{
-//             {tpTo(18, 40, 110)}
-//             if (obj_time.current_encounter == {noFleeLength}) {{
-//                 {newStage((int)Stages.PreFleeGrind)}
-//             }} else {{
-//                 {newStage((int)Stages.PreTripleMold)}
-//             }}
-//         }}
-
-//         // first one means we are coming from the incomplete transition from three rock
-//         if (current_encounter == 1) {{
-//             {startSegment("three-rock-transition")}
-//         // second one for measuring the condition that happens for any given one
-//         }} else if (current_encounter == 2) {{
-//             {startSegment("ruins-second-transition")}
-//         }}
-//     }} else if (stage == {(int)Stages.InTripleMold}) {{
-//         {stopTime}
-//         // TP back for final explanation
-//         stage = {(int)Stages.PreEnd};
-//         {tpTo(17, 500, 110)}
-//         // max out kills
-//         global.flag[202] = 20;
-//     }}
-// }}
-// ");
-
-// // naming screen time start
-// replace(naming, "naming = 4", @$" {{
-//     naming = 4;
-//     {startSegment("ruins-start", (int)Stages.Start)}
-//     {startSession}
-// }}
-// ");
-
-// // encountering first froggit in ruins
-// // battlegroup 3 is first froggit
-
-// // everything at the start the start of blcon; end of ruins start
-// append(blcon, @$"
-// if (obj_time.stage == {(int)Stages.Start} || obj_time.stage == {(int)Stages.NobodyCame}) {{
-//     {stopTime}
-// // all stages below are mostly used just to remove the message
-// }} else if (obj_time.stage =={(int)Stages.PreFirstGrind}) {{
-//     {newStage((int)Stages.InFirstGrind)}
-// }} else if (obj_time.stage == {(int)Stages.PreFallEncounter}) {{
-//     {newStage((int)Stages.InFallEncounter)}
-// }} else if (obj_time.stage == {(int)Stages.PreLeafMaze}) {{
-//     {newStage((int)Stages.OneRockEncounter)}
-// }} else if (obj_time.stage == {(int)Stages.PreSecondGrind}) {{
-//     obj_time.current_encounter = 0;
-//     {newStage((int)Stages.InSecondGrind)}
-// }} else if (obj_time.stage == {(int)Stages.PreFleeGrind}) {{
-//     {newStage((int)Stages.InFleeGrind)}
-// }} else if (obj_time.stage == {(int)Stages.PreTripleMold}) {{
-//     {newStage((int)Stages.InTripleMold)};
-// }}");
-
-// // everything at the end of the blcon
-
-// place(blconAlarm, "battle = 1", @$"
-// // rigging encounters
-// if ({isFirstGrind}) {{ 
-//     {firstHalfCurrentEncounter}
-//     // only 'A' is not rigged
-//     if (encounter_name != 'A') {{
-//         // default to froggit, since it's the most probable
-//         var to_battle = 4;
-//         if (encounter_name == 'W') {{
-//             // whimsun battlegroup
-//             to_battle = 5;
-//         }}
-//         global.battlegroup = to_battle;
-//     }}
-// // rigging to whimsun just to speed things up
-// }} else if (obj_time.stage == {(int)Stages.InFallEncounter} || obj_time.stage == {(int)Stages.OneRockEncounter}) {{ 
-//     global.battlegroup = 5;
-// }} else if ({isSecondHalf}) {{
-//     {secondHalfCurrentEncounter}
-//     if (encounter_name == 'W') {{
-//         global.battlegroup = 6;
-//     }} else if (encounter_name == 'F') {{
-//         global.battlegroup = 9;
-//     }} else if (encounter_name == 'A') {{
-//         global.battlegroup = 7;
-//     }} else if (encounter_name == 'B') {{
-//         global.battlegroup = 10;
-//     }} else if (encounter_name == 'C') {{
-//         global.battlegroup = 8;
-//     }}
-// }} else if (obj_time.stage == {(int)Stages.InTripleMold}) {{
-//     global.battlegroup = 8;
-// }}
-// ");
-
-// // DOOR C ACCESS
-// append(doorC, @$"
-// // stop leafpile downtime
-// if (obj_time.stage == {(int)Stages.LeafPileDowntime} && room == 12) {{
-//     {stopDowntime}
-//     {enableEncounters}
-//     {newStage((int)Stages.PreFirstGrind)}
-// }}
-// ");
-
-// // DOOR A ACCESS
-// append(doorA, @$"
-// if (obj_time.stage == {(int)Stages.LeafFallDowntime} && room == 14) {{
-//     // end leaf fall downtime
-//     {stopDowntime}
-//     {enableEncounters}
-//     {newStage((int)Stages.PreFallEncounter)}
-// }} else if (obj_time.stage == {(int)Stages.OneRockDowntime} && room == 15) {{
-//     // end one rock downtime
-//     {stopDowntime}
-//     {enableEncounters}
-//     {newStage((int)Stages.PreLeafMaze)}
-// }} else if (obj_time.stage == {(int)Stages.ThreeRockDowntime} && room == 17) {{
-//     // end three rock downtime
-//     {stopDowntime}
-//     {enableEncounters}
-//     {newStage((int)Stages.PreSecondGrind)}
-// // ending second half grind
-// }} else if (obj_time.stage == {(int)Stages.PreEnd} && room == 17) {{
-//     {startSegment("ruins-napsta", (int)Stages.NobodyCame)}
-// // exit ruins (end ruins segment)
-// }}
-// ");
-
-// // DOOR A MUSIC FADE ACCESS
-// append(doorAmusic, @$"
-// if (room == 41 && obj_time.stage == {(int)Stages.End}) {{
-//     {stopTime}
-//     {newStage((int)Stages.Finished)}
-// }}
-// ");
-
-// // teleporting at the end of downtimes
-// append(step, @$"
-// if (stage == {(int)Stages.PreFirstGrind} && room == 14) {{ 
-//     {tpTo(12, 180, 260)}
-// }} else if (stage == {(int)Stages.PreFallEncounter} && room == 15) {{
-//     {tpTo(14, 210, 100)}
-// }} else if (stage == {(int)Stages.PreLeafMaze} && room == 16) {{
-//     {tpTo(15, 340, 100)}
-// }} else if (stage == {(int)Stages.PreSecondGrind} && room == 18) {{
-//     {tpTo(17, 430, 110)}
-// }}
-// ");
-
-// // rigging attacks for froggit
-// // it is placed right after mycommand declaration
-// place(froggitAlarm, "0))", @$"
-// // as a means to speed up practice, all of them will have frog skip by default
-// var use_frogskip = 1;
-// // find the only case to not use frogskip (when we are measuring the speed of not having frogskip)
-// if ({isFirstGrind}) {{
-//     {firstHalfCurrentEncounter}
-//     if (encounter_name == 'N') {{
-//         use_frogskip = 0;
-//     }}
-// }}
-// if (use_frogskip) {{
-//     mycommand = 0;
-// }} else {{
-//     mycommand = 100;
-// }}
-// ");
-
-// // start the first half segments for the froggit attacks
-// place(froggitStep, "if (global.mnfight == 2)\n{", @$"
-// if ({isFirstGrind}) {{
-//     {firstHalfCurrentEncounter}
-//     var name = 0;
-//     switch (encounter_name) {{
-//         case 'F':
-//             name = 'frogskip';
-//             break;
-//         case 'N':
-//             name = 'not-frogskip';
-//             break;
-//     }}
-//     if (name != 0) {{
-//         {startSegment("name", -1, true)}
-//     }}
-// }}
-// ");
-
-// // end first half segments for froggit attacks
-// replace(froggitStep, "attacked = 0", @$" {{
-//     attacked = 0;
-//     if ({isFirstGrind}) {{
-//         {firstHalfCurrentEncounter}
-//         if (encounter_name == 'F' || encounter_name == 'N') {{
-//             {stopTime}
-//         }}
-//     }}
-// }}
-// ");
-
-// // start count for the "YOU WON!" text
-// place(battlecontrol, "earned \"", @$"
-//     if ({isFirstGrind}) {{
-//         {firstHalfCurrentEncounter}
-//         // for 'A', we are starting time for the LV up text
-//         if (encounter_name == 'A') {{
-//             {startSegment("lv-up")}
-//         }} else if (encounter_name == 'N') {{
-//             // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
-//             {startSegment("you-won")}
-//         }}
-//     }}
-// ");
 
 /// <summary>
 /// Function that if called will add debug functions to the game
@@ -1128,11 +649,6 @@ void useDebug () {
     }}
     ");
 }
-
-
-/**
-main script
-**/
 
 
 // so this is how the program works
@@ -1280,9 +796,30 @@ class Door : UndertaleEvent {
 class Stage {
     public Listener[] Listeners;
 
-    public Stage (params Listener[] listeners) {
+    public string Message;
+
+    public Stage (string msg, params Listener[] listeners) {
         Listeners = listeners;
+        Message = msg;
     }
+}
+
+class ProceedStage : Stage {
+    public ProceedStage (params Listener[] listeners) : base(@"
+PROCEED
+    ", listeners) {}
+}
+
+class WalkStage : Stage {
+    public WalkStage (params Listener[] listeners) : base(@"
+WALK
+    ", listeners) {}
+}
+
+class GrindStage : Stage {
+    public GrindStage (params Listener[] listeners) : base(@"
+GRIND
+    ", listeners) {}
 }
 
 class Session {
@@ -1471,6 +1008,11 @@ class Listener {
 }
 
 var offline = new Stage(
+    @"
+RECORDING SESSION WAITING TO START
+To start it, begin a normal run,
+and keep playing until the mod stops you
+    ",
     new Listener(
         new PickName(),
         new Callback(
@@ -1481,7 +1023,7 @@ var offline = new Stage(
     )
 );
 
-var ruinsStart = new Stage(
+var ruinsStart = new ProceedStage(
     new Listener(
         new Blcon(),
         new Callback(
@@ -1497,7 +1039,7 @@ var ruinsStart = new Stage(
     )
 );
 
-var ruinsHallway = new Stage(
+var ruinsHallway = new ProceedStage(
     new Listener(
         new RoomTransition(11, 12),
         new Callback(
@@ -1509,6 +1051,10 @@ var ruinsHallway = new Stage(
 );
 
 var preLeafPile = new Stage(
+    @"
+Next, walk through the next room
+as quickly as possible
+    ",
     new Listener(
         new RoomTransition(11, 12),
         new Callback(
@@ -1518,7 +1064,7 @@ var preLeafPile = new Stage(
     )
 );
 
-var leafPileDowntime = new Stage(
+var leafPileDowntime = new WalkStage(
     new Listener(
         new Door("C", 12),
         new Callback(
@@ -1530,6 +1076,11 @@ var leafPileDowntime = new Stage(
 );
 
 var preFirstGrind = new Stage(
+    @"
+Now, grind and encounter at the end of
+the room and continue grinding as if you were
+in a normal run
+    ",
     new Listener(
         new Room(14),
         new Callback(
@@ -1544,7 +1095,7 @@ var preFirstGrind = new Stage(
     )
 );
 
-var inFirstGrind = new Stage(
+var inFirstGrind = new GrindStage(
     new Listener(
         new RoomTransition(12, 14),
         new Callback(
@@ -1603,6 +1154,10 @@ var inFirstGrind = new Stage(
 );
 
 var postFirstGrind = new Stage(
+    @"
+Now, walk to the right room
+and simply cross it (don't grind)
+    ",
     new Listener(
         new LeaveBattle(),
         new Callback(
@@ -1618,7 +1173,7 @@ var postFirstGrind = new Stage(
     )
 );
 
-var leafFallDowntime = new Stage(
+var leafFallDowntime = new WalkStage(
     new Listener(
         new Door("A", 14),
         new Callback(
@@ -1630,6 +1185,11 @@ var leafFallDowntime = new Stage(
 );
 
 var preFalLEncounter = new Stage(
+    @"
+Now, grind an encounter at
+the end of this room and proceed as if it
+were a normal run until you are stopped
+    ",
     new Listener(
         new Room(15),
         new Callback(
@@ -1644,7 +1204,7 @@ var preFalLEncounter = new Stage(
     )
 );
 
-var inFalLEncounter = new Stage(
+var inFalLEncounter = new ProceedStage(
     new Listener(
         new BeforeBattle(),
         new Callback(
@@ -1660,7 +1220,7 @@ var inFalLEncounter = new Stage(
     )
 );
 
-var leafFallTransition = new Stage(
+var leafFallTransition = new ProceedStage(
     new Listener(
         new RoomTransition(14, 15),
         new Callback(
@@ -1673,6 +1233,12 @@ var leafFallTransition = new Stage(
 );
 
 var preOneRock = new Stage(
+    @"
+Now, go through the next room
+from beginning to end as if it was a
+normal run but without grinding an encounter
+at the end
+    ",
     new Listener(
         new RoomTransition(14, 15),
         new Callback(
@@ -1682,7 +1248,7 @@ var preOneRock = new Stage(
     )
 );
 
-var oneRockDowntime = new Stage(
+var oneRockDowntime = new WalkStage(
     new Listener(
         new Door("A", 15),
         new Callback(
@@ -1694,6 +1260,11 @@ var oneRockDowntime = new Stage(
 );
 
 var preLeafMaze = new Stage(
+    @"
+Now grind at the
+end of the room, and proceed as a normal
+run until you are stopped
+    ",
     new Listener(
         new Room(16),
         new Callback(
@@ -1708,7 +1279,7 @@ var preLeafMaze = new Stage(
     )
 );
 
-var oneRockEncounter = new Stage(
+var oneRockEncounter = new ProceedStage(
     new Listener(
         new BeforeBattle(),
         new Callback(
@@ -1725,7 +1296,7 @@ var oneRockEncounter = new Stage(
     )
 );
 
-var inLeafMaze = new Stage(
+var inLeafMaze = new ProceedStage(
     new Listener(
         new RoomTransition(16, 17),
         new Callback(
@@ -1738,6 +1309,12 @@ var inLeafMaze = new Stage(
 );
 
 var preThreeRock = new Stage(
+    @"
+Now, go through the next
+room from begining to end as if it was
+a normal run but without grinding an encounter
+at the end
+    ",
     new Listener(
         new RoomTransition(16, 17),
         new Callback(
@@ -1747,7 +1324,7 @@ var preThreeRock = new Stage(
     )
 );
 
-var threeRockDowntime = new Stage(
+var threeRockDowntime = new WalkStage(
     new Listener(
         new Door("A", 17),
         new Callback(
@@ -1759,6 +1336,14 @@ var threeRockDowntime = new Stage(
 );
 
 var preSecondGrind = new Stage(
+    @"
+Now, grind an
+encounter at the end of the room,
+and proceed grinding and killing
+encounters until you are stopped
+Grind as you would in a normal
+run
+    ",
     new Listener(
         new Room(18),
         new Callback(
@@ -1774,7 +1359,7 @@ var preSecondGrind = new Stage(
     )
 );
 
-var inSecondGrind = new Stage(
+var inSecondGrind = new GrindStage(
     new Listener(
         new RoomTransition(18, 17),
         new Callback(
@@ -1802,6 +1387,12 @@ var inSecondGrind = new Stage(
 );
 
 var preFleeGrind = new Stage(
+    @"
+Now, continue grinding
+just the same, but as if you had 19 kills,
+that is, flee after killing the
+first enemy for ALL encounters
+    ",
     new Listener(
         new Blcon(),
         new Callback(
@@ -1811,6 +1402,9 @@ var preFleeGrind = new Stage(
 );
 
 var inFleeGrind = new Stage(
+    @"
+GRIND (KILL ONLY ONE)
+    ",
     new Listener(
         new BeforeBattle(),
         new Callback(
@@ -1832,6 +1426,13 @@ var inFleeGrind = new Stage(
 );
 
 var preTripleMold = new Stage(
+    @"
+Now, kill one last encounter
+it will be a triple mold, and you must only
+kill TWO monsters, then flee
+Feel free to still attack second one
+to simulate the Froggit Whimsun attacks
+    ",
     new Listener(
         new Blcon(),
         new Callback(
@@ -1841,6 +1442,9 @@ var preTripleMold = new Stage(
 );
 
 var inTripleMold = new Stage(
+    @"
+GRIND (KILL ONLY TWO)
+    ",
     new Listener(
         new BeforeBattle(),
         new Callback(
@@ -1865,6 +1469,12 @@ var inTripleMold = new Stage(
 );
 
 var ruinsPreEnd = new Stage(
+    @"
+Finally, walk to the right as if
+you have finished killing all
+monsters and play normally until
+the end of Ruins
+    ",
     new Listener(
         new Door("A", 17),
         new Callback(
@@ -1874,7 +1484,7 @@ var ruinsPreEnd = new Stage(
     )
 );
 
-var ruinsNobodyCame = new Stage(
+var ruinsNobodyCame = new ProceedStage(
     new Listener(
         new Blcon(),
         new Callback(
@@ -1889,7 +1499,7 @@ var ruinsNobodyCame = new Stage(
     )
 );
 
-var ruinsEnd = new Stage(
+var ruinsEnd = new ProceedStage(
     new Listener(
         new Door("Amusic", 41),
         new Callback(
@@ -1897,6 +1507,12 @@ var ruinsEnd = new Stage(
             next
         )
     )
+);
+
+var sessionFinished = new Stage(
+    @"
+Session finished!
+    "
 );
 
 var ruinsScript = new Session(
@@ -1927,8 +1543,22 @@ var ruinsScript = new Session(
     inTripleMold,
     ruinsPreEnd,
     ruinsNobodyCame,
-    ruinsEnd
+    ruinsEnd,
+    sessionFinished
 );
+
+// code that assigns the current_msg variable
+var messageList = new List<string>();
+for (int i = 0; i < ruinsScript.Stages.Length; i++) {
+    messageList.Add($@"
+    if (stage == {i}) {{
+        current_msg = ""{ruinsScript.Stages[i].Message}"";
+    }}
+    ");
+}
+
+append(step, generateIfElseBlock(messageList));
+
 
 // 1st step is to break into stages
 
@@ -1961,21 +1591,6 @@ var doorTouches = new Dictionary<string, string>();
 var roomPresent = new Dictionary<string, string>();
 
 
-string generateIfElseBlock (List<string> ifBlocks) {
-    return generateIfElseBlock(ifBlocks.ToArray());
-}
-
-string generateIfElseBlock (string[] ifBlocks) {
-    string code = "";
-    bool isFirst = true;
-    for (int i = 0; i < ifBlocks.Length; i++) {
-        if (isFirst) {
-            isFirst = false;
-        } else code += "else";
-        code += ifBlocks[i];
-    }
-    return code;
-}
 
 // step 5: assemble the code that goes in each event and place it
 
