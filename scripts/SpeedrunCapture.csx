@@ -416,6 +416,7 @@ if (encounter_name != 'F') {{
 obj_time.current_encounter++;
 if (obj_time.current_encounter == {firstHalfLength}) {{
     {disableEncounters}
+    {tpTo(12, 220, 320)}
     obj_time.stage++;
 }}
 
