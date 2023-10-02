@@ -283,6 +283,12 @@ var firstHalfLength = 6;
 /// </summary>
 string firstHalfCurrentEncounter = "var encounter_name = obj_time.first_half_encounters[obj_time.current_encounter];";
 
+/// <summary>
+/// Generate GML code that will stop the time of the current transition segment in the
+/// first half grind if we are the given encounter
+/// </summary>
+/// <param name="encounter">Encounter number to stop at (1-indexed)</param>
+/// <returns></returns>
 string firstHalfTransition (int encounter) {
     return @$"
     {firstHalfCurrentEncounter}
@@ -299,6 +305,9 @@ string disableEncounters = @"
 obj_time.fast_encounters = 0;
 ";
 
+/// <summary>
+/// GML code that starts the first half encounter segments
+/// </summary>
 var firstHalfEncounter = $@"
 {firstHalfCurrentEncounter}
 name = 0;
@@ -315,6 +324,9 @@ if (name != 0) {{
 }}
 ";
 
+/// <summary>
+/// GML code that updates the first half grind information at the end of encounters
+/// </summary>
 var firstHalfVictory = $@"
 {firstHalfCurrentEncounter}
 // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
@@ -329,7 +341,6 @@ if (encounter_name != 'F') {{
 }}
 // increment for BOTH the in turn and the whole battle segments 
 obj_time.current_encounter++;
-show_debug_message(obj_time.current_encounter)
 if (obj_time.current_encounter == {firstHalfLength}) {{
     {disableEncounters}
     obj_time.stage++;
@@ -343,8 +354,6 @@ if (current_encounter == 1) {{
     {startSegment("ruins-first-transition")}
 }}
 ";
-
-
 
 /// <summary>
 /// Length of the second half encounters array up to elements in the without flee grind
@@ -372,22 +381,6 @@ show_debug_message(encounter_name)";
 /// <param name="y">y position to telport to</param>
 /// <returns></returns>
 string tpTo (int room, int x, int y) {
-    return tpTo(room.ToString(), x.ToString(), y.ToString());
-}
-
-/// <summary>
-/// Generate GML code that teleports the player to a room and in a given position inside the room
-/// </summary>
-/// <param name="room">The room ID as a string or the room name</param>
-/// <param name="x">x position to teleport to</param>
-/// <param name="y">y position to telport to</param>
-/// <returns></returns>
-string tpTo (string room, int x, int y) {
-    return tpTo(room, x.ToString(), y.ToString());
-}
-
-
-string tpTo (string room, string x, string y) {
     return @$"
     obj_time.tp_flag = 1;
     room = {room};
@@ -400,20 +393,8 @@ string tpTo (string room, string x, string y) {
 /// GML variable that is `1` if any of the arrow keys are currently held or `0` otherwise
 /// </summary>
 string isMoving = @"
-keyboard_check(vk_left) || keyboard_check(vk_right) || keyboard_check(vk_up) || keyboard_check(vk_down)
+(keyboard_check(vk_left) || keyboard_check(vk_right) || keyboard_check(vk_up) || keyboard_check(vk_down))
 ";
-
-/// <summary>
-/// GML code that teleports to the end of the leaf pile room
-/// </summary>
-string leafpileTp = tpTo(12, 240, 340);
-
-/// <summary>
-/// GML code that teleports to the end of the ruins long hallway
-/// </summary>
-string tpRuinsHallway = tpTo(11, 2400, 80);
-
-
 
 /// <summary>
 /// GML code that enables the encounters
@@ -422,6 +403,1254 @@ string enableEncounters = @"
 obj_time.fast_encounters = 1;
 ";
 
+/// <summary>
+/// GML code that rigs battles in the first half
+/// </summary>
+var rigFirstHalf = $@"
+{firstHalfCurrentEncounter}
+// only 'A' is not rigged
+if (encounter_name != 'A') {{
+    // default to froggit, since it's the most probable
+    var to_battle = 4;
+    if (encounter_name == 'W') {{
+        // whimsun battlegroup
+        to_battle = 5;
+    }}
+    global.battlegroup = to_battle;
+}}
+";
+
+/// <summary>
+/// GML code that unrigs the frogskip in the first half for a specific encounters
+/// </summary>
+var unrigFrogskip = $@"
+{firstHalfCurrentEncounter}
+if (encounter_name == 'N') {{
+    use_frogskip = 0;
+}}
+";
+
+/// <summary>
+/// GML code that starts timing Froggit's attacks
+/// </summary>
+var timeFrogTurn = $@"
+{firstHalfCurrentEncounter}
+var name = 0;
+switch (encounter_name) {{
+    case 'F':
+        name = 'frogskip';
+        break;
+    case 'N':
+        name = 'not-frogskip';
+        break;
+}}
+if (name != 0) {{
+    {startSegment("name", true)}
+}}
+";
+
+/// <summary>
+/// GML code that ends the time for Froggit's attacks
+/// </summary>
+string endFrogTime = $@"
+{firstHalfCurrentEncounter}
+if (encounter_name == 'F' || encounter_name == 'N') {{
+    {stopTime}
+}}
+";
+
+/// <summary>
+/// GML code that starts the segments for the "YOU WON!" message
+/// </summary>
+var timeYouWon = @$"
+{firstHalfCurrentEncounter}
+// for 'A', we are starting time for the LV up text
+if (encounter_name == 'A') {{
+    {startSegment("lv-up")}
+}} else if (encounter_name == 'N') {{
+    // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
+    {startSegment("you-won")}
+}}
+";
+
+/// <summary>
+/// GML code that rigs the encounter to bein a Whimsun
+/// </summary>
+var rigWhimsun = @$"
+global.battlegroup = 5;
+";
+
+/// <summary>
+/// GML code that stops the transition segments in the first half grind
+/// </summary>
+var secondHalfTransition = @$"
+if (current_encounter == 1 || current_encounter == 2) {{
+    {stopTime}
+}}
+";
+
+/// <summary>
+/// GML code that starts the segments for the battles in the second half grind
+/// </summary>
+/// <param name="isFleeGrind">Should be `true` if the encounter is for the grind with fleeing, `false` if otherwise</param>
+/// <returns></returns>
+string secondHalfEncounter (bool isFleeGrind) {
+    int gmlBool = isFleeGrind ? 1 : 0;
+    return @$"
+    {secondHalfCurrentEncounter}
+    var name = 0;
+    if (encounter_name == 'W') {{
+        name = 'frog-whim';
+    }} else if (encounter_name == 'F') {{
+        name = 'dbl-frog';
+    }} else if (encounter_name == 'A') {{
+        name = 'sgl-mold';
+    }} else if (encounter_name == 'B') {{
+        name = 'dbl-mold';
+    }} else if (encounter_name == 'C') {{
+        name = 'tpl-mold';
+    }}
+    if ({gmlBool}) {{
+        name += '-19';
+    }}
+    {startSegment("name", true)}
+    ";
+}
+
+/// <summary>
+/// GML code that updates information at the end of the second half grind encounters
+/// </summary>
+var secondHalfVictory = @$"
+{stopTime}
+// last ones so we TP for explanation
+obj_time.current_encounter++;
+if (obj_time.current_encounter == {noFleeLength} || obj_time.current_encounter == {secondHalfLength}) {{
+    {tpTo(18, 40, 110)}
+    obj_time.stage++;
+}}
+
+// first one means we are coming from the incomplete transition from three rock
+if (current_encounter == 1) {{
+    {startSegment("three-rock-transition")}
+// second one for measuring the condition that happens for any given one
+}} else if (current_encounter == 2) {{
+    {startSegment("ruins-second-transition")}
+}}
+";
+
+/// <summary>
+/// GML code that rigs the encounters for the second half grind
+/// </summary>
+var secondHalfRig = @$"
+{secondHalfCurrentEncounter}
+if (encounter_name == 'W') {{
+    global.battlegroup = 6;
+}} else if (encounter_name == 'F') {{
+    global.battlegroup = 9;
+}} else if (encounter_name == 'A') {{
+    global.battlegroup = 7;
+}} else if (encounter_name == 'B') {{
+    global.battlegroup = 10;
+}} else if (encounter_name == 'C') {{
+    global.battlegroup = 8;
+}}
+";
+
+/// <summary>
+/// GML code that sets the Ruins area kills to max
+/// </summary>
+var maxRuinsKills = @$"
+global.flag[202] = 20;
+";
+
+/// <summary>
+/// GML code that rigs the encounter to be a triple mold
+/// </summary>
+var rigTripleMold = @$"
+global.battlegroup = 8;
+";
+
+/// <summary>
+/// GML code that start segments for the nobody came section in Ruins
+/// </summary>
+var nobodyCameSegments = @$"
+if (obj_time.nobody_came == 0) {{
+    {startSegment("ruins-switches")}
+}} else if (obj_time.nobody_came == 1) {{
+    {startSegment("perspective-a")}
+}} else if (obj_time.nobody_came == 2) {{
+    {startSegment("perspective-b")}
+}} else if (obj_time.nobody_came == 3) {{
+    {startSegment("perspective-c")}
+}} else if (obj_time.nobody_came == 4) {{
+    {startSegment("perspective-d")}
+}} else {{
+    {startSegment("ruins-end")}
+    obj_time.stage++;
+}}
+obj_time.nobody_came++;
+";
+
+/// <summary>
+/// GML code to run when starting the second half grind
+/// </summary>
+var secondHalfSetup = @$"
+obj_time.current_encounter = 0;
+";
+
+/// <summary>
+/// Function that if called will add debug functions to the game
+/// </summary>
+void useDebug () {
+    // updating it every frame is just a lazy way of doing it since it can't be done in obj_time's create event
+    // since it gets overwritten by gamestart
+    append(step, "global.debug = 1;");
+
+    // stage skip keybinds
+    append(step, @$"
+    if (keyboard_check_pressed(ord('Q'))) {{
+        is_timer_running = 0;
+        stage = 3;
+        global.xp = 10;
+        script_execute(scr_levelup);
+        global.plot = 9;
+        {tpTo(11, 2400, 80)}
+    }}
+    ");
+
+    append(step, @$"
+    if (keyboard_check_pressed(ord('E'))) {{
+        is_timer_running = 0;
+        obj_time.stage = 7;
+        global.xp = 30;
+        script_execute(scr_levelup);
+        global.plot = 9.5;
+        {tpTo(12, 240, 340)}
+    }}
+    ");
+
+    // variables to print
+    string[] watchVars = {
+        "obj_time.stage",
+        "is_timer_running",
+        "segment_name",
+        "is_downtime_mode",
+        "is_downtime_running",
+        "downtime_name",
+        "global.encounter", 
+        "step_count",
+        "get_timer()",
+        "previous_time"
+    };
+
+    // start just with line break just to not interefere with anything
+    string code = @"
+    ";
+    int i = 0;
+    foreach (string watchVar in watchVars) {
+        code += $"draw_text(20, {110 + i * 25}, '{watchVar}: ' + string({watchVar}));";
+        i++;
+    }
+    append(draw, code);
+
+    // coordinates
+    append(draw, @$"
+    if (instance_exists(obj_mainchara)) {{
+        draw_text(20, {(110 + i * 25)}, 'x:' +  string(obj_mainchara.x));
+        draw_text(20, {(110 + (i + 1) * 25)}, 'y:' + string(obj_mainchara.y));
+    }}
+    ");
+}
+
+/*
+EVENT CLASSES
+*/
+
+/// <summary>
+/// Abstract class for the events that will be watched for the script
+/// </summary>
+abstract class UndertaleEvent {
+    /// <summary>
+    /// Must return a unique string for the current event and its arguments
+    /// </summary>
+    /// <returns></returns>
+    public abstract string EventId ();
+}
+
+/// <summary>
+/// Name of the events used, equal to the respective classes
+/// </summary>
+// NOTE: Not sure if the redundancy is very good, not sure how to improve it though
+enum EventName {
+    PickName,
+    Blcon,
+    BeforeBattle,
+    EnterBattle,
+    LeaveBattle,
+    RoomTransition,
+    Room,
+    FroggitAttack,
+    FroggitTurnStart,
+    FroggitTurnEnd,
+    YouWon,
+    Door
+
+
+}
+
+/// <summary>
+/// Event for picking the name
+/// </summary>
+class PickName : UndertaleEvent {
+    public override string EventId () {
+        return EventName.PickName.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when the blcon shows up in the screen
+/// </summary>
+class Blcon : UndertaleEvent {
+    public override string EventId () {
+        return EventName.Blcon.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when a battle starts
+/// </summary>
+class EnterBattle : UndertaleEvent {
+    /// <summary>
+    /// Battlegroup id for the battle that is being watched, equal to `-1` if all battles are being watched
+    /// </summary>
+    public int Battlegroup;
+    
+    /// <summary>
+    /// Create event listening to all battles
+    /// </summary>
+    public EnterBattle () {
+        Battlegroup = -1;
+    }
+
+    /// <summary>
+    /// Create event listening to a specific battle
+    /// </summary>
+    /// <param name="battlegroup">Battlegroup id that will be watched</param>
+    public EnterBattle (int battlegroup) {
+        Battlegroup = battlegroup;
+    }
+
+    public override string EventId () {
+        string group = Battlegroup > -1 ? $",{Battlegroup.ToString()}" : "";
+        return $"{EventName.EnterBattle}{group}";
+    }
+}
+
+/// <summary>
+/// Event for a room transition
+/// </summary>
+class RoomTransition : UndertaleEvent {
+    /// <summary>
+    /// Id of the room being transitioned out of
+    /// </summary>
+    public int PreviousRoom;
+
+    /// <summary>
+    /// Id of the room being transitioned into
+    /// </summary>
+    public int CurrentRoom;
+
+    /// <summary>
+    /// Create event listening to transition from room with ids `prev` to `cur`
+    /// </summary>
+    /// <param name="prev"></param>
+    /// <param name="cur"></param>
+    public RoomTransition (int prev, int cur) {
+        PreviousRoom = prev;
+        CurrentRoom = cur;
+    }
+
+    public override string EventId () {
+        return $"{EventName.RoomTransition},{PreviousRoom},{CurrentRoom}";
+    }
+}
+
+/// <summary>
+/// Event for being in a room
+/// </summary>
+class Room : UndertaleEvent {
+    /// <summary>
+    /// Id of the room to watch
+    /// </summary>
+    public int RoomId;
+
+    /// <summary>
+    /// Create event watching a room
+    /// </summary>
+    /// <param name="room">Id of the room</param>
+    public Room (int room) {
+        RoomId = room;
+    }
+
+    public override string EventId () {
+        return $"{EventName.Room},{RoomId}";
+    }
+}
+
+/// <summary>
+/// Event for leaving a battle
+/// </summary>
+class LeaveBattle : UndertaleEvent {
+    public override string EventId () {
+        return EventName.LeaveBattle.ToString();
+    }
+}
+
+/// <summary>
+/// Event for before entering a battle
+/// </summary>
+class BeforeBattle : UndertaleEvent {
+    public override string EventId () {
+        return EventName.BeforeBattle.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when Froggit's attack is decided
+/// </summary>
+class FroggitAttack : UndertaleEvent {
+    public override string EventId () {
+        return EventName.FroggitAttack.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when Froggit's turn ends
+/// </summary>
+class FroggitTurnEnd : UndertaleEvent {
+    public override string EventId () {
+        return EventName.FroggitTurnEnd.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when Froggit's turn starts
+/// </summary>
+class FroggitTurnStart : UndertaleEvent {
+    public override string EventId () {
+        return EventName.FroggitTurnStart.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when the "YOU WON" message in battle begins
+/// </summary>
+class YouWon : UndertaleEvent {
+    public override string EventId () {
+        return EventName.YouWon.ToString();
+    }
+}
+
+/// <summary>
+/// Event for when a door is touched
+/// </summary>
+class Door : UndertaleEvent {
+    /// <summary>
+    /// Name of the door to listen to
+    /// </summary>
+    public string Name;
+
+    /// <summary>
+    /// Name of the room to listen for the door touch
+    /// </summary>
+    public int Room;
+    
+    /// <summary>
+    /// Creates event for touching a door in a room
+    /// </summary>
+    /// <param name="name">Name of the door</param>
+    /// <param name="room">Room id</param>
+    public Door (string name, int room) {
+        Name = name;
+        Room = room;
+    }
+
+    public override string EventId () {
+        return $"{EventName.Door},{Name},{Room}";
+    }
+}
+
+/*
+STAGE CLASSES
+*/
+
+/// <summary>
+/// Class for a stage in a session
+/// </summary>
+class Stage {
+    /// <summary>
+    /// All event listeners in the current stage
+    /// </summary>
+    public Listener[] Listeners;
+
+    /// <summary>
+    /// The drawn message associated with the stage
+    /// </summary>
+    public string Message;
+
+    /// <summary>
+    /// Create stage with a message and event listeners
+    /// </summary>
+    /// <param name="msg"></param>
+    /// <param name="listeners"></param>
+    public Stage (string msg, params Listener[] listeners) {
+        Listeners = listeners;
+        Message = msg;
+    }
+}
+
+/// <summary>
+/// Class for stages with the message "PROCEED'
+/// </summary>
+class ProceedStage : Stage {
+    /// <summary>
+    /// Create stage with listeners
+    /// </summary>
+    /// <param name="listeners"></param>
+    public ProceedStage (params Listener[] listeners) : base(@"
+PROCEED
+    ", listeners) {}
+}
+
+/// <summary>
+/// Class for stages with the message "WALK"
+/// </summary>
+class WalkStage : Stage {
+    /// <summary>
+    /// Create stage with listeners
+    /// </summary>
+    /// <param name="listeners"></param>
+    public WalkStage (params Listener[] listeners) : base(@"
+WALK
+    ", listeners) {}
+}
+
+
+/// <summary>
+/// Class for stages with the message "GRIND"
+/// </summary>
+class GrindStage : Stage {
+    /// <summary>
+    /// Create stage with lsteners
+    /// </summary>
+    /// <param name="listeners"></param>
+    public GrindStage (params Listener[] listeners) : base(@"
+GRIND
+    ", listeners) {}
+}
+
+/*
+GENERAL CLASSES FOR THE SESSIONS
+*/
+
+/// <summary>
+/// Class representing a recording session
+/// </summary>
+class Session {
+    /// <summary>
+    /// All stages that compose the session
+    /// </summary>
+    public Stage[] Stages;
+
+    /// <summary>
+    /// Create session with stages
+    /// </summary>
+    /// <param name="stages"></param>
+    public Session (params Stage[] stages) {
+        Stages = stages;
+    }
+}
+
+/// <summary>
+/// Class for the GML code executed after an event is fired
+/// </summary>
+class Callback {
+    /// <summary>
+    /// Code that will be executed
+    /// </summary>
+    public string GMLCode;
+
+    /// <summary>
+    /// Create callback with arbitrary code blocks
+    /// </summary>
+    /// <param name="code"></param>
+    public Callback (params string[] code) {
+        GMLCode = "\n" + String.Join("\n", code) + "\n";
+    }
+}
+
+/// <summary>
+/// Class representing the listener for an event
+/// </summary>
+class Listener {
+    /// <summary>
+    /// Event being watched
+    /// </summary>
+    public UndertaleEvent Event;
+
+    /// <summary>
+    /// Code to execute after the event is fired
+    /// </summary>
+    public Callback ListenerCallback; 
+
+    /// <summary>
+    /// Create an event listener with an event and a callback
+    /// </summary>
+    /// <param name="undertaleEvent"></param>
+    /// <param name="callback"></param>
+    public Listener (UndertaleEvent undertaleEvent, Callback callback) {
+        Event = undertaleEvent;
+        ListenerCallback = callback;
+    }
+}
+
+/*
+STAGE DEFINITIONS
+*/
+
+/// <summary>
+/// Before the session begins
+/// </summary>
+var offline = new Stage(
+    @"
+RECORDING SESSION WAITING TO START
+To start it, begin a normal run,
+and keep playing until the mod stops you
+    ",
+    new Listener(
+        new PickName(),
+        new Callback(
+            startSession,
+            startSegment("ruins-start"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Normal run from the start up to the first froggit
+/// </summary>
+var ruinsStart = new ProceedStage(
+    new Listener(
+        new Blcon(),
+        new Callback(
+            stopTime
+        )
+    ),
+    new Listener(
+        new EnterBattle(3),
+        new Callback(
+            startSegment("ruins-hallway"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Normal run from first froggit up to long hallway exit
+/// </summary>
+var ruinsHallway = new ProceedStage(
+    new Listener(
+        new RoomTransition(11, 12),
+        new Callback(
+            stopTime,
+            next,
+            tpTo(11, 2400, 80)
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before leaf pile
+/// </summary>
+var preLeafPile = new Stage(
+    @"
+Next, walk through the next room
+as quickly as possible
+    ",
+    new Listener(
+        new RoomTransition(11, 12),
+        new Callback(
+            startDowntime("ruins-leafpile", 97),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Walking across the leaf pile room
+/// </summary>
+var leafPileDowntime = new WalkStage(
+    new Listener(
+        new Door("C", 12),
+        new Callback(
+            stopDowntime,
+            enableEncounters,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before first half grind
+/// </summary>
+var preFirstGrind = new Stage(
+    @"
+Now, grind and encounter at the end of
+the room and continue grinding as if you were
+in a normal run
+    ",
+    new Listener(
+        new Room(14),
+        new Callback(
+            tpTo(12, 180, 260)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Minified version of the first half grind
+/// </summary>
+var inFirstGrind = new GrindStage(
+    new Listener(
+        new RoomTransition(12, 14),
+        new Callback(
+            firstHalfTransition(1)
+        )
+    ),
+    new Listener(
+        new RoomTransition(14, 12),
+        new Callback(
+            firstHalfTransition(2)
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            firstHalfEncounter
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            firstHalfVictory
+        )
+    ),
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            rigFirstHalf
+        )
+    ),
+    new Listener(
+        new FroggitAttack(),
+        new Callback(
+            timeFrogTurn
+        )
+    ),
+    new Listener(
+        new FroggitTurnStart(),
+        new Callback(
+            unrigFrogskip,
+            timeFrogTurn
+        )
+    ),
+    new Listener(
+        new FroggitTurnEnd(),
+        new Callback(
+            endFrogTime
+        )
+    ),
+    new Listener(
+        new YouWon(),
+        new Callback(
+            timeYouWon
+        )
+    )
+);
+
+/// <summary>
+/// Explanation after the first half grind
+/// </summary>
+var postFirstGrind = new Stage(
+    @"
+Now, walk to the right room
+and simply cross it (don't grind)
+    ",
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            tpTo(12, 240, 340)
+        )
+    ),
+    new Listener(
+        new RoomTransition(12, 14),
+        new Callback(
+            startDowntime("ruins-leaf-fall"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Walking across the leaf fall room
+/// </summary>
+var leafFallDowntime = new WalkStage(
+    new Listener(
+        new Door("A", 14),
+        new Callback(
+            stopDowntime,
+            enableEncounters,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation after leaf fall downtime
+/// </summary>
+var preFalLEncounter = new Stage(
+    @"
+Now, grind an encounter at
+the end of this room and proceed as if it
+were a normal run until you are stopped
+    ",
+    new Listener(
+        new Room(15),
+        new Callback(
+            tpTo(14, 210, 100)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Grinding encounter in the leaf fall room
+/// </summary>
+var inFalLEncounter = new ProceedStage(
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            rigWhimsun
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            startSegment("leaf-fall-transition"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Exitting leaf fall room
+/// </summary>
+var leafFallTransition = new ProceedStage(
+    new Listener(
+        new RoomTransition(14, 15),
+        new Callback(
+            stopTime,
+            disableEncounters,
+            tpTo(14, 200, 80),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before one rock room
+/// </summary>
+var preOneRock = new Stage(
+    @"
+Now, go through the next room
+from beginning to end as if it was a
+normal run but without grinding an encounter
+at the end
+    ",
+    new Listener(
+        new RoomTransition(14, 15),
+        new Callback(
+            startDowntime("ruins-one-rock"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Walking across the one rock room
+/// </summary>
+var oneRockDowntime = new WalkStage(
+    new Listener(
+        new Door("A", 15),
+        new Callback(
+            stopDowntime,
+            enableEncounters,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before the leaf maze
+/// </summary>
+var preLeafMaze = new Stage(
+    @"
+Now grind at the
+end of the room, and proceed as a normal
+run until you are stopped
+    ",
+    new Listener(
+        new Room(16),
+        new Callback(
+            tpTo(15, 340, 100)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Grinding encounter at the end of one rock room
+/// </summary>
+var oneRockEncounter = new ProceedStage(
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            rigWhimsun
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            disableEncounters,
+            startSegment("ruins-maze"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Walking across the leaf maze room
+/// </summary>
+var inLeafMaze = new ProceedStage(
+    new Listener(
+        new RoomTransition(16, 17),
+        new Callback(
+            stopTime,
+            disableEncounters,
+            tpTo(16, 520, 220),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before three rock room
+/// </summary>
+var preThreeRock = new Stage(
+    @"
+Now, go through the next
+room from begining to end as if it was
+a normal run but without grinding an encounter
+at the end
+    ",
+    new Listener(
+        new RoomTransition(16, 17),
+        new Callback(
+            startDowntime("ruins-three-rock"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Walking across three rock room
+/// </summary>
+var threeRockDowntime = new WalkStage(
+    new Listener(
+        new Door("A", 17),
+        new Callback(
+            stopDowntime,
+            enableEncounters,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before second half grinding
+/// </summary>
+var preSecondGrind = new Stage(
+    @"
+Now, grind an
+encounter at the end of the room,
+and proceed grinding and killing
+encounters until you are stopped
+Grind as you would in a normal
+run
+    ",
+    new Listener(
+        new Room(18),
+        new Callback(
+            tpTo(17, 430, 110)
+        )
+    ),
+    new Listener(
+        new Blcon(),
+        new Callback(
+            secondHalfSetup,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Grinding encounters (killing every enemy) in the second half
+/// </summary>
+var inSecondGrind = new GrindStage(
+    new Listener(
+        new RoomTransition(18, 17),
+        new Callback(
+            secondHalfTransition
+        )
+    ),
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            secondHalfRig
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            secondHalfEncounter(false)
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            secondHalfVictory
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before second half grinding with fleeing
+/// </summary>
+var preFleeGrind = new Stage(
+    @"
+Now, continue grinding
+just the same, but as if you had 19 kills,
+that is, flee after killing the
+first enemy for ALL encounters
+    ",
+    new Listener(
+        new Blcon(),
+        new Callback(
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Grinding encounters (killing one enemy and fleeing) in the second half
+/// </summary>
+var inFleeGrind = new Stage(
+    @"
+GRIND (KILL ONLY ONE)
+    ",
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            secondHalfRig
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            secondHalfEncounter(true)
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            secondHalfVictory
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before triple moldsmal
+/// </summary>
+var preTripleMold = new Stage(
+    @"
+Now, kill one last encounter
+it will be a triple mold, and you must only
+kill TWO monsters, then flee
+Feel free to still attack second one
+to simulate the Froggit Whimsun attacks
+    ",
+    new Listener(
+        new Blcon(),
+        new Callback(
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Battling triple moldsmal killing two enemies and fleeing
+/// </summary>
+var inTripleMold = new Stage(
+    @"
+GRIND (KILL ONLY TWO)
+    ",
+    new Listener(
+        new BeforeBattle(),
+        new Callback(
+            rigTripleMold
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            startSegment("tpl-mold-18")
+        )
+    ),
+    new Listener(
+        new LeaveBattle(),
+        new Callback(
+            stopTime,
+            tpTo(17, 500, 110),
+            maxRuinsKills,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Explanation before the end
+/// </summary>
+var ruinsPreEnd = new Stage(
+    @"
+Finally, walk to the right as if
+you have finished killing all
+monsters and play normally until
+the end of Ruins
+    ",
+    new Listener(
+        new Door("A", 17),
+        new Callback(
+            startSegment("ruins-napsta"),
+            next
+        )
+    )
+);
+
+/// <summary>
+/// Walking across rooms with "But nobody came"
+/// </summary>
+var ruinsNobodyCame = new ProceedStage(
+    new Listener(
+        new Blcon(),
+        new Callback(
+            stopTime
+        )
+    ),
+    new Listener(
+        new EnterBattle(),
+        new Callback(
+            nobodyCameSegments
+        )
+    )
+);
+
+/// <summary>
+/// Going to the end of the Ruins
+/// </summary>
+var ruinsEnd = new ProceedStage(
+    new Listener(
+        new Door("Amusic", 41),
+        new Callback(
+            stopTime,
+            next
+        )
+    )
+);
+
+/// <summary>
+/// After the session is finished
+/// </summary>
+var sessionFinished = new Stage(
+    @"
+Session finished!
+    "
+);
+
+/*
+SESSION DEFINITIONS
+*/
+
+/// <summary>
+/// Session for timing all segments in Ruins
+/// </summary>
+var ruinsScript = new Session(
+    offline,
+    ruinsStart,
+    ruinsHallway,
+    preLeafPile,
+    leafPileDowntime,
+    preFirstGrind,
+    inFirstGrind,
+    postFirstGrind,
+    leafFallDowntime,
+    preFalLEncounter,
+    inFalLEncounter,
+    leafFallTransition,
+    preOneRock,
+    oneRockDowntime,
+    preLeafMaze,
+    oneRockEncounter,
+    inLeafMaze,
+    preThreeRock,
+    threeRockDowntime,
+    preSecondGrind,
+    inSecondGrind,
+    preFleeGrind,
+    inFleeGrind,
+    preTripleMold,
+    inTripleMold,
+    ruinsPreEnd,
+    ruinsNobodyCame,
+    ruinsEnd,
+    sessionFinished
+);
 
 /******
 start of main script
@@ -434,13 +1663,10 @@ if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale") {
     ScriptError("Error 0: Script must be used in Undertale");
 }
 
-// code for specific game manipulation
-
-
 // make drawing work
 Data.GameObjects.ByName("obj_time").Visible = true;
 
-// initializing
+// initializing variables
 append(create, $@"
 // where recording text files will be saved
 directory_create('recordings');
@@ -536,7 +1762,7 @@ for (var i = 0; i < 4; i++) {{
 // C: 3x mold (3 times)
 );
 
-// edit step counts
+// add switch for enabling and disabling encounters
 replace(scrSteps, @"
     populationfactor = (argument2 / (argument2 - global.flag[argument3]))
     if (populationfactor > 8)
@@ -557,7 +1783,7 @@ if (obj_time.fast_encounters) {{
 }}
 ");
 
-// room tracker; it is useful for some segments that are room based
+// room tracker, widely used for room transition events
 append(step, @"
 previous_room = current_room;
 current_room = room;
@@ -590,7 +1816,6 @@ if (tp_flag) {{
 
 // downtime timer api
 append(step, @"
-// will likely need to tweak this slightly depending on the order of things
 // downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
 // since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
 if (is_downtime_mode) {
@@ -623,987 +1848,8 @@ draw_set_color(c_yellow);
 draw_text(20, 0, current_msg);
 ");
 
-// rigging attacks for froggit
-// it is placed right after mycommand declaration
-place(froggitAlarm, "0))", @$"
-// as a means to speed up practice, all of them will have frog skip by default
-var use_frogskip = 1;
-if (use_frogskip) {{
-    mycommand = 0;
-}} else {{
-    mycommand = 100;
-}}
-");
-
-// // STEP CHECKS (every frame)
-
-
-
-
-
-/// <summary>
-/// Function that if called will add debug functions to the game
-/// </summary>
-void useDebug () {
-    // updating it every frame is just a lazy way of doing it since it can't be done in obj_time's create event
-    // since it gets overwritten by gamestart
-    append(step, "global.debug = 1;");
-
-    // stage skip keybinds
-    // Q skips to stage 6
-    append(step, @$"
-    if (keyboard_check_pressed(ord('Q'))) {{
-        is_timer_running = 0;
-        stage = 3;
-        global.xp = 10;
-        script_execute(scr_levelup);
-        global.plot = 9;
-        {tpRuinsHallway}
-    }}
-    ");
-
-    // E skips to stage 14
-    append(step, @$"
-    if (keyboard_check_pressed(ord('E'))) {{
-        is_timer_running = 0;
-        obj_time.stage = 7;
-        global.xp = 30;
-        script_execute(scr_levelup);
-        global.plot = 9.5;
-        {leafpileTp}
-    }}
-    ");
-
-    string[] watchVars = {
-        "obj_time.stage",
-        "is_timer_running",
-        "segment_name",
-        "is_downtime_mode",
-        "is_downtime_running",
-        "downtime_name",
-        "global.encounter", 
-        "step_count",
-        "get_timer()",
-        "previous_time"
-    };
-
-    // start just with line break just to not interefere with anything
-    string code = @"
-    ";
-    int i = 0;
-    foreach (string watchVar in watchVars) {
-        code += $"draw_text(20, {110 + i * 25}, '{watchVar}: ' + string({watchVar}));";
-        i++;
-    }
-    append(draw, code);
-
-    // coordinates
-    append(draw, @$"
-    if (instance_exists(obj_mainchara)) {{
-        draw_text(20, {(110 + i * 25)}, 'x:' +  string(obj_mainchara.x));
-        draw_text(20, {(110 + (i + 1) * 25)}, 'y:' + string(obj_mainchara.y));
-    }}
-    ");
-}
-
-
-// so this is how the program works
-// script -> defines everything
-// break the script into stages
-// break the stages into events
-// group all listeners for each event by their stage
-// place the code for the listeners inside the respective events
-
-// IDEA
-// have events be part of enum
-// create event handler to handle each event
-//
-
-// EVENT CLASSES (not sure if I like this!!)
-
-abstract class UndertaleEvent {
-    public abstract string EventId ();
-}
-
-enum EventName {
-    PickName,
-    Blcon,
-    BeforeBattle,
-    EnterBattle,
-    LeaveBattle,
-    RoomTransition,
-    Room,
-    FroggitAttack,
-    FroggitTurnStart,
-    FroggitTurnEnd,
-    YouWon,
-    Door
-
-
-}
-
-class PickName : UndertaleEvent {
-    public override string EventId () {
-        return EventName.PickName.ToString();
-    }
-}
-
-class Blcon : UndertaleEvent {
-    public override string EventId () {
-        return EventName.Blcon.ToString();
-    }
-}
-
-class EnterBattle : UndertaleEvent {
-    public int Battlegroup;
-    
-    public EnterBattle () {
-        Battlegroup = -1;
-    }
-
-    public EnterBattle (int battlegroup) {
-        Battlegroup = battlegroup;
-    }
-
-    public override string EventId () {
-        string group = Battlegroup > -1 ? $",{Battlegroup.ToString()}" : "";
-        return $"{EventName.EnterBattle}{group}";
-    }
-}
-
-class RoomTransition : UndertaleEvent {
-    public int PreviousRoom;
-
-    public int CurrentRoom;
-
-    public RoomTransition (int prev, int cur) {
-        PreviousRoom = prev;
-        CurrentRoom = cur;
-    }
-
-    public override string EventId () {
-        return $"{EventName.RoomTransition},{PreviousRoom},{CurrentRoom}";
-    }
-}
-
-class Room : UndertaleEvent {
-    public int RoomId;
-
-    public Room (int room) {
-        RoomId = room;
-    }
-
-    public override string EventId () {
-        return $"{EventName.Room},{RoomId}";
-    }
-}
-class LeaveBattle : UndertaleEvent {
-    public override string EventId () {
-        return EventName.LeaveBattle.ToString();
-    }
-}
-
-class BeforeBattle : UndertaleEvent {
-    public override string EventId () {
-        return EventName.BeforeBattle.ToString();
-    }
-}
-
-class FroggitAttack : UndertaleEvent {
-    public override string EventId () {
-        return EventName.FroggitAttack.ToString();
-    }
-}
-
-class FroggitTurnEnd : UndertaleEvent {
-    public override string EventId () {
-        return EventName.FroggitTurnEnd.ToString();
-    }
-}
-
-class FroggitTurnStart : UndertaleEvent {
-    public override string EventId () {
-        return EventName.FroggitTurnStart.ToString();
-    }
-}
-
-class YouWon : UndertaleEvent {
-    public override string EventId () {
-        return EventName.YouWon.ToString();
-    }
-}
-
-class Door : UndertaleEvent {
-    public string Name;
-
-    public int Room;
-    
-    public Door (string name, int room) {
-        Name = name;
-        Room = room;
-    }
-
-    public override string EventId () {
-        return $"{EventName.Door},{Name},{Room}";
-    }
-}
-
-
-class Stage {
-    public Listener[] Listeners;
-
-    public string Message;
-
-    public Stage (string msg, params Listener[] listeners) {
-        Listeners = listeners;
-        Message = msg;
-    }
-}
-
-class ProceedStage : Stage {
-    public ProceedStage (params Listener[] listeners) : base(@"
-PROCEED
-    ", listeners) {}
-}
-
-class WalkStage : Stage {
-    public WalkStage (params Listener[] listeners) : base(@"
-WALK
-    ", listeners) {}
-}
-
-class GrindStage : Stage {
-    public GrindStage (params Listener[] listeners) : base(@"
-GRIND
-    ", listeners) {}
-}
-
-class Session {
-    public Stage[] Stages;
-
-    public Session (params Stage[] stages) {
-        Stages = stages;
-    }
-}
-
-
-var rigFirstHalf = $@"
-{firstHalfCurrentEncounter}
-// only 'A' is not rigged
-if (encounter_name != 'A') {{
-    // default to froggit, since it's the most probable
-    var to_battle = 4;
-    if (encounter_name == 'W') {{
-        // whimsun battlegroup
-        to_battle = 5;
-    }}
-    global.battlegroup = to_battle;
-}}
-";
-
-var unrigFrogskip = $@"
-{firstHalfCurrentEncounter}
-if (encounter_name == 'N') {{
-    use_frogskip = 0;
-}}
-";
-
-var timeFrogTurn = $@"
-{firstHalfCurrentEncounter}
-var name = 0;
-switch (encounter_name) {{
-    case 'F':
-        name = 'frogskip';
-        break;
-    case 'N':
-        name = 'not-frogskip';
-        break;
-}}
-if (name != 0) {{
-    {startSegment("name", true)}
-}}
-";
-
-string endFrogTime = $@"
-{firstHalfCurrentEncounter}
-if (encounter_name == 'F' || encounter_name == 'N') {{
-    {stopTime}
-}}
-";
-
-var timeYouWon = @$"
-{firstHalfCurrentEncounter}
-// for 'A', we are starting time for the LV up text
-if (encounter_name == 'A') {{
-    {startSegment("lv-up")}
-}} else if (encounter_name == 'N') {{
-    // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
-    {startSegment("you-won")}
-}}
-";
-
-var rigWhimsun = @$"
-global.battlegroup = 5;
-";
-
-var secondHalfTransition = @$"
-if (current_encounter == 1 || current_encounter == 2) {{
-    {stopTime}
-}}
-";
-
-
-string secondHalfEncounter (bool isFleeGrind) {
-    int gmlBool = isFleeGrind ? 1 : 0;
-    return @$"
-    {secondHalfCurrentEncounter}
-    var name = 0;
-    if (encounter_name == 'W') {{
-        name = 'frog-whim';
-    }} else if (encounter_name == 'F') {{
-        name = 'dbl-frog';
-    }} else if (encounter_name == 'A') {{
-        name = 'sgl-mold';
-    }} else if (encounter_name == 'B') {{
-        name = 'dbl-mold';
-    }} else if (encounter_name == 'C') {{
-        name = 'tpl-mold';
-    }}
-    if ({gmlBool}) {{
-        name += '-19';
-    }}
-    {startSegment("name", true)}
-    ";
-}
-
-
-
-var secondHalfVictory = @$"
-{stopTime}
-// last ones so we TP for explanation
-obj_time.current_encounter++;
-if (obj_time.current_encounter == {noFleeLength} || obj_time.current_encounter == {secondHalfLength}) {{
-    {tpTo(18, 40, 110)}
-    obj_time.stage++;
-}}
-
-// first one means we are coming from the incomplete transition from three rock
-if (current_encounter == 1) {{
-    {startSegment("three-rock-transition")}
-// second one for measuring the condition that happens for any given one
-}} else if (current_encounter == 2) {{
-    {startSegment("ruins-second-transition")}
-}}
-";
-
-var secondHalfRig = @$"
-{secondHalfCurrentEncounter}
-if (encounter_name == 'W') {{
-    global.battlegroup = 6;
-}} else if (encounter_name == 'F') {{
-    global.battlegroup = 9;
-}} else if (encounter_name == 'A') {{
-    global.battlegroup = 7;
-}} else if (encounter_name == 'B') {{
-    global.battlegroup = 10;
-}} else if (encounter_name == 'C') {{
-    global.battlegroup = 8;
-}}
-";
-
-var maxRuinsKills = @$"
-global.flag[202] = 20;
-";
-
-var rigTripleMold = @$"
-global.battlegroup = 8;
-";
-
-var nobodyCameSegments = @$"
-if (obj_time.nobody_came == 0) {{
-    {startSegment("ruins-switches")}
-}} else if (obj_time.nobody_came == 1) {{
-    {startSegment("perspective-a")}
-}} else if (obj_time.nobody_came == 2) {{
-    {startSegment("perspective-b")}
-}} else if (obj_time.nobody_came == 3) {{
-    {startSegment("perspective-c")}
-}} else if (obj_time.nobody_came == 4) {{
-    {startSegment("perspective-d")}
-}} else {{
-    {startSegment("ruins-end")}
-    obj_time.stage++;
-}}
-obj_time.nobody_came++;
-";
-
-
-
-
-var secondHalfSetup = @$"
-obj_time.current_encounter = 0;
-";
-
-class Callback {
-    public string GMLCode;
-
-    public Callback (params string[] code) {
-        GMLCode = "\n" + String.Join("\n", code) + "\n";
-    }
-}
-
-class Listener {
-    public UndertaleEvent Event;
-
-    public Callback ListenerCallback; 
-
-    public Listener (UndertaleEvent undertaleEvent, Callback callback) {
-        Event = undertaleEvent;
-        ListenerCallback = callback;
-    }
-}
-
-var offline = new Stage(
-    @"
-RECORDING SESSION WAITING TO START
-To start it, begin a normal run,
-and keep playing until the mod stops you
-    ",
-    new Listener(
-        new PickName(),
-        new Callback(
-            startSession,
-            startSegment("ruins-start"),
-            next
-        )
-    )
-);
-
-var ruinsStart = new ProceedStage(
-    new Listener(
-        new Blcon(),
-        new Callback(
-            stopTime
-        )
-    ),
-    new Listener(
-        new EnterBattle(3),
-        new Callback(
-            startSegment("ruins-hallway"),
-            next
-        )
-    )
-);
-
-var ruinsHallway = new ProceedStage(
-    new Listener(
-        new RoomTransition(11, 12),
-        new Callback(
-            stopTime,
-            next,
-            tpTo(11, 2400, 80)
-        )
-    )
-);
-
-var preLeafPile = new Stage(
-    @"
-Next, walk through the next room
-as quickly as possible
-    ",
-    new Listener(
-        new RoomTransition(11, 12),
-        new Callback(
-            startDowntime("ruins-leafpile", 97),
-            next
-        )
-    )
-);
-
-var leafPileDowntime = new WalkStage(
-    new Listener(
-        new Door("C", 12),
-        new Callback(
-            stopDowntime,
-            enableEncounters,
-            next
-        )
-    )
-);
-
-var preFirstGrind = new Stage(
-    @"
-Now, grind and encounter at the end of
-the room and continue grinding as if you were
-in a normal run
-    ",
-    new Listener(
-        new Room(14),
-        new Callback(
-            tpTo(12, 180, 260)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            next
-        )
-    )
-);
-
-var inFirstGrind = new GrindStage(
-    new Listener(
-        new RoomTransition(12, 14),
-        new Callback(
-            firstHalfTransition(1)
-        )
-    ),
-    new Listener(
-        new RoomTransition(14, 12),
-        new Callback(
-            firstHalfTransition(2)
-        )
-    ),
-    new Listener(
-        new EnterBattle(),
-        new Callback(
-            firstHalfEncounter
-        )
-    ),
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            firstHalfVictory
-        )
-    ),
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            rigFirstHalf
-        )
-    ),
-    new Listener(
-        new FroggitAttack(),
-        new Callback(
-            timeFrogTurn
-        )
-    ),
-    new Listener(
-        new FroggitTurnStart(),
-        new Callback(
-            unrigFrogskip,
-            timeFrogTurn
-        )
-    ),
-    new Listener(
-        new FroggitTurnEnd(),
-        new Callback(
-            endFrogTime
-        )
-    ),
-    new Listener(
-        new YouWon(),
-        new Callback(
-            timeYouWon
-        )
-    )
-);
-
-var postFirstGrind = new Stage(
-    @"
-Now, walk to the right room
-and simply cross it (don't grind)
-    ",
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            tpTo(12, 240, 340)
-        )
-    ),
-    new Listener(
-        new RoomTransition(12, 14),
-        new Callback(
-            startDowntime("ruins-leaf-fall"),
-            next
-        )
-    )
-);
-
-var leafFallDowntime = new WalkStage(
-    new Listener(
-        new Door("A", 14),
-        new Callback(
-            stopDowntime,
-            enableEncounters,
-            next
-        )
-    )
-);
-
-var preFalLEncounter = new Stage(
-    @"
-Now, grind an encounter at
-the end of this room and proceed as if it
-were a normal run until you are stopped
-    ",
-    new Listener(
-        new Room(15),
-        new Callback(
-            tpTo(14, 210, 100)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            next
-        )
-    )
-);
-
-var inFalLEncounter = new ProceedStage(
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            rigWhimsun
-        )
-    ),
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            startSegment("leaf-fall-transition"),
-            next
-        )
-    )
-);
-
-var leafFallTransition = new ProceedStage(
-    new Listener(
-        new RoomTransition(14, 15),
-        new Callback(
-            stopTime,
-            disableEncounters,
-            tpTo(14, 200, 80),
-            next
-        )
-    )
-);
-
-var preOneRock = new Stage(
-    @"
-Now, go through the next room
-from beginning to end as if it was a
-normal run but without grinding an encounter
-at the end
-    ",
-    new Listener(
-        new RoomTransition(14, 15),
-        new Callback(
-            startDowntime("ruins-one-rock"),
-            next
-        )
-    )
-);
-
-var oneRockDowntime = new WalkStage(
-    new Listener(
-        new Door("A", 15),
-        new Callback(
-            stopDowntime,
-            enableEncounters,
-            next
-        )
-    )
-);
-
-var preLeafMaze = new Stage(
-    @"
-Now grind at the
-end of the room, and proceed as a normal
-run until you are stopped
-    ",
-    new Listener(
-        new Room(16),
-        new Callback(
-            tpTo(15, 340, 100)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            next
-        )
-    )
-);
-
-var oneRockEncounter = new ProceedStage(
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            rigWhimsun
-        )
-    ),
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            disableEncounters,
-            startSegment("ruins-maze"),
-            next
-        )
-    )
-);
-
-var inLeafMaze = new ProceedStage(
-    new Listener(
-        new RoomTransition(16, 17),
-        new Callback(
-            stopTime,
-            disableEncounters,
-            tpTo(16, 520, 220),
-            next
-        )
-    )
-);
-
-var preThreeRock = new Stage(
-    @"
-Now, go through the next
-room from begining to end as if it was
-a normal run but without grinding an encounter
-at the end
-    ",
-    new Listener(
-        new RoomTransition(16, 17),
-        new Callback(
-            startDowntime("ruins-three-rock"),
-            next
-        )
-    )
-);
-
-var threeRockDowntime = new WalkStage(
-    new Listener(
-        new Door("A", 17),
-        new Callback(
-            stopDowntime,
-            enableEncounters,
-            next
-        )
-    )
-);
-
-var preSecondGrind = new Stage(
-    @"
-Now, grind an
-encounter at the end of the room,
-and proceed grinding and killing
-encounters until you are stopped
-Grind as you would in a normal
-run
-    ",
-    new Listener(
-        new Room(18),
-        new Callback(
-            tpTo(17, 430, 110)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            secondHalfSetup,
-            next
-        )
-    )
-);
-
-var inSecondGrind = new GrindStage(
-    new Listener(
-        new RoomTransition(18, 17),
-        new Callback(
-            secondHalfTransition
-        )
-    ),
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            secondHalfRig
-        )
-    ),
-    new Listener(
-        new EnterBattle(),
-        new Callback(
-            secondHalfEncounter(false)
-        )
-    ),
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            secondHalfVictory
-        )
-    )
-);
-
-var preFleeGrind = new Stage(
-    @"
-Now, continue grinding
-just the same, but as if you had 19 kills,
-that is, flee after killing the
-first enemy for ALL encounters
-    ",
-    new Listener(
-        new Blcon(),
-        new Callback(
-            next
-        )
-    )
-);
-
-var inFleeGrind = new Stage(
-    @"
-GRIND (KILL ONLY ONE)
-    ",
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            secondHalfRig
-        )
-    ),
-    new Listener(
-        new EnterBattle(),
-        new Callback(
-            secondHalfEncounter(true)
-        )
-    ),
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            secondHalfVictory
-        )
-    )
-);
-
-var preTripleMold = new Stage(
-    @"
-Now, kill one last encounter
-it will be a triple mold, and you must only
-kill TWO monsters, then flee
-Feel free to still attack second one
-to simulate the Froggit Whimsun attacks
-    ",
-    new Listener(
-        new Blcon(),
-        new Callback(
-            next
-        )
-    )
-);
-
-var inTripleMold = new Stage(
-    @"
-GRIND (KILL ONLY TWO)
-    ",
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            rigTripleMold
-        )
-    ),
-    new Listener(
-        new EnterBattle(),
-        new Callback(
-            startSegment("tpl-mold-18")
-        )
-    ),
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
-            stopTime,
-            tpTo(17, 500, 110),
-            maxRuinsKills,
-            next
-        )
-    )
-);
-
-var ruinsPreEnd = new Stage(
-    @"
-Finally, walk to the right as if
-you have finished killing all
-monsters and play normally until
-the end of Ruins
-    ",
-    new Listener(
-        new Door("A", 17),
-        new Callback(
-            startSegment("ruins-napsta"),
-            next
-        )
-    )
-);
-
-var ruinsNobodyCame = new ProceedStage(
-    new Listener(
-        new Blcon(),
-        new Callback(
-            stopTime
-        )
-    ),
-    new Listener(
-        new EnterBattle(),
-        new Callback(
-            nobodyCameSegments
-        )
-    )
-);
-
-var ruinsEnd = new ProceedStage(
-    new Listener(
-        new Door("Amusic", 41),
-        new Callback(
-            stopTime,
-            next
-        )
-    )
-);
-
-var sessionFinished = new Stage(
-    @"
-Session finished!
-    "
-);
-
-var ruinsScript = new Session(
-    offline,
-    ruinsStart,
-    ruinsHallway,
-    preLeafPile,
-    leafPileDowntime,
-    preFirstGrind,
-    inFirstGrind,
-    postFirstGrind,
-    leafFallDowntime,
-    preFalLEncounter,
-    inFalLEncounter,
-    leafFallTransition,
-    preOneRock,
-    oneRockDowntime,
-    preLeafMaze,
-    oneRockEncounter,
-    inLeafMaze,
-    preThreeRock,
-    threeRockDowntime,
-    preSecondGrind,
-    inSecondGrind,
-    preFleeGrind,
-    inFleeGrind,
-    preTripleMold,
-    inTripleMold,
-    ruinsPreEnd,
-    ruinsNobodyCame,
-    ruinsEnd,
-    sessionFinished
-);
-
 // code that assigns the current_msg variable
+// TO-DO: Current only takes for ruins. Refactor once more sessions are supported
 var messageList = new List<string>();
 for (int i = 0; i < ruinsScript.Stages.Length; i++) {
     messageList.Add($@"
@@ -1615,26 +1861,34 @@ for (int i = 0; i < ruinsScript.Stages.Length; i++) {
 
 append(step, generateIfElseBlock(messageList));
 
+// rigging frogskip for all froggit encounters to speed up practice
+// it is placed right after mycommand declaration
+place(froggitAlarm, "0))", @$"
+// as a means to speed up practice, all of them will have frog skip by default
+var use_frogskip = 1;
+if (use_frogskip) {{
+    mycommand = 0;
+}} else {{
+    mycommand = 100;
+}}
+");
 
-// 1st step is to break into stages
+// placing all listeners for all stages
 
-
-// 2nd step is to break into events
+// first, create a map of all unique events that maps to a map of all stages and their respective code
 var events = new Dictionary<string, Dictionary<int, Callback>>();
 
-int i = 0;
-foreach (Stage stage in ruinsScript.Stages) {
+for (int i = 0; i < ruinsScript.Stages.Length; i++) {
+    var stage = ruinsScript.Stages[i];
     foreach (Listener listener in stage.Listeners) {
         if (!events.ContainsKey(listener.Event.EventId())) {
             events[listener.Event.EventId()] = new Dictionary<int, Callback>();
         }
         events[listener.Event.EventId()][i] = listener.ListenerCallback;
     }
-    i++;
 }
 
-
-// 4th step: define variables to use in each event listener
+// events that use arguments will need specific code placement
 
 var roomTransitions = new Dictionary<string, string>();
 
