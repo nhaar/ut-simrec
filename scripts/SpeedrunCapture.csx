@@ -7,33 +7,72 @@ CODE ENTRIES
 */
 
 // will be using obj_time for the API of the mod
+
+/// <summary>
+/// `Create` script for `obj_time`
+/// </summary>
 var create = "gml_Object_obj_time_Create_0";
+
+/// <summary>
+/// `BeginStep` script for `obj_time`
+/// </summary>
 var step = "gml_Object_obj_time_Step_1";
+
+/// <summary>
+/// `Draw` script for `obj_time`
+/// </summary>
 var draw = "gml_Object_obj_time_Draw_64";
 
+/// <summary>
+/// Code that runs at the start of "blcon"s
+/// </summary>
 var blcon = "gml_Object_obj_battleblcon_Create_0";
 
+/// <summary>
+/// Code that runs at the end of "blcon"s
+/// </summary>
 var blconAlarm = "gml_Object_obj_battleblcon_Alarm_0";
 
-// code for picking how many steps are needed for an encounter
+/// <summary>
+/// Code for picking how many steps are needed for an encounter
+/// </summary>
 var scrSteps = "gml_Script_scr_steps";
 
-// for knowing the naming screen before the run start
+/// <summary>
+/// Code where the player picks the name for the game
+/// </summary>
 var naming = "gml_Script_scr_namingscreen";
 
-// for the YOU WON screen
+/// <summary>
+/// Step code that contains the "YOU WON" screen
+/// </summary>
 var battlecontrol = "gml_Object_obj_battlecontroller_Step_0";
 
-// froggit enemy step
+/// <summary>
+/// Step code for Froggit
+/// </summary>
 var froggitStep = "gml_Object_obj_froggit_Step_0";
 
-// froggit enemy alarm used for deciding the attacks
+/// <summary>
+/// Froggit enemy alarm used to decide the attacks
+/// </summary>
 var froggitAlarm = "gml_Object_obj_froggit_Alarm_6";
 
 // code for the room transition doors being touched
 
+/// <summary>
+/// Code for touching `doorA`
+/// </summary>
 var doorA = "gml_Object_obj_doorA_Other_19";
+
+/// <summary>
+/// Code for touching `doorAmusic`
+/// </summary>
 var doorAmusic = "gml_Object_obj_doorAmusicfade_Other_19";
+
+/// <summary>
+/// Code for touching `doorC`
+/// </summary>
 var doorC = "gml_Object_obj_doorC_Other_19";
 
 /*
@@ -69,6 +108,13 @@ void place (string codeName, string preceding, string placement) {
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
 }
 
+/// <summary>
+/// Place text inside a code entry in which the location to place it is currently a "braceless" if statement
+/// (with only one statement) and you want to put it inside this braceless if statement
+/// </summary>
+/// <param name="codeName">Name of the code entry</param>
+/// <param name="preceding">String matching the exact text for the statement inside if</param>
+/// <param name="placement">New code to place</param>
 void placeInIf (string codeName, string preceding, string placement) {
     ReplaceTextInGML(codeName, preceding, @$"
     {{
@@ -83,28 +129,27 @@ GML GENERATING/MANIPULATION/ETC.
 */
 
 /// <summary>
-/// Generate GML code that (assuming it exists) finds the first index in an array that contains only `0`
-/// and assigns it a value
+/// Generate GML code that (assuming the array has enough empty indexes) populates entries of the array randomly
+/// with a given set of string values
 /// </summary>
-/// <param name="arr">Name of the array variable in GML</param>
-/// <param name="index">The first index to start searching, it will go up from here</param>
-/// <param name="value">Value to assign to the found spot</param>
-/// <remarks>
-/// If it incorrectly assumes there is a free index then it will crash the game with an out of range error
-/// </remarks>
+/// <param name="arr">Name of the array variable</param>
+/// <param name="elements">Value of all elements to populate</param>
 /// <returns></returns>
-string assignNonTakenIndex (string arr, string index, string value) {
+string randomPopulateArray (string arr, params string[] elements) {
     var arrAccess = arr + "[target_index]";
-    return @$"
-    var target_index = {index};
-    // using 0 to indicate non existent elements
-    while ({arrAccess} != 0) {{
-        target_index++;
-    }}
-    {arrAccess} = {value};
-    ";
+    var code = "";
+    for (int i = elements.Length - 1; i >= 0; i--) {
+        code += @$"
+        var target_index = irandom({i});
+        // using 0 to indicate non existent elements
+        while ({arrAccess} != 0) {{
+            target_index++;
+        }}
+        {arrAccess} = '{elements[i]}';
+        ";
+    }
+    return code;
 }
-
 
 string generateIfElseBlock (List<string> ifBlocks) {
     return generateIfElseBlock(ifBlocks.ToArray());
@@ -302,7 +347,8 @@ var secondHalfLength = noFleeLength * 2 - 1;
 /// <summary>
 /// GML code that assigns a `var` `encounter_name` the value of the current second half encounter
 /// </summary>
-var secondHalfCurrentEncounter = "var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];";
+var secondHalfCurrentEncounter = @"var encounter_name = obj_time.second_half_encounters[obj_time.current_encounter];
+show_debug_message(encounter_name)";
 
 /// <summary>
 /// Generate GML code that teleports the player to a room and in a given position inside the room
@@ -449,9 +495,7 @@ first_half_encounters[lv3_index] = '3';
 // leave an empty encounter for the LV up so that LV up itself can be measured 
 first_half_encounters[lv2_index + 1] = 'A';
 
-{assignNonTakenIndex("first_half_encounters", "irandom(2)", "'W'")}
-{assignNonTakenIndex("first_half_encounters", "irandom(1)", "'F'")}
-{assignNonTakenIndex("first_half_encounters", "0", "'N'")}
+{randomPopulateArray("first_half_encounters", "W", "F", "N")}
 
 // ruins first half encounters array guide:
 // W: whimsun
@@ -462,15 +506,13 @@ first_half_encounters[lv2_index + 1] = 'A';
 // A: any (random encounter)
 
 second_half_encounters[9] = 0;
-{assignNonTakenIndex("second_half_encounters", "irandom(4)", "'W'")}
-{assignNonTakenIndex("second_half_encounters", "irandom(3)", "'F'")} 
-{assignNonTakenIndex("second_half_encounters", "irandom(2)", "'A'")} 
-{assignNonTakenIndex("second_half_encounters", "irandom(1)", "'B'")} 
-{assignNonTakenIndex("second_half_encounters", "0", "'C'")}
-{assignNonTakenIndex("second_half_encounters", "irandom(3) + 5", "'W'")} 
-{assignNonTakenIndex("second_half_encounters", "irandom(2) + 5", "'F'")} 
-{assignNonTakenIndex("second_half_encounters", "irandom(1) + 5", "'B'")} 
-{assignNonTakenIndex("second_half_encounters", "5", "'C'")}
+second_half_flee_encounters[3] = 0;
+
+{randomPopulateArray("second_half_encounters", "W", "F", "A", "B", "C")}
+{randomPopulateArray("second_half_flee_encounters", "W", "F", "B", "C")}
+for (var i = 0; i < 4; i++) {{
+    second_half_encounters[5 + i] = second_half_flee_encounters[i];
+}}
 "
 // ruins second half encounters array guide:
 // W: frog whim (2 times)
