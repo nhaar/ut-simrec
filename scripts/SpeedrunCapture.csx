@@ -4,6 +4,74 @@ using System.Linq;
 helper variables and functions
 ******/
 
+class UndertaleRoom {
+    public UndertaleRoom Previous = null;
+
+    public UndertaleRoom Next = null;
+
+    public int RoomId;
+
+    private void Init (int id, UndertaleRoom prev) {
+        Previous = prev;
+        RoomId = id;
+
+        // asserting neighbors correctness
+        Previous.Next = this;
+    }
+
+    public UndertaleRoom () {}
+
+    public UndertaleRoom (int id) {
+        Init(id, new UndertaleRoom());
+    }
+
+    public UndertaleRoom (int id, UndertaleRoom prev) {
+        Init(id, prev);
+    }
+}
+
+static class RoomClass {
+    public static UndertaleRoom RuinsHallway = new UndertaleRoom(11);
+
+    public static UndertaleRoom RuinsLeafPile = new UndertaleRoom(12, RuinsHallway);
+
+    public static UndertaleRoom RuinsLeafFall = new UndertaleRoom(14, RuinsLeafPile);
+
+    public static UndertaleRoom RuinsOneRock = new UndertaleRoom(15, RuinsLeafFall);
+
+    public static UndertaleRoom RuinsLeafMaze = new UndertaleRoom(16, RuinsOneRock);
+
+    public static UndertaleRoom RuinsThreeRock = new UndertaleRoom(17, RuinsLeafMaze);
+
+    public static UndertaleRoom RuinsCheese = new UndertaleRoom(18, RuinsThreeRock);
+
+    public static UndertaleRoom RuinsCredits = new UndertaleRoom(325);
+
+    public static UndertaleRoom SnowdinRuinsDoor = new UndertaleRoom(44, RuinsCredits);
+
+    public static UndertaleRoom SnowdinConvenientLamp = new UndertaleRoom(45, SnowdinRuinsDoor);
+
+    public static UndertaleRoom SnowdinBoxRoad = new UndertaleRoom(46, SnowdinConvenientLamp);
+
+    public static UndertaleRoom SnowdinHumanRock = new UndertaleRoom(48, SnowdinBoxRoad);
+
+    public static UndertaleRoom SnowdinDoggo = new UndertaleRoom(49, SnowdinHumanRock);
+
+    public static UndertaleRoom SnowdinDirectionsSign = new UndertaleRoom(50, SnowdinDoggo);
+
+    public static UndertaleRoom SnowdinSpaghetti = new UndertaleRoom(56);
+
+    public static UndertaleRoom SnowdinDogi = new UndertaleRoom(57, SnowdinSpaghetti);
+
+    public static UndertaleRoom SnowdinPoffZone = new UndertaleRoom(66);
+
+    public static UndertaleRoom SnowdinDangerBridge = new UndertaleRoom(67, SnowdinPoffZone);
+
+    public static UndertaleRoom SnowdinTown = new UndertaleRoom(68, SnowdinDangerBridge);
+
+}
+
+
 // Class for a GML if-else code block
 class IfElseBlock {
     /// <summary>
@@ -742,34 +810,29 @@ class EnterBattle : UndertaleEvent {
     }
 }
 
+
 /// <summary>
 /// Event for a room transition
 /// </summary>
 class RoomTransition : UndertaleEvent {
-    /// <summary>
-    /// Id of the room being transitioned out of
-    /// </summary>
-    public int PreviousRoom;
+    public int Start;
 
-    /// <summary>
-    /// Id of the room being transitioned into
-    /// </summary>
-    public int CurrentRoom;
+    public int End;
 
-    /// <summary>
-    /// Create event listening to transition from room with ids `prev` to `cur`
-    /// </summary>
-    /// <param name="prev"></param>
-    /// <param name="cur"></param>
-    public RoomTransition (int prev, int cur) {
-        PreviousRoom = prev;
-        CurrentRoom = cur;
+    public RoomTransition (UndertaleRoom room, bool isForwards = true) {
+        if (isForwards) {
+            Start = room.RoomId;
+            End = room.Next.RoomId;
+        } else {
+            Start = room.RoomId;
+            End = room.Previous.RoomId;
+        }
     }
     
     public override PlaceMethod Method => PlaceMethod.Append;
 
     public override string GMLCondition () {
-        return $"obj_time.previous_room == {PreviousRoom} && room == {CurrentRoom}";
+        return $"obj_time.previous_room == {Start} && room == {End}";
     }
     
     public override string CodeEntry() {
@@ -777,7 +840,7 @@ class RoomTransition : UndertaleEvent {
     }
 
     public override string EventArgs () {
-        return $"{PreviousRoom},{CurrentRoom}";
+        return $"{Start},{End}";
     }
 }
 
@@ -1041,9 +1104,9 @@ class ProceedExitRoomStage : ProceedStage {
     /// <param name="room">The room to teleport to</param>
     /// <param name="x">The x position to teleport to</param>
     /// <param name="y">The y position to teleport to</param>
-    public ProceedExitRoomStage (bool disable, int origin, int dest, int room, int x, int y) : base(
+    public ProceedExitRoomStage (bool disable, UndertaleRoom transitionRoom, int room, int x, int y, bool isTransitionForwards = true) : base(
         new Listener(
-            new RoomTransition(origin, dest),
+            new RoomTransition(transitionRoom, isTransitionForwards),
             GMLCodeClass.ExitSegment(room, x, y, disable)
         )
     ) {}
@@ -1061,9 +1124,9 @@ class PreDowntimeStage : Stage {
     /// <param name="downtimeName">Name of the new downtime</param>
     /// <param name="steps">Number of optimal steps</param>
     /// <returns></returns>
-    private static Listener DefaultListener (int origin, int dest, string downtimeName, int steps) {
+    private static Listener DefaultListener (UndertaleRoom transitionRoom, string downtimeName, int steps = 10000) {
         return new Listener(
-            new RoomTransition(origin, dest),
+            new RoomTransition(transitionRoom),
             GMLCodeClass.NextDowntime(downtimeName, steps)
         );
     }
@@ -1076,9 +1139,9 @@ class PreDowntimeStage : Stage {
     /// <param name="dest"></param>
     /// <param name="downtimeName"></param>
     /// <param name="steps"></param>
-    public PreDowntimeStage (string msg, int origin, int dest, string downtimeName, int steps = 10000) : base(
+    public PreDowntimeStage (string msg, UndertaleRoom transitionRoom, string downtimeName, int steps = 10000) : base(
         msg,
-        DefaultListener(origin, dest, downtimeName, steps)
+        DefaultListener(transitionRoom, downtimeName, steps)
     ) {}
 
     /// <summary>
@@ -1090,9 +1153,9 @@ class PreDowntimeStage : Stage {
     /// <param name="downtimeName">Name for the downtime to start</param>
     /// <param name="extraListeners">Aditionall listeners to bind to stage</param>
     /// <param name=""></param>
-    public PreDowntimeStage (string msg, int origin, int dest, string downtimeName, Listener[] extraListeners, int steps = 10000) : base(
+    public PreDowntimeStage (string msg, UndertaleRoom transitionRoom, string downtimeName, Listener[] extraListeners, int steps = 10000) : base(
         msg,
-        (new Listener[] { DefaultListener(origin, dest, downtimeName, steps) }).Concat(extraListeners).ToArray()
+        (new Listener[] { DefaultListener(transitionRoom, downtimeName, steps) }).Concat(extraListeners).ToArray()
     ) {}
 }
 
@@ -1229,15 +1292,7 @@ class EncounterName {
 /// Class for a timed transition in a grind
 /// </summary>
 class GrindTransition {
-    /// <summary>
-    /// Room that the transition starts
-    /// </summary>
-    public int OriginRoom;
-
-    /// <summary>
-    /// Room that the transition ends
-    /// </summary>
-    public int DestinationRoom;
+    public RoomTransition Event;
 
     /// <summary>
     /// Condition for starting and ending the segment timer for this condition
@@ -1256,9 +1311,8 @@ class GrindTransition {
     /// <param name="destination"></param>
     /// <param name="condition"></param>
     /// <param name="segmentName"></param>
-    public GrindTransition (int origin, int destination, string condition, string segmentName) {
-        OriginRoom = origin;
-        DestinationRoom = destination;
+    public GrindTransition (UndertaleRoom start, string condition, string segmentName, bool isForwards = true) {
+        Event = new RoomTransition(start, isForwards);
         Condition = condition;
         SegmentName = segmentName;
     }
@@ -1280,11 +1334,11 @@ class StaticGrindTransition : GrindTransition {
     /// <param name="destination"></param>
     /// <param name="number">Number of the `current_encounter` the transition should play</param>
     /// <param name="segmentName"></param>
-    public StaticGrindTransition (int origin, int destination, int number, string segmentName) : base(
-        origin,
-        destination,
+    public StaticGrindTransition (UndertaleRoom start, int number, string segmentName, bool isForwards = true) : base(
+        start,
         $"(obj_time.current_encounter == {number})",
-        segmentName
+        segmentName,
+        isForwards
     ) {}
 }
 
@@ -1341,7 +1395,7 @@ class GrindStage : Stage {
 
             listeners.Add(
                 new Listener(
-                    new RoomTransition(transition.OriginRoom, transition.DestinationRoom),
+                    transition.Event,
                     @$"
                     if ({transition.Condition}) {{
                         {GMLCodeClass.StopTime}
@@ -1531,7 +1585,7 @@ var ruinsStart = new ProceedStage(
 /// <summary>
 /// Normal run from first froggit up to long hallway exit
 /// </summary>
-var ruinsHallway = new ProceedExitRoomStage(false, 11, 12, 11, 2400, 80);
+var ruinsHallway = new ProceedExitRoomStage(false, RoomClass.RuinsHallway, 11, 2400, 80);
 
 /// <summary>
 /// Explanation before leaf pile
@@ -1541,8 +1595,7 @@ var preLeafPile = new PreDowntimeStage(
 Next, walk through the next room
 as quickly as possible
     ",
-    11,
-    12,
+    RoomClass.RuinsHallway,
     "ruins-leafpile",
     97
 );
@@ -1577,8 +1630,8 @@ var inFirstGrind = new GrindStage(
         new EncounterName("A", 5, true) // TO-DO: this was originally unrigged!
     },
     new GrindTransition[] {
-        new StaticGrindTransition(12, 14, 1, "leaf-pile-transition"),
-        new StaticGrindTransition(14, 12, 2, "ruins-first-transition")
+        new StaticGrindTransition(RoomClass.RuinsLeafPile, 1, "leaf-pile-transition"),
+        new StaticGrindTransition(RoomClass.RuinsLeafFall, 2, "ruins-first-transition", false)
     },
     @$"
     // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
@@ -1649,8 +1702,7 @@ var postFirstGrind = new PreDowntimeStage(
 Now, walk to the right room
 and simply cross it (don't grind)
     ",
-    12,
-    14,
+    RoomClass.RuinsLeafPile,
     "ruins-leaf-fall",
     new Listener [] {
         new Listener(
@@ -1691,7 +1743,7 @@ var inFalLEncounter = new ProceedStage(
 /// <summary>
 /// Exitting leaf fall room
 /// </summary>
-var leafFallTransition = new ProceedExitRoomStage(true, 14, 15, 14, 200, 80);
+var leafFallTransition = new ProceedExitRoomStage(true, RoomClass.RuinsLeafFall, 14, 200, 80);
 
 /// <summary>
 /// Explanation before one rock room
@@ -1703,8 +1755,7 @@ from beginning to end as if it was a
 normal run but without grinding an encounter
 at the end
     ",
-    14,
-    15,
+    RoomClass.RuinsLeafFall,
     "ruins-one-rock"
 );
 
@@ -1742,7 +1793,7 @@ var oneRockEncounter = new ProceedStage(
 /// <summary>
 /// Walking across the leaf maze room
 /// </summary>
-var inLeafMaze = new ProceedExitRoomStage(true, 16, 17, 16, 520, 220);
+var inLeafMaze = new ProceedExitRoomStage(true, RoomClass.RuinsLeafMaze, 16, 520, 220);
 
 /// <summary>
 /// Explanation before three rock room
@@ -1754,8 +1805,7 @@ room from begining to end as if it was
 a normal run but without grinding an encounter
 at the end
     ",
-    16,
-    17,
+    RoomClass.RuinsLeafMaze,
     "ruins-three-rock"
 );
 
@@ -1792,8 +1842,8 @@ var inSecondGrind = new GrindStage(
         new EncounterName("C", 8, "tpl-mold")
     },
     new StaticGrindTransition[] {
-        new StaticGrindTransition(18, 17, 1, "three-rock-transition"),
-        new StaticGrindTransition(18, 17, 2, "ruins-second-transition")
+        new StaticGrindTransition(RoomClass.RuinsCheese, 1, "three-rock-transition", false),
+        new StaticGrindTransition(RoomClass.RuinsCheese, 2, "ruins-second-transition", false)
     },
     "",
     "GRIND",
@@ -1933,7 +1983,7 @@ var ruinsEnd = new ProceedStage(
 
 var ruinsToSnowdin = new ProceedStage(
     new Listener(
-        new RoomTransition(325, 44),
+        new RoomTransition(RoomClass.RuinsCredits),
         @$"
         {GMLCodeClass.StopTime}
         {GMLCodeClass.NextSegment("snowdin-start")}
@@ -1949,7 +1999,7 @@ var snowdinSessionStart = new Stage(
 GO THROUGH THE RUINS DOOR TO BEGIN THE SESSION
     ",
     new Listener(
-        new RoomTransition(325, 44),
+        new RoomTransition(RoomClass.RuinsCredits),
         @$"
         {GMLCodeClass.StartSession}
         {GMLCodeClass.NextSegment("snowdin-start")}
@@ -1957,14 +2007,14 @@ GO THROUGH THE RUINS DOOR TO BEGIN THE SESSION
     )
 );
 
-var snowdinStart = new ProceedExitRoomStage(true, 45, 46, 45, 2620, 160);
+var snowdinStart = new ProceedExitRoomStage(true, RoomClass.SnowdinConvenientLamp, 45, 2620, 160);
 
 var preBoxRoad = new PreDowntimeStage(
     @"
 Next, go through the next room as normal
 but without grinding the encounter
     ",
-    45, 46, "box-road-downtime"
+    RoomClass.SnowdinConvenientLamp, "box-road-downtime"
 );
 
 var boxRoadDowntime = new DowntimeStage("C", 46);
@@ -1990,13 +2040,16 @@ var inSingleSnowdrake = new ProceedStage(
     )
 );
 
-var boxRoadTransition = new ProceedExitRoomStage(true, 46, 48, 46, 320, 140);
+var boxRoadTransition = new ProceedExitRoomStage(
+    true,
+    RoomClass.SnowdinBoxRoad, 46, 320, 140
+);
 
 var preHumanRockDowntime = new PreDowntimeStage(
     @"
 Next, go through the next room normally
 (you will not get an encounter)
-    ", 46, 48, "human-rock-downtime");
+    ", RoomClass.SnowdinBoxRoad, "human-rock-downtime");
 
 var inHumanRockDowntime = new DowntimeStage("A", 48);
 
@@ -2033,13 +2086,14 @@ until you are stopped
 );
 
 var inDoggo = new ProceedExitRoomStage(
-    true, 49, 50, 49, 400, 160
+    true,
+    RoomClass.SnowdinDoggo, 49, 400, 160
 );
 
 var preIceSlideDowntime = new PreDowntimeStage(
     @$"
 Now, go through the next room (you will not)
-    ", 49, 50, "ice-slide-downtime" // TO-DO ADD MAX HERE
+    ", RoomClass.SnowdinDoggo, "ice-slide-downtime" // TO-DO ADD MAX HERE
 );
 
 var inIceSlideDowntime = new DowntimeStage("C", 50);
@@ -2074,7 +2128,7 @@ until you are stopped
 
 var beforeDogi = new ProceedStage(
     new Listener(
-        new RoomTransition(56, 57),
+        new RoomTransition(RoomClass.SnowdinSpaghetti),
         @$"
         {GMLCodeClass.StopTime}
         {GMLCodeClass.NextDowntime("dogi-downtime")}
@@ -2159,7 +2213,7 @@ var inGreaterDogEnd = new ProceedStage(
     )
 );
 
-var postGreaterDog = new ProceedExitRoomStage(false, 67, 68, 68, 80, 120);
+var postGreaterDog = new ProceedExitRoomStage(false, RoomClass.SnowdinDangerBridge, 68, 80, 120);
 
 var preSnowdinGrind = new PreGrindStage(
     @"
@@ -2185,7 +2239,7 @@ var snowdinGrindFirst = new ProceedStage(
     )
 );
 
-var snowdinRightTransition = new ProceedExitRoomStage(false, 68, 67, 66, 520, 140);
+var snowdinRightTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinTown, 66, 520, 140, false);
 
 var preLeftSnowdinGrind = new PreGrindStage(
     @"
@@ -2214,7 +2268,7 @@ KILL JERRY AND LEFT TRANSITION
     )
 );
 
-var snowdinLeftTransition = new ProceedExitRoomStage(false, 66, 67, 68, 40, 120);
+var snowdinLeftTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinPoffZone, 68, 40, 120);
 
 var preSnowdinRightJerry = new PreGrindStage(
     @$"
