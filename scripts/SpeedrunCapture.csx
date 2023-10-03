@@ -59,6 +59,8 @@ static class RoomClass {
 
     public static UndertaleRoom SnowdinDirectionsSign = new UndertaleRoom(50, SnowdinDoggo);
 
+    public static UndertaleRoom SnowdinElectricMaze = new UndertaleRoom(52, SnowdinDirectionsSign);
+
     public static UndertaleRoom SnowdinSpaghetti = new UndertaleRoom(56);
 
     public static UndertaleRoom SnowdinDogi = new UndertaleRoom(57, SnowdinSpaghetti);
@@ -452,6 +454,10 @@ static class GMLCodeClass {
     public static string DisableEncounters = @"
     obj_time.fast_encounters = 0;
     ";
+
+    public static string TPTo (UndertaleRoom room, int x, int y) {
+        return TPTo(room.RoomId, x, y);
+    }
 
     /// <summary>
     /// Generate GML code that teleports the player to a room and in a given position inside the room
@@ -847,7 +853,7 @@ class RoomTransition : UndertaleEvent {
 /// <summary>
 /// Event for being in a room
 /// </summary>
-class Room : UndertaleEvent {
+class RoomEvent : UndertaleEvent {
     /// <summary>
     /// Id of the room to watch
     /// </summary>
@@ -857,8 +863,8 @@ class Room : UndertaleEvent {
     /// Create event watching a room
     /// </summary>
     /// <param name="room">Id of the room</param>
-    public Room (int room) {
-        RoomId = room;
+    public RoomEvent (UndertaleRoom room) {
+        RoomId = room.RoomId;
     }
 
     public override PlaceMethod Method => PlaceMethod.Append;
@@ -1218,12 +1224,12 @@ class PreGrindStage : Stage {
     /// <param name="x">x position to teleport to</param>
     /// <param name="y">y position to teleport to</param>
     /// <param name=""></param>
-    public PreGrindStage (string msg, int watchRoom, int tpRoom, int x, int y, bool reset = false) : base (
+    public PreGrindStage (string msg, UndertaleRoom watchRoom, int x, int y, bool reset = false) : base (
         msg,
         MessageCleanerListener(reset),
         new Listener(
-            new Room(watchRoom),
-            GMLCodeClass.TPTo(tpRoom, x, y)
+            new RoomEvent(watchRoom),
+            GMLCodeClass.TPTo(watchRoom.Previous, x, y)
         )
     ) {}
 }
@@ -1614,7 +1620,7 @@ Now, grind and encounter at the end of
 the room and continue grinding as if you were
 in a normal run
     ",
-    14, 12, 180, 260
+    RoomClass.RuinsLeafFall, 180, 260
 );
 
 /// <summary>
@@ -1726,7 +1732,7 @@ Now, grind an encounter at
 the end of this room and proceed as if it
 were a normal run until you are stopped
     ",
-    15, 14, 210, 100
+    RoomClass.RuinsOneRock, 210, 100
 );
 
 /// <summary>
@@ -1773,7 +1779,7 @@ Now grind at the
 end of the room, and proceed as a normal
 run until you are stopped
     ",
-    16, 15, 340, 100
+    RoomClass.RuinsLeafMaze, 340, 100
 );
 
 /// <summary>
@@ -1826,7 +1832,7 @@ encounters until you are stopped
 Grind as you would in a normal
 run
     ",
-    18, 17, 430, 110, true
+    RoomClass.RuinsCheese, 430, 110, true
 );
 
 /// <summary>
@@ -2023,7 +2029,7 @@ var preSingleSnowdrake = new PreGrindStage(
     @"
 Now, grind Snowdrake at the end of this room
 and proceed
-    ", 48, 46, 320, 140
+    ", RoomClass.SnowdinHumanRock, 320, 140
 );
 
 var inSingleSnowdrake = new ProceedStage(
@@ -2057,7 +2063,7 @@ var preSingleIcecap = new PreGrindStage(
     @"
 Now, grind the Ice Cap encounter and kill it
 optimally
-    ", 49, 48, 480, 140
+    ", RoomClass.SnowdinDoggo, 480, 140
 );
 
 var inSingleIcecap = new ProceedStage(
@@ -2101,7 +2107,7 @@ var inIceSlideDowntime = new DowntimeStage("C", 50);
 var preLesserDog = new PreGrindStage(
     @"
 Now, grind for Lesser Dog and kill it optimally
-    ", 52, 50, 40, 140);
+    ", RoomClass.SnowdinElectricMaze, 40, 140);
 
 var inLesserDog = new ProceedStage(
     new Listener(
