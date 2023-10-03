@@ -45,7 +45,9 @@ static class RoomClass {
 
     public static UndertaleRoom RuinsCheese = new UndertaleRoom(18, RuinsThreeRock);
 
-    public static UndertaleRoom RuinsCredits = new UndertaleRoom(325);
+    public static UndertaleRoom RuinsExit = new UndertaleRoom(43, RuinsCheese);
+
+    public static UndertaleRoom RuinsCredits = new UndertaleRoom(325, RuinsExit);
 
     public static UndertaleRoom SnowdinRuinsDoor = new UndertaleRoom(44, RuinsCredits);
 
@@ -455,10 +457,6 @@ static class GMLCodeClass {
     obj_time.fast_encounters = 0;
     ";
 
-    public static string TPTo (UndertaleRoom room, int x, int y) {
-        return TPTo(room.RoomId, x, y);
-    }
-
     /// <summary>
     /// Generate GML code that teleports the player to a room and in a given position inside the room
     /// </summary>
@@ -466,10 +464,10 @@ static class GMLCodeClass {
     /// <param name="x">x position to teleport to</param>
     /// <param name="y">y position to telport to</param>
     /// <returns></returns>
-    public static string TPTo (int room, int x, int y) {
+    public static string TPTo (UndertaleRoom room, int x, int y) {
         return @$"
         obj_time.tp_flag = 1;
-        room = {room};
+        room = {room.RoomId};
         obj_time.tp_x = {x};
         obj_time.tp_y = {y};
         ";
@@ -486,7 +484,7 @@ static class GMLCodeClass {
     /// Should be set to `true` if the encounters should be disabled at the end, and `false` otherwise
     /// </param>
     /// <returns></returns>
-    public static string ExitSegment (int room, int x, int y, bool disable = false) {
+    public static string ExitSegment (UndertaleRoom room, int x, int y, bool disable = false) {
         var disableEncounters = disable ? DisableEncounters : "";
         return @$"
         {StopTime}
@@ -587,7 +585,7 @@ void useDebug () {
         global.plot = 28;
         global.flag[202] = 20;
         global.flag[45] = 4;
-        {GMLCodeClass.TPTo(43, 150, 210)}
+        {GMLCodeClass.TPTo(RoomClass.RuinsExit, 150, 210)}
     }}
     ");
 
@@ -603,7 +601,7 @@ void useDebug () {
         global.flag[52] = 1;
         global.flag[53] = 1;
         global.flag[55] = 1;
-        {GMLCodeClass.TPTo(66, 150, 210)}
+        {GMLCodeClass.TPTo(RoomClass.SnowdinPoffZone, 150, 210)}
     }}
     ");
 
@@ -1110,10 +1108,10 @@ class ProceedExitRoomStage : ProceedStage {
     /// <param name="room">The room to teleport to</param>
     /// <param name="x">The x position to teleport to</param>
     /// <param name="y">The y position to teleport to</param>
-    public ProceedExitRoomStage (bool disable, UndertaleRoom transitionRoom, int room, int x, int y, bool isTransitionForwards = true) : base(
+    public ProceedExitRoomStage (bool disable, UndertaleRoom transitionRoom, int x, int y, UndertaleRoom? tpRoom = null, bool isTransitionForwards = true) : base(
         new Listener(
             new RoomTransition(transitionRoom, isTransitionForwards),
-            GMLCodeClass.ExitSegment(room, x, y, disable)
+            GMLCodeClass.ExitSegment(tpRoom == null ? transitionRoom : tpRoom, x, y, disable)
         )
     ) {}
 }
@@ -1352,7 +1350,7 @@ class StaticGrindTransition : GrindTransition {
 /// Class for a stage that carries out a grind
 /// </summary>
 class GrindStage : Stage {
-    private static Listener[] InitListeners (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string arr, int tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) {
+    private static Listener[] InitListeners (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string arr, UndertaleRoom tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) {
         // using a list here to later convert to array
         var listeners = new List<Listener>();
 
@@ -1475,7 +1473,7 @@ class GrindStage : Stage {
     /// Should be set to `true` if the encounters should be disabled at the end of the encounter and `false` otherwise
     /// </param>
     /// <param name="customListeners">Extra listeners to add to the stage</param>
-    public GrindStage (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string msg, string arr, int tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) : base(
+    public GrindStage (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string msg, string arr, UndertaleRoom tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) : base(
         msg,
         InitListeners(encounters, transitions, victoryCode, arr, tpRoom, tpX, tpY, disableOnEnd, customListeners)
     ) {}
@@ -1591,7 +1589,7 @@ var ruinsStart = new ProceedStage(
 /// <summary>
 /// Normal run from first froggit up to long hallway exit
 /// </summary>
-var ruinsHallway = new ProceedExitRoomStage(false, RoomClass.RuinsHallway, 11, 2400, 80);
+var ruinsHallway = new ProceedExitRoomStage(false, RoomClass.RuinsHallway, 2400, 80);
 
 /// <summary>
 /// Explanation before leaf pile
@@ -1649,7 +1647,7 @@ var inFirstGrind = new GrindStage(
 GRIND
     ",
     "first_half_encounters",
-    12,
+    RoomClass.RuinsLeafPile,
     220,
     320,
     true,
@@ -1713,7 +1711,7 @@ and simply cross it (don't grind)
     new Listener [] {
         new Listener(
             new LeaveBattle(),
-            GMLCodeClass.TPTo(12, 240, 340)
+            GMLCodeClass.TPTo(RoomClass.RuinsLeafPile, 240, 340)
         )
     }
 );
@@ -1749,7 +1747,7 @@ var inFalLEncounter = new ProceedStage(
 /// <summary>
 /// Exitting leaf fall room
 /// </summary>
-var leafFallTransition = new ProceedExitRoomStage(true, RoomClass.RuinsLeafFall, 14, 200, 80);
+var leafFallTransition = new ProceedExitRoomStage(true, RoomClass.RuinsLeafFall, 200, 80);
 
 /// <summary>
 /// Explanation before one rock room
@@ -1799,7 +1797,7 @@ var oneRockEncounter = new ProceedStage(
 /// <summary>
 /// Walking across the leaf maze room
 /// </summary>
-var inLeafMaze = new ProceedExitRoomStage(true, RoomClass.RuinsLeafMaze, 16, 520, 220);
+var inLeafMaze = new ProceedExitRoomStage(true, RoomClass.RuinsLeafMaze, 520, 220);
 
 /// <summary>
 /// Explanation before three rock room
@@ -1854,7 +1852,7 @@ var inSecondGrind = new GrindStage(
     "",
     "GRIND",
     "second_half_encounters",
-    18,
+    RoomClass.RuinsCheese,
     40,
     110,
     false
@@ -1889,7 +1887,7 @@ var inFleeGrind = new GrindStage(
     "",
     "GRIND (KILL ONLY ONE)",
     "second_half_flee_encounters",
-    18,
+    RoomClass.RuinsCheese,
     40,
     110,
     false
@@ -1921,7 +1919,7 @@ var inTripleMold = new Stage(
     new Listener(
         new LeaveBattle(),
         @$"
-        {GMLCodeClass.ExitSegment(17, 500, 100)}
+        {GMLCodeClass.ExitSegment(RoomClass.RuinsThreeRock, 500, 100)}
         // max out ruins kills
         global.flag[202] = 20;
         "
@@ -2013,7 +2011,7 @@ GO THROUGH THE RUINS DOOR TO BEGIN THE SESSION
     )
 );
 
-var snowdinStart = new ProceedExitRoomStage(true, RoomClass.SnowdinConvenientLamp, 45, 2620, 160);
+var snowdinStart = new ProceedExitRoomStage(true, RoomClass.SnowdinConvenientLamp, 2620, 160);
 
 var preBoxRoad = new PreDowntimeStage(
     @"
@@ -2048,7 +2046,7 @@ var inSingleSnowdrake = new ProceedStage(
 
 var boxRoadTransition = new ProceedExitRoomStage(
     true,
-    RoomClass.SnowdinBoxRoad, 46, 320, 140
+    RoomClass.SnowdinBoxRoad, 320, 140
 );
 
 var preHumanRockDowntime = new PreDowntimeStage(
@@ -2093,7 +2091,7 @@ until you are stopped
 
 var inDoggo = new ProceedExitRoomStage(
     true,
-    RoomClass.SnowdinDoggo, 49, 400, 160
+    RoomClass.SnowdinDoggo, 400, 160
 );
 
 var preIceSlideDowntime = new PreDowntimeStage(
@@ -2116,7 +2114,7 @@ var inLesserDog = new ProceedStage(
     ),
     new Listener(
         new LeaveBattle(),
-        GMLCodeClass.ExitSegment(50, 560, 140)
+        GMLCodeClass.ExitSegment(RoomClass.SnowdinDirectionsSign, 560, 140)
     )
 );
 
@@ -2219,7 +2217,7 @@ var inGreaterDogEnd = new ProceedStage(
     )
 );
 
-var postGreaterDog = new ProceedExitRoomStage(false, RoomClass.SnowdinDangerBridge, 68, 80, 120);
+var postGreaterDog = new ProceedExitRoomStage(false, RoomClass.SnowdinDangerBridge, 80, 120, RoomClass.SnowdinTown);
 
 var preSnowdinGrind = new PreGrindStage(
     @"
@@ -2245,7 +2243,7 @@ var snowdinGrindFirst = new ProceedStage(
     )
 );
 
-var snowdinRightTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinTown, 66, 520, 140, false);
+var snowdinRightTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinTown, 520, 140, RoomClass.SnowdinPoffZone, false);
 
 var preLeftSnowdinGrind = new PreGrindStage(
     @"
@@ -2274,7 +2272,7 @@ KILL JERRY AND LEFT TRANSITION
     )
 );
 
-var snowdinLeftTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinPoffZone, 68, 40, 120);
+var snowdinLeftTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinPoffZone, 40, 120, RoomClass.SnowdinTown);
 
 var preSnowdinRightJerry = new PreGrindStage(
     @$"
