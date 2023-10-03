@@ -675,7 +675,8 @@ void useDebug () {
         "global.encounter", 
         "step_count",
         "get_timer()",
-        "previous_time"
+        "previous_time",
+        "obj_time.session"
     };
 
     // start just with line break just to not interefere with anything
@@ -1653,431 +1654,7 @@ class WhimsunRigListener : RigBattleListener {
 STAGE DEFINITIONS
 */
 
-/// <summary>
-/// Before the session begins
-/// </summary>
-var offline = new Stage(
-    @"
-RECORDING SESSION WAITING TO START
-To start it, begin a normal run,
-and keep playing until the mod stops you
-    ",
-    new Listener(
-        new PickName(),
-        @$"
-        {GMLCodeClass.StartSession}
-        {GMLCodeClass.NextSegment("ruins-start")}
-        "
-    )
-);
 
-/// <summary>
-/// Normal run from the start up to the first froggit
-/// </summary>
-var ruinsStart = new ProceedStage(
-    new Listener(
-        new Blcon(),
-        GMLCodeClass.StopTime
-    ),
-    new Listener(
-        new EnterBattle(3),
-        GMLCodeClass.NextSegment("ruins-hallway")
-    )
-);
-
-/// <summary>
-/// Normal run from first froggit up to long hallway exit
-/// </summary>
-var ruinsHallway = new ProceedExitRoomStage(false, RoomClass.RuinsHallway, 2400, 80);
-
-/// <summary>
-/// Explanation before leaf pile
-/// </summary>
-var preLeafPile = new PreDowntimeStage(
-    @"
-Next, walk through the next room
-as quickly as possible
-    ",
-    RoomClass.RuinsHallway,
-    "ruins-leafpile",
-    97
-);
-
-/// <summary>
-/// Walking across the leaf pile room
-/// </summary>
-var leafPileDowntime = new DowntimeStage("C", 12);
-
-/// <summary>
-/// Explanation before first half grind
-/// </summary>
-var preFirstGrind = new PreGrindStage(
-    @"
-Now, grind and encounter at the end of
-the room and continue grinding as if you were
-in a normal run
-    ",
-    RoomClass.RuinsLeafFall, 180, 260
-);
-
-/// <summary>
-/// Minified version of the first half grind
-/// </summary>
-var inFirstGrind = new GrindStage(
-    new EncounterName[] {
-        new EncounterName("W", 5, "whim"),
-        new EncounterName("F", 4, false),
-        new EncounterName("N", 4, true),
-        new EncounterName("2", 4, "froggit-lv2"),
-        new EncounterName("3", 4, "froggit-lv3"),
-        new EncounterName("A", 5, true) // TO-DO: this was originally unrigged!
-    },
-    new GrindTransition[] {
-        new StaticGrindTransition(RoomClass.RuinsLeafPile, 1, "leaf-pile-transition"),
-        new StaticGrindTransition(RoomClass.RuinsLeafFall, 2, "ruins-first-transition", false)
-    },
-    @$"
-    // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
-    if (encounter_name == '2') {{
-        global.xp = 29;
-    }}
-    ",
-    @"
-GRIND
-    ",
-    "first_half_encounters",
-    RoomClass.RuinsLeafPile,
-    220,
-    320,
-    true,
-    new Listener(
-        new FroggitAttack(),
-        GMLCodeClass.WithFirstHalfEncounter(@$"
-        if (encounter_name == 'N') {{
-            use_frogskip = 0;
-        }}
-        ")
-    ),
-    new Listener(
-        new FroggitTurnStart(),
-        GMLCodeClass.WithFirstHalfEncounter($@"
-        var name = 0;
-        switch (encounter_name) {{
-            case 'F':
-                name = 'frogskip';
-                break;
-            case 'N':
-                name = 'not-frogskip';
-                break;
-        }}
-        if (name != 0) {{
-            {GMLCodeClass.StartSegment("name", true)}
-        }}
-        ")
-    ),
-    new Listener(
-        new FroggitTurnEnd(),
-        GMLCodeClass.WithFirstHalfEncounter($@"
-        if (encounter_name == 'F' || encounter_name == 'N') {{
-            {GMLCodeClass.StopTime}
-        }}
-        ")
-    ),
-    new Listener(
-        new YouWon(),
-        GMLCodeClass.WithFirstHalfEncounter(@$"
-        // for 'A', we are starting time for the LV up text
-        if (encounter_name == 'A') {{
-            {GMLCodeClass.StartSegment("lv-up")}
-        }} else if (encounter_name == 'N') {{
-            // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
-            {GMLCodeClass.StartSegment("you-won")}
-        }}
-        ")
-    )
-);
-
-/// <summary>
-/// Explanation after the first half grind
-/// </summary>
-var postFirstGrind = new PreDowntimeStage(
-    @"
-Now, walk to the right room
-and simply cross it (don't grind)
-    ",
-    RoomClass.RuinsLeafPile,
-    "ruins-leaf-fall",
-    new Listener [] {
-        new Listener(
-            new LeaveBattle(),
-            GMLCodeClass.TPTo(RoomClass.RuinsLeafPile, 240, 340)
-        )
-    }
-);
-
-/// <summary>
-/// Walking across the leaf fall room
-/// </summary>
-var leafFallDowntime = new DowntimeStage("A", 14);
-
-/// <summary>
-/// Explanation after leaf fall downtime
-/// </summary>
-var preFallEncounter = new PreGrindStage(
-    @"
-Now, grind an encounter at
-the end of this room and proceed as if it
-were a normal run until you are stopped
-    ",
-    RoomClass.RuinsOneRock, 210, 100
-);
-
-/// <summary>
-/// Grinding encounter in the leaf fall room
-/// </summary>
-var inFalLEncounter = new ProceedStage(
-    new WhimsunRigListener(),
-    new Listener(
-        new LeaveBattle(),
-        GMLCodeClass.NextSegment("leaf-fall-transition")
-    )
-);
-
-/// <summary>
-/// Exitting leaf fall room
-/// </summary>
-var leafFallTransition = new ProceedExitRoomStage(true, RoomClass.RuinsLeafFall, 200, 80);
-
-/// <summary>
-/// Explanation before one rock room
-/// </summary>
-var preOneRock = new PreDowntimeStage(
-    @"
-Now, go through the next room
-from beginning to end as if it was a
-normal run but without grinding an encounter
-at the end
-    ",
-    RoomClass.RuinsLeafFall,
-    "ruins-one-rock"
-);
-
-/// <summary>
-/// Walking across the one rock room
-/// </summary>
-var oneRockDowntime = new DowntimeStage("A", 15);
-
-/// <summary>
-/// Explanation before the leaf maze
-/// </summary>
-var preLeafMaze = new PreGrindStage(
-    @"
-Now grind at the
-end of the room, and proceed as a normal
-run until you are stopped
-    ",
-    RoomClass.RuinsLeafMaze, 340, 100
-);
-
-/// <summary>
-/// Grinding encounter at the end of one rock room
-/// </summary>
-var oneRockEncounter = new ProceedStage(
-    new WhimsunRigListener(),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.DisableEncounters}
-        {GMLCodeClass.NextSegment("ruins-maze")}
-        "
-    )
-);
-
-/// <summary>
-/// Walking across the leaf maze room
-/// </summary>
-var inLeafMaze = new ProceedExitRoomStage(true, RoomClass.RuinsLeafMaze, 520, 220);
-
-/// <summary>
-/// Explanation before three rock room
-/// </summary>
-var preThreeRock = new PreDowntimeStage(
-    @"
-Now, go through the next
-room from begining to end as if it was
-a normal run but without grinding an encounter
-at the end
-    ",
-    RoomClass.RuinsLeafMaze,
-    "ruins-three-rock"
-);
-
-/// <summary>
-/// Walking across three rock room
-/// </summary>
-var threeRockDowntime = new DowntimeStage("A", 17);
-
-/// <summary>
-/// Explanation before second half grinding
-/// </summary>
-var preSecondGrind = new PreGrindStage(
-    @"
-Now, grind an
-encounter at the end of the room,
-and proceed grinding and killing
-encounters until you are stopped
-Grind as you would in a normal
-run
-    ",
-    RoomClass.RuinsCheese, 430, 110, true
-);
-
-/// <summary>
-/// Grinding encounters (killing every enemy) in the second half
-/// </summary>
-///
-var inSecondGrind = new GrindStage(
-    new EncounterName[] {
-        new EncounterName("F", 9, "dbl-froggit"),
-        new EncounterName("W", 6, "frog-whim"),
-        new EncounterName("A", 7, "sgl-mold"),
-        new EncounterName("B", 10, "dbl-mold"),
-        new EncounterName("C", 8, "tpl-mold")
-    },
-    new StaticGrindTransition[] {
-        new StaticGrindTransition(RoomClass.RuinsCheese, 1, "three-rock-transition", false),
-        new StaticGrindTransition(RoomClass.RuinsCheese, 2, "ruins-second-transition", false)
-    },
-    "",
-    "GRIND",
-    "second_half_encounters",
-    RoomClass.RuinsCheese,
-    40,
-    110,
-    false
-);
-
-
-/// <summary>
-/// Explanation before second half grinding with fleeing
-/// </summary>
-var preFleeGrind = new PreGrindStage(
-    @"
-Now, continue grinding
-just the same, but as if you had 19 kills,
-that is, flee after killing the
-first enemy for ALL encounters
-    ",
-    true
-);
-
-
-/// <summary>
-/// Grinding encounters (killing one enemy and fleeing) in the second half
-/// </summary>
-var inFleeGrind = new GrindStage(
-    new EncounterName[] {
-        new EncounterName("F", 9, "dbl-froggit-19"),
-        new EncounterName("W", 6, "frog-whim-19"),
-        new EncounterName("B", 10, "dbl-mold-19"),
-        new EncounterName("C", 8, "tpl-mold-19")
-    },
-    new StaticGrindTransition[] {},
-    "",
-    "GRIND (KILL ONLY ONE)",
-    "second_half_flee_encounters",
-    RoomClass.RuinsCheese,
-    40,
-    110,
-    false
-);
-
-/// <summary>
-/// Explanation before triple moldsmal
-/// </summary>
-var preTripleMold = new PreGrindStage(
-    @"
-Now, kill one last encounter
-it will be a triple mold, and you must only
-kill TWO monsters, then flee
-Feel free to still attack second one
-to simulate the Froggit Whimsun attacks
-    "
-);
-
-/// <summary>
-/// Battling triple moldsmal killing two enemies and fleeing
-/// </summary>
-var inTripleMold = new SingleBattleStage(
-    "tpl-mold-18",
-    "GRIND (KILL ONLY TWO)",
-    Battlegroup.TripleMoldsmal,
-    victoryCode: @$"
-    global.flag[202] = 20;
-    ",
-    tpRoom: RoomClass.RuinsThreeRock,
-    x: 500,
-    y: 100
-);
-
-/// <summary>
-/// Explanation before the end
-/// </summary>
-var ruinsPreEnd = new Stage(
-    @"
-Finally, walk to the right as if
-you have finished killing all
-monsters and play normally until
-the end of Ruins
-    ",
-    new Listener(
-        new Door("A", 17),
-        GMLCodeClass.NextSegment("ruins-napsta")
-    )
-);
-
-/// <summary>
-/// Walking across rooms with "But nobody came"
-/// </summary>
-var ruinsNobodyCame = new ProceedStage(
-    new Listener(
-        new Blcon(),
-        GMLCodeClass.StopTime
-    ),
-    new Listener(
-        new EnterBattle(),
-        @$"
-        if (obj_time.nobody_came == 0) {{
-            {GMLCodeClass.StartSegment("ruins-switches")}
-        }} else if (obj_time.nobody_came == 1) {{
-            {GMLCodeClass.StartSegment("perspective-a")}
-        }} else if (obj_time.nobody_came == 2) {{
-            {GMLCodeClass.StartSegment("perspective-b")}
-        }} else if (obj_time.nobody_came == 3) {{
-            {GMLCodeClass.StartSegment("perspective-c")}
-        }} else if (obj_time.nobody_came == 4) {{
-            {GMLCodeClass.StartSegment("perspective-d")}
-        }} else {{
-            {GMLCodeClass.StartSegment("ruins-end")}
-            obj_time.stage++;
-        }}
-        obj_time.nobody_came++;
-        "
-    )
-);
-
-/// <summary>
-/// Going to the end of the Ruins
-/// </summary>
-var ruinsEnd = new ProceedStage(
-    new Listener(
-        new Door("Amusic", 41),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.Next}
-        "
-    )
-);
 
 var ruinsToSnowdin = new ProceedStage(
     new Listener(
@@ -2088,341 +1665,544 @@ var ruinsToSnowdin = new ProceedStage(
         "
     )
 );
+static class StageSegmentClass {
+    public static Stage[] RuinsStages = new [] {
+        new Stage(
+            @"
+RECORDING SESSION WAITING TO START
+To start it, begin a normal run,
+and keep playing until the mod stops you
+            ",
+            new Listener(
+                new PickName(),
+                @$"
+                {GMLCodeClass.StartSession}
+                {GMLCodeClass.NextSegment("ruins-start")}
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new Blcon(),
+                GMLCodeClass.StopTime
+            ),
+            new Listener(
+                new EnterBattle(3),
+                GMLCodeClass.NextSegment("ruins-hallway")
+            )
+        ),
+        new ProceedExitRoomStage(false, RoomClass.RuinsHallway, 2400, 80),
+        new PreDowntimeStage(
+            @"
+Next, walk through the next room
+as quickly as possible
+            ",
+            RoomClass.RuinsHallway,
+            "ruins-leafpile",
+            97
+        ),
+        new DowntimeStage("C", 12),
+        new PreGrindStage(
+            @"
+Now, grind and encounter at the end of
+the room and continue grinding as if you were
+in a normal run
+            ",
+            RoomClass.RuinsLeafFall, 180, 260
+        ),
+        new GrindStage(
+            new EncounterName[] {
+                new EncounterName("W", 5, "whim"),
+                new EncounterName("F", 4, false),
+                new EncounterName("N", 4, true),
+                new EncounterName("2", 4, "froggit-lv2"),
+                new EncounterName("3", 4, "froggit-lv3"),
+                new EncounterName("A", 5, true) // TO-DO: this was originally unrigged!
+            },
+            new GrindTransition[] {
+                new StaticGrindTransition(RoomClass.RuinsLeafPile, 1, "leaf-pile-transition"),
+                new StaticGrindTransition(RoomClass.RuinsLeafFall, 2, "ruins-first-transition", false)
+            },
+            @$"
+            // leave the player high enough XP for guaranteed LV up next encounter if just fought the LV 2 encounter
+            if (encounter_name == '2') {{
+                global.xp = 29;
+            }}
+            ",
+            "GRIND",
+            "first_half_encounters",
+            RoomClass.RuinsLeafPile,
+            220,
+            320,
+            true,
+            new Listener(
+                new FroggitAttack(),
+                GMLCodeClass.WithFirstHalfEncounter(@$"
+                if (encounter_name == 'N') {{
+                    use_frogskip = 0;
+                }}
+                ")
+            ),
+            new Listener(
+                new FroggitTurnStart(),
+                GMLCodeClass.WithFirstHalfEncounter($@"
+                var name = 0;
+                switch (encounter_name) {{
+                    case 'F':
+                        name = 'frogskip';
+                        break;
+                    case 'N':
+                        name = 'not-frogskip';
+                        break;
+                }}
+                if (name != 0) {{
+                    {GMLCodeClass.StartSegment("name", true)}
+                }}
+                ")
+            ),
+            new Listener(
+                new FroggitTurnEnd(),
+                GMLCodeClass.WithFirstHalfEncounter($@"
+                if (encounter_name == 'F' || encounter_name == 'N') {{
+                    {GMLCodeClass.StopTime}
+                }}
+                ")
+            ),
+            new Listener(
+                new YouWon(),
+                GMLCodeClass.WithFirstHalfEncounter(@$"
+                // for 'A', we are starting time for the LV up text
+                if (encounter_name == 'A') {{
+                    {GMLCodeClass.StartSegment("lv-up")}
+                }} else if (encounter_name == 'N') {{
+                    // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
+                    {GMLCodeClass.StartSegment("you-won")}
+                }}
+                ")
+            )
+        ),
+        new PreDowntimeStage(
+            @"
+Now, walk to the right room
+and simply cross it (don't grind)
+            ",
+            RoomClass.RuinsLeafPile,
+            "ruins-leaf-fall",
+            new Listener [] {
+                new Listener(
+                    new LeaveBattle(),
+                    GMLCodeClass.TPTo(RoomClass.RuinsLeafPile, 240, 340)
+                )
+            }
+        ),
+        new DowntimeStage("A", 14),
+        new PreGrindStage(
+            @"
+Now, grind an encounter at
+the end of this room and proceed as if it
+were a normal run until you are stopped
+            ",
+            RoomClass.RuinsOneRock, 210, 100
+        ),
+        new ProceedStage(
+            new WhimsunRigListener(),
+            new Listener(
+                new LeaveBattle(),
+                GMLCodeClass.NextSegment("leaf-fall-transition")
+            )
+        ),
+        new ProceedExitRoomStage(true, RoomClass.RuinsLeafFall, 200, 80),
+        new PreDowntimeStage(
+            @"
+Now, go through the next room
+from beginning to end as if it was a
+normal run but without grinding an encounter
+at the end
+            ",
+            RoomClass.RuinsLeafFall,
+            "ruins-one-rock"
+        ),
+        new DowntimeStage("A", 15),
+        new PreGrindStage(
+            @"
+Now grind at the
+end of the room, and proceed as a normal
+run until you are stopped
+            ",
+            RoomClass.RuinsLeafMaze, 340, 100
+        ),
+        new ProceedStage(
+            new WhimsunRigListener(),
+            new Listener(
+                new LeaveBattle(),
+                @$"
+                {GMLCodeClass.DisableEncounters}
+                {GMLCodeClass.NextSegment("ruins-maze")}
+                "
+            )
+        ),
+        new ProceedExitRoomStage(true, RoomClass.RuinsLeafMaze, 520, 220),
+        new PreDowntimeStage(
+            @"
+Now, go through the next
+room from begining to end as if it was
+a normal run but without grinding an encounter
+at the end
+            ",
+            RoomClass.RuinsLeafMaze,
+            "ruins-three-rock"
+        ),
+        new DowntimeStage("A", 17),
+        new PreGrindStage(
+            @"
+Now, grind an
+encounter at the end of the room,
+and proceed grinding and killing
+encounters until you are stopped
+Grind as you would in a normal
+run
+            ",
+            RoomClass.RuinsCheese, 430, 110, true
+        ),
+        new GrindStage(
+            new EncounterName[] {
+                new EncounterName("F", 9, "dbl-froggit"),
+                new EncounterName("W", 6, "frog-whim"),
+                new EncounterName("A", 7, "sgl-mold"),
+                new EncounterName("B", 10, "dbl-mold"),
+                new EncounterName("C", 8, "tpl-mold")
+            },
+            new StaticGrindTransition[] {
+                new StaticGrindTransition(RoomClass.RuinsCheese, 1, "three-rock-transition", false),
+                new StaticGrindTransition(RoomClass.RuinsCheese, 2, "ruins-second-transition", false)
+            },
+            "",
+            "GRIND",
+            "second_half_encounters",
+            RoomClass.RuinsCheese,
+            40,
+            110,
+            false
+        ),
+        new PreGrindStage(
+            @"
+Now, continue grinding
+just the same, but as if you had 19 kills,
+that is, flee after killing the
+first enemy for ALL encounters
+            ",
+            true
+        ),
+        new GrindStage(
+            new EncounterName[] {
+                new EncounterName("F", 9, "dbl-froggit-19"),
+                new EncounterName("W", 6, "frog-whim-19"),
+                new EncounterName("B", 10, "dbl-mold-19"),
+                new EncounterName("C", 8, "tpl-mold-19")
+            },
+            new StaticGrindTransition[] {},
+            "",
+            "GRIND (KILL ONLY ONE)",
+            "second_half_flee_encounters",
+            RoomClass.RuinsCheese,
+            40,
+            110,
+            false
+        ),
+        new PreGrindStage(
+            @"
+Now, kill one last encounter
+it will be a triple mold, and you must only
+kill TWO monsters, then flee
+Feel free to still attack second one
+to simulate the Froggit Whimsun attacks
+            "
+        ),
+        new SingleBattleStage(
+            "tpl-mold-18",
+            "GRIND (KILL ONLY TWO)",
+            Battlegroup.TripleMoldsmal,
+            victoryCode: @$"
+            global.flag[202] = 20;
+            ",
+            tpRoom: RoomClass.RuinsThreeRock,
+            x: 500,
+            y: 100
+        ),
+        new Stage(
+            @"
+Finally, walk to the right as if
+you have finished killing all
+monsters and play normally until
+the end of Ruins
+            ",
+            new Listener(
+                new Door("A", 17),
+                GMLCodeClass.NextSegment("ruins-napsta")
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new Blcon(),
+                GMLCodeClass.StopTime
+            ),
+            new Listener(
+                new EnterBattle(),
+                @$"
+                if (obj_time.nobody_came == 0) {{
+                    {GMLCodeClass.StartSegment("ruins-switches")}
+                }} else if (obj_time.nobody_came == 1) {{
+                    {GMLCodeClass.StartSegment("perspective-a")}
+                }} else if (obj_time.nobody_came == 2) {{
+                    {GMLCodeClass.StartSegment("perspective-b")}
+                }} else if (obj_time.nobody_came == 3) {{
+                    {GMLCodeClass.StartSegment("perspective-c")}
+                }} else if (obj_time.nobody_came == 4) {{
+                    {GMLCodeClass.StartSegment("perspective-d")}
+                }} else {{
+                    {GMLCodeClass.StartSegment("ruins-end")}
+                    obj_time.stage++;
+                }}
+                obj_time.nobody_came++;
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new Door("Amusic", 41),
+                @$"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.Next}
+                "
+            )
+        ),
+        new Stage("Session finished!")
+    };
 
-/*
-SNOWDIN STUFF
-*/
-var snowdinSessionStart = new Stage(
-    @"
+    public static Stage[] SnowdinStages = new[] {
+        new Stage(
+            @"
 GO THROUGH THE RUINS DOOR TO BEGIN THE SESSION
-    ",
-    new Listener(
-        new RoomTransition(RoomClass.RuinsCredits),
-        @$"
-        {GMLCodeClass.StartSession}
-        {GMLCodeClass.NextSegment("snowdin-start")}
-        "
-    )
-);
-
-var snowdinStart = new ProceedExitRoomStage(true, RoomClass.SnowdinConvenientLamp, 2620, 160);
-
-var preBoxRoad = new PreDowntimeStage(
-    @"
+            ",  
+            new Listener(
+                new RoomTransition(RoomClass.RuinsCredits),
+                @$"
+                {GMLCodeClass.StartSession}
+                {GMLCodeClass.NextSegment("snowdin-start")}
+                "
+            )
+        ),
+        new ProceedExitRoomStage(true, RoomClass.SnowdinConvenientLamp, 2620, 160),
+        new PreDowntimeStage(
+            @"
 Next, go through the next room as normal
 but without grinding the encounter
-    ",
-    RoomClass.SnowdinConvenientLamp, "box-road-downtime"
-);
-
-var boxRoadDowntime = new DowntimeStage("C", 46);
-
-var preSingleSnowdrake = new PreGrindStage(
-    @"
+            ",
+            RoomClass.SnowdinConvenientLamp, "box-road-downtime"
+        ),
+        new DowntimeStage("C", 46),
+        new PreGrindStage(
+            @"
 Now, grind Snowdrake at the end of this room
 and proceed
-    ", RoomClass.SnowdinHumanRock, 320, 140
-);
-
-var inSingleSnowdrake = new SingleBattleStage(
-    "sgl-snowdrake",
-    nextSegment: "box-road-transition"
-);
-
-var boxRoadTransition = new ProceedExitRoomStage(
-    true,
-    RoomClass.SnowdinBoxRoad, 320, 140
-);
-
-var preHumanRockDowntime = new PreDowntimeStage(
-    @"
+            ", RoomClass.SnowdinHumanRock, 320, 140
+        ),
+        new SingleBattleStage(
+            "sgl-snowdrake",
+            nextSegment: "box-road-transition"
+        ),
+        new ProceedExitRoomStage(
+            true,
+            RoomClass.SnowdinBoxRoad, 320, 140
+        ),
+        new PreDowntimeStage(
+            @"
 Next, go through the next room normally
 (you will not get an encounter)
-    ", RoomClass.SnowdinBoxRoad, "human-rock-downtime");
-
-var inHumanRockDowntime = new DowntimeStage("A", 48);
-
-var preSingleIcecap = new PreGrindStage(
-    @"
+            ", RoomClass.SnowdinBoxRoad, "human-rock-downtime"),
+        new DowntimeStage("A", 48),
+        new PreGrindStage(
+            @"
 Now, grind the Ice Cap encounter and kill it
 optimally
-    ", RoomClass.SnowdinDoggo, 480, 140
-);
-
-var inSingleIcecap = new SingleBattleStage("sgl-icecap");
-
-var preDoggo = new Stage(
-    @$"
+            ", RoomClass.SnowdinDoggo, 480, 140
+        ),
+        new SingleBattleStage("sgl-icecap"),
+        new Stage(
+            @$"
 Now, keep going and play as normally
 until you are stopped
-    ",
-    new Listener(
-        new Door("A", 48),
-        GMLCodeClass.NextSegment("doggo")
-    )
-);
-
-var inDoggo = new ProceedExitRoomStage(
-    true,
-    RoomClass.SnowdinDoggo, 400, 160
-);
-
-var preIceSlideDowntime = new PreDowntimeStage(
-    @$"
+            ",
+            new Listener(
+                new Door("A", 48),
+                GMLCodeClass.NextSegment("doggo")
+            )
+        ),
+        new ProceedExitRoomStage(
+            true,
+            RoomClass.SnowdinDoggo, 400, 160
+        ),
+        new PreDowntimeStage(
+            @$"
 Now, go through the next room (you will not)
-    ", RoomClass.SnowdinDoggo, "ice-slide-downtime" // TO-DO ADD MAX HERE
-);
-
-var inIceSlideDowntime = new DowntimeStage("C", 50);
-
-var preLesserDog = new PreGrindStage(
-    @"
+            ", RoomClass.SnowdinDoggo, "ice-slide-downtime" // TO-DO ADD MAX HERE
+        ),
+        new DowntimeStage("C", 50),
+        new PreGrindStage(
+            @"
 Now, grind for Lesser Dog and kill it optimally
-    ", RoomClass.SnowdinElectricMaze, 40, 140);
-
-var inLesserDog = new SingleBattleStage("lesser-dog", tpRoom: RoomClass.SnowdinDirectionsSign, x: 560, y: 140);
-
-var preElectricMaze = new Stage(
-    @$"
+            ", RoomClass.SnowdinElectricMaze, 40, 140),
+        new SingleBattleStage("lesser-dog", tpRoom: RoomClass.SnowdinDirectionsSign, x: 560, y: 140),
+        new Stage(
+            @$"
 Now, go through the right and keep going as normal
 until you are stopped
-    ",
-    new Listener(
-        new Door("C", 50),
-        GMLCodeClass.NextSegment("before-dogi")
-    )
-);
-
-
-var beforeDogi = new ProceedStage(
-    new Listener(
-        new RoomTransition(RoomClass.SnowdinSpaghetti),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextDowntime("dogi-downtime")}
-        "
-    )
-);
-var dogiDowntime = new ProceedStage(
-    new Listener(
-        new ScrSteps(),
-        "steps = 841"
-    ),
-    new Listener(
-        new Blcon(),
-        @$"
-        {GMLCodeClass.StopDowntime}
-        {GMLCodeClass.Next}
-        "
-    )
-);
-
-var dogiEncounter = new ProceedStage(
-    new RigBattleListener(Battlegroup.SnowdinDouble),
-    new Listener(
-        new EnterBattle(),
-        GMLCodeClass.StartSegment("snowdin-dbl")
-    ),
-    new Listener(
-        new LeaveBattle(),
-        $@"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("post-dogi")}
-        "
-    )
-);
-
-var postDogi = new ProceedStage(
-    new Listener(
-        new EnterBattle(26),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("greater-dog-1")}
-        "
-    )
-);
-
-var inGreaterDogOne = new ProceedStage(
-    new Listener(
-        new GreaterDogTurnStart(),
-        @$"
-        mycommand = 0;
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("dogskip")}
-        "
-    )
-);
-
-var inGreaterDogTwo = new ProceedStage(
-    new Listener(
-        new GreaterDogTurnEnd(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.StartSegment("greater-dog-2")}
-        "
-    ),
-    new Listener(
-        new GreaterDogTurnStart(),
-        @$"
-        mycommand = 100;
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("not-dogskip")}
-        "
-    )
-);
-
-var inGreaterDogEnd = new ProceedStage(
-    new Listener(
-        new GreaterDogTurnEnd(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("greater-dog-end")}
-        "
-    )
-);
-
-var postGreaterDog = new ProceedExitRoomStage(false, RoomClass.SnowdinDangerBridge, 80, 120, RoomClass.SnowdinTown);
-
-var preSnowdinGrind = new PreGrindStage(
-    @"
+            ",
+            new Listener(
+                new Door("C", 50),
+                GMLCodeClass.NextSegment("before-dogi")
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new RoomTransition(RoomClass.SnowdinSpaghetti),
+                @$"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.NextDowntime("dogi-downtime")}
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new ScrSteps(),
+                "steps = 841"
+            ),
+            new Listener(
+                new Blcon(),
+                @$"
+                {GMLCodeClass.StopDowntime}
+                {GMLCodeClass.Next}
+                "
+            )
+        ),
+        new ProceedStage(
+            new RigBattleListener(Battlegroup.SnowdinDouble),
+            new Listener(
+                new EnterBattle(),
+                GMLCodeClass.StartSegment("snowdin-dbl")
+            ),
+            new Listener(
+                new LeaveBattle(),
+                $@"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.NextSegment("post-dogi")}
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new EnterBattle(26),
+                @$"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.NextSegment("greater-dog-1")}
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new GreaterDogTurnStart(),
+                @$"
+                mycommand = 0;
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.NextSegment("dogskip")}
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new GreaterDogTurnEnd(),
+                @$"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.StartSegment("greater-dog-2")}
+                "
+            ),
+            new Listener(
+                new GreaterDogTurnStart(),
+                @$"
+                mycommand = 100;
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.NextSegment("not-dogskip")}
+                "
+            )
+        ),
+        new ProceedStage(
+            new Listener(
+                new GreaterDogTurnEnd(),
+                @$"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.NextSegment("greater-dog-end")}
+                "
+            )
+        ),
+        new ProceedExitRoomStage(false, RoomClass.SnowdinDangerBridge, 80, 120, RoomClass.SnowdinTown),
+        new PreGrindStage(
+            @"
 Now, go back and grind for an encounter as normal until you are
 stopped
-    "
-);
-
-var snowdinGrindFirst = new SingleBattleStage(
-    "snowdin-tpl",
-    battlegroup: Battlegroup.SnowdinTriple,
-    nextSegment: "snowdin-right-transition"
-);
-
-var snowdinRightTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinTown, 520, 140, RoomClass.SnowdinPoffZone, false);
-
-var preLeftSnowdinGrind = new PreGrindStage(
-    @"
+            "
+        ),
+        new SingleBattleStage(
+            "snowdin-tpl",
+            battlegroup: Battlegroup.SnowdinTriple,
+            nextSegment: "snowdin-right-transition"
+        ),
+        new ProceedExitRoomStage(false, RoomClass.SnowdinTown, 520, 140, RoomClass.SnowdinPoffZone, false),
+        new PreGrindStage(
+            @"
 Now, go to the right and grind an encounter, KILL JERRY,
 and then do a leftside transition
-    "
-);
-
-var leftSideJerry = new SingleBattleStage(
-    "snowdin-dbl-jerry",
-    @"
+            "
+        ),
+        new SingleBattleStage(
+            "snowdin-dbl-jerry",
+            @"
 KILL JERRY AND LEFT TRANSITION
-    ",
-    Battlegroup.SnowdinDouble,
-    "snowdin-left-transition"
-);
-
-var snowdinLeftTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinPoffZone, 40, 120, RoomClass.SnowdinTown);
-
-var preSnowdinRightJerry = new PreGrindStage(
-    @$"
+            ",
+            Battlegroup.SnowdinDouble,
+            "snowdin-left-transition"
+        ),
+        new ProceedExitRoomStage(false, RoomClass.SnowdinPoffZone, 40, 120, RoomClass.SnowdinTown),
+        new PreGrindStage(
+            @$"
 Now, go to the left and grind for an encounter,
 kill JERRY, and proceed to the end of Snowdin
 as normal after the encounter ends
 (in short, once the encounter begins,
 it is a normal run again)
-    "
-);
+            "
+        ),
+        new SingleBattleStage(
+            "snowdin-tpl-jerry",
+            battlegroup: Battlegroup.SnowdinTriple,
+            nextSegment: "snowidn-end"
+        ),
+        new ProceedStage(
+            new Listener(
+                new Door("Amusic", 81),
+                @$"
+                {GMLCodeClass.StopTime}
+                {GMLCodeClass.Next}
+                "
+            )
+        ),
+        new Stage("Session finished!")
+    };
+}
 
-var snowdinRightJerry = new SingleBattleStage(
-    "snowdin-tpl-jerry",
-    battlegroup: Battlegroup.SnowdinTriple,
-    nextSegment: "snowidn-end"
-);
-
-var snowdinEnd = new ProceedStage(
-    new Listener(
-        new Door("Amusic", 81),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.Next}
-        "
-    )
-);
-
-/// <summary>
-/// After the session is finished
-/// </summary>
-var sessionFinished = new Stage("Session finished!");
-
-/*
-SESSION DEFINITIONS
-*/
-
-/// <summary>
-/// Session for timing all segments in Ruins
-/// </summary>
-var ruinsScript = new Session(
-    offline,
-    ruinsStart,
-    ruinsHallway,
-    preLeafPile,
-    leafPileDowntime,
-    preFirstGrind,
-    inFirstGrind,
-    postFirstGrind,
-    leafFallDowntime,
-    preFallEncounter,
-    inFalLEncounter,
-    leafFallTransition,
-    preOneRock,
-    oneRockDowntime,
-    preLeafMaze,
-    oneRockEncounter,
-    inLeafMaze,
-    preThreeRock,
-    threeRockDowntime,
-    preSecondGrind,
-    inSecondGrind,
-    preFleeGrind,
-    inFleeGrind,
-    preTripleMold,
-    inTripleMold,
-    ruinsPreEnd,
-    ruinsNobodyCame,
-    ruinsEnd,
-    sessionFinished
-);
-
-var snowdinScript = new Session(
-    snowdinSessionStart,
-    snowdinStart,
-    preBoxRoad,
-    boxRoadDowntime,
-    preSingleSnowdrake,
-    inSingleSnowdrake,
-    boxRoadTransition,
-    preHumanRockDowntime,
-    inHumanRockDowntime,
-    preSingleIcecap,
-    inSingleIcecap,
-    preDoggo,
-    inDoggo,
-    preIceSlideDowntime,
-    inIceSlideDowntime,
-    preLesserDog,
-    inLesserDog,
-    preElectricMaze,
-    beforeDogi,
-    dogiDowntime,
-    dogiEncounter,
-    postDogi,
-    inGreaterDogOne,
-    inGreaterDogTwo,
-    inGreaterDogEnd,
-    postGreaterDog,
-    preSnowdinGrind,
-    snowdinGrindFirst,
-    snowdinRightTransition,
-    preLeftSnowdinGrind,
-    leftSideJerry,
-    snowdinLeftTransition,
-    preSnowdinRightJerry,
-    snowdinRightJerry,
-    snowdinEnd
-);
+var sessions = new Session[] {
+    new Session(StageSegmentClass.RuinsStages),
+    new Session(StageSegmentClass.SnowdinStages)
+};
 
 /******
 start of main script
@@ -2445,6 +2225,7 @@ directory_create('recordings');
 
 session_name = 0;
 
+session = 0;
 stage = 0;
 current_msg = '';
 
@@ -2552,6 +2333,14 @@ if (obj_time.fast_encounters) {{
 }}
 ");
 
+append(CodeEntryClass.step, $@"
+if (keyboard_check_pressed(vk_pageup)) {{
+    session++;
+}} else if (keyboard_check_pressed(vk_pagedown)) {{
+    session--;
+}}
+");
+
 // room tracker, widely used for room transition events
 append(CodeEntryClass.step, @"
 previous_room = current_room;
@@ -2619,11 +2408,23 @@ draw_text(20, 0, current_msg);
 
 // code that assigns the current_msg variable
 // TO-DO: Current only takes for ruins. Refactor once more sessions are supported
+
 var messageList = new List<string>();
-for (int i = 0; i < snowdinScript.Stages.Length; i++) {
-    messageList.Add($@"
-    if (stage == {i}) {{
-        current_msg = ""{snowdinScript.Stages[i].Message}"";
+for (int i = 0; i < sessions.Length; i++) {
+    var session = sessions[i];
+    var sessionMsgList = new List<string>();
+    for (int j = 0; j < session.Stages.Length; j++) {
+        var stage = session.Stages[j];
+        sessionMsgList.Add($@"
+        if (stage == {j}) {{
+            current_msg = ""{stage.Message}"";
+        }}
+        ");
+    }
+
+    messageList.Add(@$"
+    if (obj_time.session == {i}) {{
+        {IfElseBlock.GetIfElseBlock(sessionMsgList)}
     }}
     ");
 }
@@ -2645,92 +2446,105 @@ if (use_frogskip) {{
 // placing all listeners for all stages
 
 // first, create a map of all unique events mapped to a map of all stages and their respective code
-var events = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
+var events = new Dictionary<int, Dictionary<UndertaleEvent, Dictionary<int, List<string>>>>();
 
-// only ruinScript supported for now
-// TO-DO: add other session support
-for (int i = 0; i < snowdinScript.Stages.Length; i++) {
-    var stage = snowdinScript.Stages[i];
-    foreach (Listener listener in stage.Listeners) {
-        if (!events.ContainsKey(listener.Event)) {
-            events[listener.Event] = new Dictionary<int, List<string>>();
+for (int i = 0; i < sessions.Length; i++) {
+    var session = sessions[i];
+    events[i] = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
+    for (int j = 0; j < session.Stages.Length; j++) {
+        var stage = session.Stages[j];
+        foreach (Listener listener in stage.Listeners) {
+            if (!events[i].ContainsKey(listener.Event)) {
+                events[i][listener.Event] = new Dictionary<int, List<string>>();
+            }
+            if (!events[i][listener.Event].ContainsKey(j)) events[i][listener.Event][j] = new List<string>();
+            events[i][listener.Event][j].Add(listener.ListenerCallback);
         }
-        if (!events[listener.Event].ContainsKey(i)) events[listener.Event][i] = new List<string>();
-        events[listener.Event][i].Add(listener.ListenerCallback);
     }
 }
 
 // then, group all the event types and their unique events
 
 // this is a map of event names to a map of unique events and their respective code
-var eventCodes = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
+var eventCodes = new Dictionary<int, Dictionary<string, Dictionary<UndertaleEvent, string>>>();
 
 // the code for each unique event is just an if-else block separating each of the stages
-foreach (UndertaleEvent undertaleEvent in events.Keys) {
-    var stageCodeBlocks = new List<string>();
-    var eventStages = events[undertaleEvent];
-    foreach (int stage in eventStages.Keys) {
-        stageCodeBlocks.Add(@$"
-        if (obj_time.stage == {stage}) {{
-            {// join the codes since it is a list
-            String.Join("\n", eventStages[stage])}
-        }}
-        ");
-
-    }
-    string eventCode = IfElseBlock.GetIfElseBlock(stageCodeBlocks);
-    var eventName = undertaleEvent.GetType().Name;
-
-    if (!eventCodes.ContainsKey(eventName)) eventCodes[eventName] = new Dictionary<UndertaleEvent, string>();
-    eventCodes[eventName][undertaleEvent] = eventCode;
-}
-
-// finally, go through each event type, and determine how the code will be placed
-foreach (string eventName in eventCodes.Keys) {
-    // get the map of unique events to their code
-    var eventMap = eventCodes[eventName];
-    
-    // pick any of the events (in this case the first) to access the general methods of this event type
-    // regarding how to place the code
-    UndertaleEvent baseEvent = eventMap.Keys.ToList()[0];
-
-    // split the events based on the code entries they edit
-    // so create a map of code entries to the if-else block for the events in the code entry
-    // in short, since the unique events are already separated, we presume that we want to access only one of them
-    // and that is filtered by doing an if-else block in all of their conditions
-    var entryMap = new Dictionary<string, IfElseBlock>();
-
-    foreach (UndertaleEvent undertaleEvent in eventMap.Keys) {
-        var eventCode = eventMap[undertaleEvent];
-        var eventEntry = undertaleEvent.CodeEntry();
-        if (!entryMap.ContainsKey(eventEntry)) {
-            entryMap[eventEntry] = new IfElseBlock();
-        }
-        var condition = undertaleEvent.GMLCondition();
-        if (condition == "1") {
-            entryMap[eventEntry].SetElseBlock(eventCode);
-        } else {    
-            entryMap[eventEntry].AddIfBlock(@$"
-            if ({undertaleEvent.GMLCondition()}) {{
-                {eventCode}
+for (int i = 0; i < sessions.Length; i++) {
+    eventCodes[i] = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
+    foreach (UndertaleEvent undertaleEvent in events[i].Keys) {
+        var stageCodeBlocks = new List<string>();
+        var eventStages = events[i][undertaleEvent];
+        foreach (int stage in eventStages.Keys) {
+            stageCodeBlocks.Add(@$"
+            if (obj_time.stage == {stage}) {{
+                {// join the codes since it is a list
+                String.Join("\n", eventStages[stage])}
             }}
             ");
+
         }
+        string eventCode = IfElseBlock.GetIfElseBlock(stageCodeBlocks);
+        var eventName = undertaleEvent.GetType().Name;
+
+        if (!eventCodes[i].ContainsKey(eventName)) eventCodes[i][eventName] = new Dictionary<UndertaleEvent, string>();
+        eventCodes[i][eventName][undertaleEvent] = eventCode;
     }
+}
 
-    foreach (string entry in entryMap.Keys) {
-        string code = entryMap[entry].GetCode();
 
-        switch (baseEvent.Method) {        
-            case PlaceMethod.Append:
-                append(entry, baseEvent.Placement(code));
-                break;
-            case PlaceMethod.Place:
-                place(entry, baseEvent.Replacement, baseEvent.Placement(code));
-                break;
-            case PlaceMethod.PlaceInIf:
-                placeInIf(entry, baseEvent.Replacement, baseEvent.Placement(code));
-                break;
+// finally, go through each event type, and determine how the code will be placed
+for (int i = 0; i < sessions.Length; i++) {
+    foreach (string eventName in eventCodes[i].Keys) {
+        // get the map of unique events to their code
+        var eventMap = eventCodes[i][eventName];
+        
+        // pick any of the events (in this case the first) to access the general methods of this event type
+        // regarding how to place the code
+        UndertaleEvent baseEvent = eventMap.Keys.ToList()[0];
+
+        // split the events based on the code entries they edit
+        // so create a map of code entries to the if-else block for the events in the code entry
+        // in short, since the unique events are already separated, we presume that we want to access only one of them
+        // and that is filtered by doing an if-else block in all of their conditions
+        var entryMap = new Dictionary<string, IfElseBlock>();
+
+        foreach (UndertaleEvent undertaleEvent in eventMap.Keys) {
+            var eventCode = eventMap[undertaleEvent];
+            var eventEntry = undertaleEvent.CodeEntry();
+            if (!entryMap.ContainsKey(eventEntry)) {
+                entryMap[eventEntry] = new IfElseBlock();
+            }
+            var condition = undertaleEvent.GMLCondition();
+            if (condition == "1") {
+                entryMap[eventEntry].SetElseBlock(eventCode);
+            } else {    
+                entryMap[eventEntry].AddIfBlock(@$"
+                if ({undertaleEvent.GMLCondition()}) {{
+                    {eventCode}
+                }}
+                ");
+            }
+        }
+
+        foreach (string entry in entryMap.Keys) {
+            string code =
+            @$"
+            if (obj_time.session == {i}) {{
+                {entryMap[entry].GetCode()}
+            }}
+            ";
+
+            switch (baseEvent.Method) {        
+                case PlaceMethod.Append:
+                    append(entry, baseEvent.Placement(code));
+                    break;
+                case PlaceMethod.Place:
+                    place(entry, baseEvent.Replacement, baseEvent.Placement(code));
+                    break;
+                case PlaceMethod.PlaceInIf:
+                    placeInIf(entry, baseEvent.Replacement, baseEvent.Placement(code));
+                    break;
+            }
         }
     }
 }
