@@ -310,7 +310,19 @@ static class GMLCodeClass {
     ";
 
     /// <summary>
-    /// Generate GML code that starts the downtime mode
+    /// Generate GML code that starts a segment and skips to the next stage
+    /// </summary>
+    /// <param name="segmentName">Name of the segment</param>
+    /// <returns></returns>
+    public static string NextSegment (string segmentName) {
+        return @$"
+        {StartSegment(segmentName, false)}
+        {Next}
+        ";
+    }
+
+    /// <summary>
+    /// Generate GML code that starts the downtime mode and skips to the next stage
     /// </summary>
     /// <param name="downtimeName">Name of the downtime</param>
     /// <param name="steps">
@@ -318,7 +330,7 @@ static class GMLCodeClass {
     /// number will be given assuming it is not important
     /// </param>
     /// <returns></returns>
-    public static string StartDowntime (string downtimeName, int steps = 10000) {
+    public static string NextDowntime (string downtimeName, int steps = 10000) {
         return @$"
         if (!obj_time.is_downtime_mode) {{
             obj_time.is_downtime_mode = 1;
@@ -328,6 +340,7 @@ static class GMLCodeClass {
             obj_time.optimal_steps = {steps}
             obj_time.downtime_name = '{downtimeName}';
         }}
+        {Next}
         ";
     }
 
@@ -338,20 +351,6 @@ static class GMLCodeClass {
     if (obj_time.is_timer_running) {{
         obj_time.is_timer_running = 0;
         {AppendNewTime("obj_time.segment_name", "get_timer() - obj_time.time_start")}
-    }}
-    ";
-
-    /// <summary>
-    /// GML code that stops downtime mode
-    /// </summary>
-    public static string StopDowntime = @$"
-    // in case the downtime ends during a downtime, must not lose the time being counted
-    if (obj_time.is_downtime_mode) {{
-        if (obj_time.is_downtime_running) {{
-            obj_time.downtime += get_timer() + obj_time.downtime_start
-        }}
-        obj_time.is_downtime_mode = 0;
-        {AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
     }}
     ";
 
@@ -401,6 +400,27 @@ static class GMLCodeClass {
     }
 
     /// <summary>
+    /// Generate GML code for the actions at the end of a segment
+    /// (stops segment time, advances the stage, and teleport away) 
+    /// </summary>
+    /// <param name="room">Room to teleport after segment</param>
+    /// <param name="x">X position to teleport to</param>
+    /// <param name="y">Y position to teleport to</param>
+    /// <param name="disable">
+    /// Should be set to `true` if the encounters should be disabled at the end, and `false` otherwise
+    /// </param>
+    /// <returns></returns>
+    public static string ExitSegment (int room, int x, int y, bool disable = false) {
+        var disableEncounters = disable ? DisableEncounters : "";
+        return @$"
+        {StopTime}
+        {Next}
+        {TPTo(room, x, y)}
+        {disableEncounters}
+        ";
+    }
+
+    /// <summary>
     /// GML variable that is `1` if any of the arrow keys are currently held or `0` otherwise
     /// </summary>
     public static string IsMoving = @"
@@ -408,109 +428,15 @@ static class GMLCodeClass {
     ";
 
     /// <summary>
-    /// GML code that enables the encounters
+    /// Rig the battlegroup
     /// </summary>
-    public static string EnableEncounters = @"
-    obj_time.fast_encounters = 1;
-    ";
-
-    /// <summary>
-    /// GML code that unrigs the frogskip in the first half for a specific encounters
-    /// </summary>
-    public static string UnrigFrogskip = WithFirstHalfEncounter(@$"
-    if (encounter_name == 'N') {{
-        use_frogskip = 0;
-    }}
-    ");
-
-    /// <summary>
-    /// GML code that starts timing Froggit's attacks
-    /// </summary>
-    public static string TimeFrogTurn = WithFirstHalfEncounter($@"
-    var name = 0;
-    switch (encounter_name) {{
-        case 'F':
-            name = 'frogskip';
-            break;
-        case 'N':
-            name = 'not-frogskip';
-            break;
-    }}
-    if (name != 0) {{
-        {StartSegment("name", true)}
-    }}
-    ");
-
-    /// <summary>
-    /// GML code that ends the time for Froggit's attacks
-    /// </summary>
-    public static string EndFrogTime = WithFirstHalfEncounter($@"
-    if (encounter_name == 'F' || encounter_name == 'N') {{
-        {StopTime}
-    }}
-    ");
-
-    /// <summary>
-    /// GML code that starts the segments for the "YOU WON!" message
-    /// </summary>
-    public static string TimeYouWon = WithFirstHalfEncounter(@$"
-    // for 'A', we are starting time for the LV up text
-    if (encounter_name == 'A') {{
-        {StartSegment("lv-up")}
-    }} else if (encounter_name == 'N') {{
-        // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
-        {StartSegment("you-won")}
-    }}
-    ");
-
-    /// <summary>
-    /// GML code that rigs the encounter to bein a Whimsun
-    /// </summary>
-    public static string RigWhimsun = @$"
-    global.battlegroup = 5;
-    ";
-
-    /// <summary>
-    /// GML code that sets the Ruins area kills to max
-    /// </summary>
-    public static string MaxRuinsKills = @$"
-    global.flag[202] = 20;
-    ";
-
-    /// <summary>
-    /// GML code that rigs the encounter to be a triple mold
-    /// </summary>
-    public static string RigTripleMold = @$"
-    global.battlegroup = 8;
-    ";
-
-    /// <summary>
-    /// GML code that start segments for the nobody came section in Ruins
-    /// </summary>
-    public static string NobodyCameSegments = @$"
-    if (obj_time.nobody_came == 0) {{
-        {StartSegment("ruins-switches")}
-    }} else if (obj_time.nobody_came == 1) {{
-        {StartSegment("perspective-a")}
-    }} else if (obj_time.nobody_came == 2) {{
-        {StartSegment("perspective-b")}
-    }} else if (obj_time.nobody_came == 3) {{
-        {StartSegment("perspective-c")}
-    }} else if (obj_time.nobody_came == 4) {{
-        {StartSegment("perspective-d")}
-    }} else {{
-        {StartSegment("ruins-end")}
-        obj_time.stage++;
-    }}
-    obj_time.nobody_came++;
-    ";
-
-    /// <summary>
-    /// GML code to run when starting the second half grind
-    /// </summary>
-    public static string ResetEncounters = @$"
-    obj_time.current_encounter = 0;
-    ";
+    /// <param name="battlegroup">Battlegroup id</param>
+    /// <returns></returns>
+    public static string RigEncounter (int battlegroup) {
+        return @$"
+        global.battlegroup = {battlegroup};
+        ";
+    }
 
     /// <summary>
     /// Generate GML code that assigns a variable to a `assignVar` variable based on the value of `readVar`
@@ -1009,12 +935,13 @@ class Stage {
     /// <param name="listeners"></param>
     public Stage (string msg, params Listener[] listeners) {
         Listeners = listeners;
-        Message = msg;
+        // trim for height consistency in-game
+        Message = msg.TrimStart();
     }
 }
 
 /// <summary>
-/// Class for stages with the message "PROCEED'
+/// Class for stages with the message "PROCEED"
 /// </summary>
 class ProceedStage : Stage {
     /// <summary>
@@ -1027,16 +954,149 @@ PROCEED
 }
 
 /// <summary>
-/// Class for stages with the message "WALK"
+/// Class for "PROCEED" stages that end with a room transition and end a segment
 /// </summary>
-class WalkStage : Stage {
+class ProceedExitRoomStage : ProceedStage {
     /// <summary>
-    /// Create stage with listeners
+    /// Create room with a room and exit options
     /// </summary>
-    /// <param name="listeners"></param>
-    public WalkStage (params Listener[] listeners) : base(@"
+    /// <param name="disable">
+    /// Should be `true` if encounters should be disabled at the end of the segment and `false` otherwise
+    /// </param>
+    /// <param name="origin">The room the end transition starts at</param>
+    /// <param name="dest">The room the end transition ends at</param>
+    /// <param name="room">The room to teleport to</param>
+    /// <param name="x">The x position to teleport to</param>
+    /// <param name="y">The y position to teleport to</param>
+    public ProceedExitRoomStage (bool disable, int origin, int dest, int room, int x, int y) : base(
+        new Listener(
+            new RoomTransition(origin, dest),
+            GMLCodeClass.ExitSegment(room, x, y, disable)
+        )
+    ) {}
+}
+
+/// <summary>
+/// Class for the stages before a downtime
+/// </summary>
+class PreDowntimeStage : Stage {
+    /// <summary>
+    /// Create the lsitener for the final room transition
+    /// </summary>
+    /// <param name="origin">Room the transition starts at</param>
+    /// <param name="dest">Room the transition ends at</param>
+    /// <param name="downtimeName">Name of the new downtime</param>
+    /// <param name="steps">Number of optimal steps</param>
+    /// <returns></returns>
+    private static Listener DefaultListener (int origin, int dest, string downtimeName, int steps) {
+        return new Listener(
+            new RoomTransition(origin, dest),
+            GMLCodeClass.NextDowntime(downtimeName, steps)
+        );
+    }
+
+    /// <summary>
+    /// Create the stage with no aditional listeners
+    /// </summary>
+    /// <param name="msg"></param>
+    /// <param name="origin"></param>
+    /// <param name="dest"></param>
+    /// <param name="downtimeName"></param>
+    /// <param name="steps"></param>
+    public PreDowntimeStage (string msg, int origin, int dest, string downtimeName, int steps = 10000) : base(
+        msg,
+        DefaultListener(origin, dest, downtimeName, steps)
+    ) {}
+
+    /// <summary>
+    /// Create the stage with extra listeners
+    /// </summary>
+    /// <param name="msg">Message to display</param>
+    /// <param name="origin">Room the transition for the end starts at</param>
+    /// <param name="dest">Room the transition for the end ends at</param>
+    /// <param name="downtimeName">Name for the downtime to start</param>
+    /// <param name="extraListeners">Aditionall listeners to bind to stage</param>
+    /// <param name=""></param>
+    public PreDowntimeStage (string msg, int origin, int dest, string downtimeName, Listener[] extraListeners, int steps = 10000) : base(
+        msg,
+        (new Listener[] { DefaultListener(origin, dest, downtimeName, steps) }).Concat(extraListeners).ToArray()
+    ) {}
+}
+
+/// <summary>
+/// Class for a downtime stage
+/// </summary>
+class DowntimeStage : Stage {
+    /// <summary>
+    /// Create the stage with an event listener
+    /// </summary>
+    /// <param name="door">Name of the door to end the downtime at</param>
+    /// <param name="room">Room the downtime ends at</param>
+    public DowntimeStage (string door, int room) : base(@"
 WALK
-    ", listeners) {}
+    ", new Listener(
+        new Door(door, room),
+        @$"
+        // in case the downtime ends during a downtime, must not lose the time being counted
+        if (obj_time.is_downtime_mode) {{
+            if (obj_time.is_downtime_running) {{
+                obj_time.downtime += get_timer() + obj_time.downtime_start
+            }}
+            obj_time.is_downtime_mode = 0;
+            {GMLCodeClass.AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
+        }}
+        {GMLCodeClass.Next}
+        obj_time.fast_encounters = 1;
+        "
+    )) {}
+}
+
+/// <summary>
+/// Class for a stage that ends with grinding
+/// </summary>
+class PreGrindStage : Stage {
+    /// <summary>
+    /// Create listener to remove the message
+    /// </summary>
+    /// <param name="reset">
+    /// Should be set to `true` if the current encounter variable should be reset and `false` otherwise
+    /// </param>
+    /// <returns></returns>
+    private static Listener MessageCleanerListener (bool reset = false) {
+        var code = reset ? "obj_time.current_encounter = 0;" : "";
+
+        return new Listener(new Blcon(), @$"
+        {code}
+        {GMLCodeClass.Next}
+        ");
+    }
+
+    /// <summary>
+    /// Create stage with a message
+    /// </summary>
+    /// <param name="msg">Stage message</param>
+    /// <param name="reset">
+    /// Should be set to `true` if the current encounter variable should be reset and `false` otherwise
+    /// </param>
+    public PreGrindStage (string msg, bool reset = false) : base (msg, MessageCleanerListener(reset)) {}
+
+    /// <summary>
+    /// Create a stage that teleports away from a room at the start
+    /// </summary>
+    /// <param name="msg">Stage message</param>
+    /// <param name="watchRoom">Room to watch for teleport</param>
+    /// <param name="tpRoom">Room to teleport to</param>
+    /// <param name="x">x position to teleport to</param>
+    /// <param name="y">y position to teleport to</param>
+    /// <param name=""></param>
+    public PreGrindStage (string msg, int watchRoom, int tpRoom, int x, int y, bool reset = false) : base (
+        msg,
+        MessageCleanerListener(reset),
+        new Listener(
+            new Room(watchRoom),
+            GMLCodeClass.TPTo(tpRoom, x, y)
+        )
+    ) {}
 }
 
 /// <summary>
@@ -1166,22 +1226,7 @@ class StaticGrindTransition : GrindTransition {
 /// Class for a stage that carries out a grind
 /// </summary>
 class GrindStage : Stage {
-    /// <summary>
-    /// Create stage for the grind
-    /// </summary>
-    /// <param name="encounters">Array with all the encounters in the grind</param>
-    /// <param name="transitions">Array with all timed transitions in the grind</param>
-    /// <param name="victoryCode">GML code to run at the start of the leave battle event</param>
-    /// <param name="msg">Message to be displayed in the session message</param>
-    /// <param name="arr">Name of the array with the encounters for the grind</param>
-    /// <param name="tpRoom">Room to teleport at the end of the grind</param>
-    /// <param name="tpX">X position to teleport at the end of the grind</param>
-    /// <param name="tpY">Y position to teleport at the end of the grind</param>
-    /// <param name="disableOnEnd">
-    /// Should be set to `true` if the encounters should be disabled at the end of the encounter and `false` otherwise
-    /// </param>
-    /// <param name="customListeners">Extra listeners to add to the stage</param>
-    public GrindStage (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string msg, string arr, int tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) {
+    private static Listener[] InitListeners (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string arr, int tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) {
         // using a list here to later convert to array
         var listeners = new List<Listener>();
 
@@ -1231,13 +1276,11 @@ class GrindStage : Stage {
             listeners.Add(
                 new Listener(
                     new RoomTransition(transition.OriginRoom, transition.DestinationRoom),
-                    new Callback(
-                        @$"
-                        if ({transition.Condition}) {{
-                            {GMLCodeClass.StopTime}
-                        }}
-                        "
-                    )
+                    @$"
+                    if ({transition.Condition}) {{
+                        {GMLCodeClass.StopTime}
+                    }}
+                    "
                 )             
             );
         }
@@ -1248,52 +1291,68 @@ class GrindStage : Stage {
             new Listener [] {
                 new Listener(
                     new EnterBattle(),
-                    new Callback(
-                        @$"
-                        {encounterName}
-                        
-                        var name = 0;
-                        {GMLCodeClass.GetVariableSwitch(segmentMap, "encounter_name", "name")}
+                    @$"
+                    {encounterName}
+                    
+                    var name = 0;
+                    {GMLCodeClass.GetVariableSwitch(segmentMap, "encounter_name", "name")}
 
-                        if (name != 0) {{
-                            {GMLCodeClass.StartSegment("name", true)}
-                        }}
-                        "
-                    )
+                    if (name != 0) {{
+                        {GMLCodeClass.StartSegment("name", true)}
+                    }}
+                    "
                 ),
                 new Listener(
                     new LeaveBattle(),
-                    new Callback(
-                        encounterName,
-                        victoryCode,
-                        @$"
-                        if ({stopTimeCondition}) {{
-                            {GMLCodeClass.StopTime}
-                        }}
+                    @$"
+                    {encounterName}
+                    {victoryCode}
+                    if ({stopTimeCondition}) {{
+                        {GMLCodeClass.StopTime}
+                    }}
 
-                        obj_time.current_encounter++;
-                        if (obj_time.current_encounter == {encounters.Length}) {{
-                            {disableEncounters}
-                            {GMLCodeClass.TPTo(tpRoom, tpX, tpY)}
-                            obj_time.stage++;
-                        }}
-                        ",
-                        transitionVictoryCode.GetCode()
-                    )
+                    obj_time.current_encounter++;
+                    if (obj_time.current_encounter == {encounters.Length}) {{
+                        {disableEncounters}
+                        {GMLCodeClass.TPTo(tpRoom, tpX, tpY)}
+                        obj_time.stage++;
+                    }}
+                    {transitionVictoryCode.GetCode()}
+                    "
                 ),
                 new Listener(
                     new BeforeBattle(),
-                    new Callback(
-                        encounterName,
-                        GMLCodeClass.GetVariableSwitch(rigMap, "encounter_name", "global.battlegroup")
-                    )
+                    @$"
+                    {encounterName}
+                    show_debug_message(encounter_name);
+                    {GMLCodeClass.GetVariableSwitch(rigMap, "encounter_name", "global.battlegroup")}
+                    "
                 )
             }  
         );
 
-        Listeners = listeners.ToArray();
-        Message = msg;
+        return listeners.ToArray();
     }
+
+    /// <summary>
+    /// Create stage for the grind
+    /// </summary>
+    /// <param name="encounters">Array with all the encounters in the grind</param>
+    /// <param name="transitions">Array with all timed transitions in the grind</param>
+    /// <param name="victoryCode">GML code to run at the start of the leave battle event</param>
+    /// <param name="msg">Message to be displayed in the session message</param>
+    /// <param name="arr">Name of the array with the encounters for the grind</param>
+    /// <param name="tpRoom">Room to teleport at the end of the grind</param>
+    /// <param name="tpX">X position to teleport at the end of the grind</param>
+    /// <param name="tpY">Y position to teleport at the end of the grind</param>
+    /// <param name="disableOnEnd">
+    /// Should be set to `true` if the encounters should be disabled at the end of the encounter and `false` otherwise
+    /// </param>
+    /// <param name="customListeners">Extra listeners to add to the stage</param>
+    public GrindStage (EncounterName[] encounters, GrindTransition[] transitions, string victoryCode, string msg, string arr, int tpRoom, int tpX, int tpY, bool disableOnEnd, params Listener[] customListeners) : base(
+        msg,
+        InitListeners(encounters, transitions, victoryCode, arr, tpRoom, tpX, tpY, disableOnEnd, customListeners)
+    ) {}
 }
 
 /*
@@ -1319,24 +1378,6 @@ class Session {
 }
 
 /// <summary>
-/// Class for the GML code executed after an event is fired
-/// </summary>
-class Callback {
-    /// <summary>
-    /// Code that will be executed
-    /// </summary>
-    public string GMLCode;
-
-    /// <summary>
-    /// Create callback with arbitrary code blocks
-    /// </summary>
-    /// <param name="code"></param>
-    public Callback (params string[] code) {
-        GMLCode = "\n" + String.Join("\n", code) + "\n";
-    }
-}
-
-/// <summary>
 /// Class representing the listener for an event
 /// </summary>
 class Listener {
@@ -1348,17 +1389,41 @@ class Listener {
     /// <summary>
     /// Code to execute after the event is fired
     /// </summary>
-    public Callback ListenerCallback; 
+    public string ListenerCallback; 
 
     /// <summary>
     /// Create an event listener with an event and a callback
     /// </summary>
     /// <param name="undertaleEvent"></param>
-    /// <param name="callback"></param>
-    public Listener (UndertaleEvent undertaleEvent, Callback callback) {
+    /// <param name="code"></param>
+    public Listener (UndertaleEvent undertaleEvent, string code) {
         Event = undertaleEvent;
-        ListenerCallback = callback;
+        ListenerCallback = code;
     }
+}
+
+/// <summary>
+/// Listener for a rig encounter event
+/// </summary>
+class RigBattleListener : Listener {
+    /// <summary>
+    /// Create listener for a battlegroup
+    /// </summary>
+    /// <param name="battlegroup"></param>
+    public RigBattleListener (int battlegroup) : base (
+        new BeforeBattle(),
+        GMLCodeClass.RigEncounter(battlegroup)
+    ) {}
+}
+
+/// <summary>
+/// Listener for a rig whimsun event
+/// </summary>
+class WhimsunRigListener : RigBattleListener {
+    /// <summary>
+    /// Create listener
+    /// </summary>
+    public WhimsunRigListener () : base (5) {}
 }
 
 /*
@@ -1376,11 +1441,10 @@ and keep playing until the mod stops you
     ",
     new Listener(
         new PickName(),
-        new Callback(
-            GMLCodeClass.StartSession,
-            GMLCodeClass.StartSegment("ruins-start"),
-            GMLCodeClass.Next
-        )
+        @$"
+        {GMLCodeClass.StartSession}
+        {GMLCodeClass.NextSegment("ruins-start")}
+        "
     )
 );
 
@@ -1390,85 +1454,48 @@ and keep playing until the mod stops you
 var ruinsStart = new ProceedStage(
     new Listener(
         new Blcon(),
-        new Callback(
-            GMLCodeClass.StopTime
-        )
+        GMLCodeClass.StopTime
     ),
     new Listener(
         new EnterBattle(3),
-        new Callback(
-            GMLCodeClass.StartSegment("ruins-hallway"),
-            GMLCodeClass.Next
-        )
+        GMLCodeClass.NextSegment("ruins-hallway")
     )
 );
 
 /// <summary>
 /// Normal run from first froggit up to long hallway exit
 /// </summary>
-var ruinsHallway = new ProceedStage(
-    new Listener(
-        new RoomTransition(11, 12),
-        new Callback(
-            GMLCodeClass.StopTime,
-            GMLCodeClass.Next,
-            GMLCodeClass.TPTo(11, 2400, 80)
-        )
-    )
-);
+var ruinsHallway = new ProceedExitRoomStage(false, 11, 12, 11, 2400, 80);
 
 /// <summary>
 /// Explanation before leaf pile
 /// </summary>
-var preLeafPile = new Stage(
+var preLeafPile = new PreDowntimeStage(
     @"
 Next, walk through the next room
 as quickly as possible
     ",
-    new Listener(
-        new RoomTransition(11, 12),
-        new Callback(
-            GMLCodeClass.StartDowntime("ruins-leafpile", 97),
-            GMLCodeClass.Next
-        )
-    )
+    11,
+    12,
+    "ruins-leafpile",
+    97
 );
 
 /// <summary>
 /// Walking across the leaf pile room
 /// </summary>
-var leafPileDowntime = new WalkStage(
-    new Listener(
-        new Door("C", 12),
-        new Callback(
-            GMLCodeClass.StopDowntime,
-            GMLCodeClass.EnableEncounters,
-            GMLCodeClass.Next
-        )
-    )
-);
+var leafPileDowntime = new DowntimeStage("C", 12);
 
 /// <summary>
 /// Explanation before first half grind
 /// </summary>
-var preFirstGrind = new Stage(
+var preFirstGrind = new PreGrindStage(
     @"
 Now, grind and encounter at the end of
 the room and continue grinding as if you were
 in a normal run
     ",
-    new Listener(
-        new Room(14),
-        new Callback(
-            GMLCodeClass.TPTo(12, 180, 260)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            GMLCodeClass.Next
-        )
-    )
+    14, 12, 180, 260
 );
 
 /// <summary>
@@ -1480,7 +1507,8 @@ var inFirstGrind = new GrindStage(
         new EncounterName("F", 4, false),
         new EncounterName("N", 4, true),
         new EncounterName("2", 4, "froggit-lv2"),
-        new EncounterName("3", 4, "froggit-lv3")
+        new EncounterName("3", 4, "froggit-lv3"),
+        new EncounterName("A", 5, true) // TO-DO: this was originally unrigged!
     },
     new GrindTransition[] {
         new StaticGrindTransition(12, 14, 1, "leaf-pile-transition"),
@@ -1502,252 +1530,178 @@ GRIND
     true,
     new Listener(
         new FroggitAttack(),
-        new Callback(
-            GMLCodeClass.UnrigFrogskip
-        )
+        GMLCodeClass.WithFirstHalfEncounter(@$"
+        if (encounter_name == 'N') {{
+            use_frogskip = 0;
+        }}
+        ")
     ),
     new Listener(
         new FroggitTurnStart(),
-        new Callback(
-            GMLCodeClass.TimeFrogTurn
-        )
+        GMLCodeClass.WithFirstHalfEncounter($@"
+        var name = 0;
+        switch (encounter_name) {{
+            case 'F':
+                name = 'frogskip';
+                break;
+            case 'N':
+                name = 'not-frogskip';
+                break;
+        }}
+        if (name != 0) {{
+            {GMLCodeClass.StartSegment("name", true)}
+        }}
+        ")
     ),
     new Listener(
         new FroggitTurnEnd(),
-        new Callback(
-            GMLCodeClass.EndFrogTime
-        )
+        GMLCodeClass.WithFirstHalfEncounter($@"
+        if (encounter_name == 'F' || encounter_name == 'N') {{
+            {GMLCodeClass.StopTime}
+        }}
+        ")
     ),
     new Listener(
         new YouWon(),
-        new Callback(
-            GMLCodeClass.TimeYouWon
-        )
+        GMLCodeClass.WithFirstHalfEncounter(@$"
+        // for 'A', we are starting time for the LV up text
+        if (encounter_name == 'A') {{
+            {GMLCodeClass.StartSegment("lv-up")}
+        }} else if (encounter_name == 'N') {{
+            // 'N' will be the reserved item for measuring the normal you won text ('F' could be as well, just a choice)
+            {GMLCodeClass.StartSegment("you-won")}
+        }}
+        ")
     )
 );
 
 /// <summary>
 /// Explanation after the first half grind
 /// </summary>
-var postFirstGrind = new Stage(
+var postFirstGrind = new PreDowntimeStage(
     @"
 Now, walk to the right room
 and simply cross it (don't grind)
     ",
-    new Listener(
-        new LeaveBattle(),
-        new Callback(
+    12,
+    14,
+    "ruins-leaf-fall",
+    new Listener [] {
+        new Listener(
+            new LeaveBattle(),
             GMLCodeClass.TPTo(12, 240, 340)
         )
-    ),
-    new Listener(
-        new RoomTransition(12, 14),
-        new Callback(
-            GMLCodeClass.StartDowntime("ruins-leaf-fall"),
-            GMLCodeClass.Next
-        )
-    )
+    }
 );
 
 /// <summary>
 /// Walking across the leaf fall room
 /// </summary>
-var leafFallDowntime = new WalkStage(
-    new Listener(
-        new Door("A", 14),
-        new Callback(
-            GMLCodeClass.StopDowntime,
-            GMLCodeClass.EnableEncounters,
-            GMLCodeClass.Next
-        )
-    )
-);
+var leafFallDowntime = new DowntimeStage("A", 14);
 
 /// <summary>
 /// Explanation after leaf fall downtime
 /// </summary>
-var preFallEncounter = new Stage(
+var preFallEncounter = new PreGrindStage(
     @"
 Now, grind an encounter at
 the end of this room and proceed as if it
 were a normal run until you are stopped
     ",
-    new Listener(
-        new Room(15),
-        new Callback(
-            GMLCodeClass.TPTo(14, 210, 100)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            GMLCodeClass.Next
-        )
-    )
+    15, 14, 210, 100
 );
 
 /// <summary>
 /// Grinding encounter in the leaf fall room
 /// </summary>
 var inFalLEncounter = new ProceedStage(
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            GMLCodeClass.RigWhimsun
-        )
-    ),
+    new WhimsunRigListener(),
     new Listener(
         new LeaveBattle(),
-        new Callback(
-            GMLCodeClass.StartSegment("leaf-fall-transition"),
-            GMLCodeClass.Next
-        )
+        GMLCodeClass.NextSegment("leaf-fall-transition")
     )
 );
 
 /// <summary>
 /// Exitting leaf fall room
 /// </summary>
-var leafFallTransition = new ProceedStage(
-    new Listener(
-        new RoomTransition(14, 15),
-        new Callback(
-            GMLCodeClass.StopTime,
-            GMLCodeClass.DisableEncounters,
-            GMLCodeClass.TPTo(14, 200, 80),
-            GMLCodeClass.Next
-        )
-    )
-);
+var leafFallTransition = new ProceedExitRoomStage(true, 14, 15, 14, 200, 80);
 
 /// <summary>
 /// Explanation before one rock room
 /// </summary>
-var preOneRock = new Stage(
+var preOneRock = new PreDowntimeStage(
     @"
 Now, go through the next room
 from beginning to end as if it was a
 normal run but without grinding an encounter
 at the end
     ",
-    new Listener(
-        new RoomTransition(14, 15),
-        new Callback(
-            GMLCodeClass.StartDowntime("ruins-one-rock"),
-            GMLCodeClass.Next
-        )
-    )
+    14,
+    15,
+    "ruins-one-rock"
 );
 
 /// <summary>
 /// Walking across the one rock room
 /// </summary>
-var oneRockDowntime = new WalkStage(
-    new Listener(
-        new Door("A", 15),
-        new Callback(
-            GMLCodeClass.StopDowntime,
-            GMLCodeClass.EnableEncounters,
-            GMLCodeClass.Next
-        )
-    )
-);
+var oneRockDowntime = new DowntimeStage("A", 15);
 
 /// <summary>
 /// Explanation before the leaf maze
 /// </summary>
-var preLeafMaze = new Stage(
+var preLeafMaze = new PreGrindStage(
     @"
 Now grind at the
 end of the room, and proceed as a normal
 run until you are stopped
     ",
-    new Listener(
-        new Room(16),
-        new Callback(
-            GMLCodeClass.TPTo(15, 340, 100)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            GMLCodeClass.Next
-        )
-    )
+    16, 15, 340, 100
 );
 
 /// <summary>
 /// Grinding encounter at the end of one rock room
 /// </summary>
 var oneRockEncounter = new ProceedStage(
-    new Listener(
-        new BeforeBattle(),
-        new Callback(
-            GMLCodeClass.RigWhimsun
-        )
-    ),
+    new WhimsunRigListener(),
     new Listener(
         new LeaveBattle(),
-        new Callback(
-            GMLCodeClass.DisableEncounters,
-            GMLCodeClass.StartSegment("ruins-maze"),
-            GMLCodeClass.Next
-        )
+        @$"
+        {GMLCodeClass.DisableEncounters}
+        {GMLCodeClass.NextSegment("ruins-maze")}
+        "
     )
 );
 
 /// <summary>
 /// Walking across the leaf maze room
 /// </summary>
-var inLeafMaze = new ProceedStage(
-    new Listener(
-        new RoomTransition(16, 17),
-        new Callback(
-            GMLCodeClass.StopTime,
-            GMLCodeClass.DisableEncounters,
-            GMLCodeClass.TPTo(16, 520, 220),
-            GMLCodeClass.Next
-        )
-    )
-);
+var inLeafMaze = new ProceedExitRoomStage(true, 16, 17, 16, 520, 220);
 
 /// <summary>
 /// Explanation before three rock room
 /// </summary>
-var preThreeRock = new Stage(
+var preThreeRock = new PreDowntimeStage(
     @"
 Now, go through the next
 room from begining to end as if it was
 a normal run but without grinding an encounter
 at the end
     ",
-    new Listener(
-        new RoomTransition(16, 17),
-        new Callback(
-            GMLCodeClass.StartDowntime("ruins-three-rock"),
-            GMLCodeClass.Next
-        )
-    )
+    16,
+    17,
+    "ruins-three-rock"
 );
 
 /// <summary>
 /// Walking across three rock room
 /// </summary>
-var threeRockDowntime = new WalkStage(
-    new Listener(
-        new Door("A", 17),
-        new Callback(
-            GMLCodeClass.StopDowntime,
-            GMLCodeClass.EnableEncounters,
-            GMLCodeClass.Next
-        )
-    )
-);
+var threeRockDowntime = new DowntimeStage("A", 17);
 
 /// <summary>
 /// Explanation before second half grinding
 /// </summary>
-var preSecondGrind = new Stage(
+var preSecondGrind = new PreGrindStage(
     @"
 Now, grind an
 encounter at the end of the room,
@@ -1756,19 +1710,7 @@ encounters until you are stopped
 Grind as you would in a normal
 run
     ",
-    new Listener(
-        new Room(18),
-        new Callback(
-            GMLCodeClass.TPTo(17, 430, 110)
-        )
-    ),
-    new Listener(
-        new Blcon(),
-        new Callback(
-            GMLCodeClass.ResetEncounters,
-            GMLCodeClass.Next
-        )
-    )
+    18, 17, 430, 110, true
 );
 
 /// <summary>
@@ -1784,8 +1726,8 @@ var inSecondGrind = new GrindStage(
         new EncounterName("C", 8, "tpl-mold")
     },
     new StaticGrindTransition[] {
-        new StaticGrindTransition(17, 18, 1, "three-rock-transition"),
-        new StaticGrindTransition(17, 18, 2, "ruins-second-transition")
+        new StaticGrindTransition(18, 17, 1, "three-rock-transition"),
+        new StaticGrindTransition(18, 17, 2, "ruins-second-transition")
     },
     "",
     "GRIND",
@@ -1800,20 +1742,14 @@ var inSecondGrind = new GrindStage(
 /// <summary>
 /// Explanation before second half grinding with fleeing
 /// </summary>
-var preFleeGrind = new Stage(
+var preFleeGrind = new PreGrindStage(
     @"
 Now, continue grinding
 just the same, but as if you had 19 kills,
 that is, flee after killing the
 first enemy for ALL encounters
     ",
-    new Listener(
-        new Blcon(),
-        new Callback(
-            GMLCodeClass.ResetEncounters,
-            GMLCodeClass.Next
-        )
-    )
+    true
 );
 
 
@@ -1840,49 +1776,37 @@ var inFleeGrind = new GrindStage(
 /// <summary>
 /// Explanation before triple moldsmal
 /// </summary>
-var preTripleMold = new Stage(
+var preTripleMold = new PreGrindStage(
     @"
 Now, kill one last encounter
 it will be a triple mold, and you must only
 kill TWO monsters, then flee
 Feel free to still attack second one
 to simulate the Froggit Whimsun attacks
-    ",
-    new Listener(
-        new Blcon(),
-        new Callback(
-            GMLCodeClass.Next
-        )
-    )
+    "
 );
 
 /// <summary>
 /// Battling triple moldsmal killing two enemies and fleeing
 /// </summary>
 var inTripleMold = new Stage(
-    @"
-GRIND (KILL ONLY TWO)
-    ",
+    "GRIND (KILL ONLY TWO)",
+    new RigBattleListener(8),
     new Listener(
         new BeforeBattle(),
-        new Callback(
-            GMLCodeClass.RigTripleMold
-        )
+        GMLCodeClass.RigEncounter(8)
     ),
     new Listener(
         new EnterBattle(),
-        new Callback(
-            GMLCodeClass.StartSegment("tpl-mold-18")
-        )
+        GMLCodeClass.StartSegment("tpl-mold-18")
     ),
     new Listener(
         new LeaveBattle(),
-        new Callback(
-            GMLCodeClass.StopTime,
-            GMLCodeClass.TPTo(17, 500, 110),
-            GMLCodeClass.MaxRuinsKills,
-            GMLCodeClass.Next
-        )
+        @$"
+        {GMLCodeClass.ExitSegment(17, 500, 100)}
+        // max out ruins kills
+        global.flag[202] = 20;
+        "
     )
 );
 
@@ -1898,10 +1822,7 @@ the end of Ruins
     ",
     new Listener(
         new Door("A", 17),
-        new Callback(
-            GMLCodeClass.StartSegment("ruins-napsta"),
-            GMLCodeClass.Next
-        )
+        GMLCodeClass.NextSegment("ruins-napsta")
     )
 );
 
@@ -1911,15 +1832,27 @@ the end of Ruins
 var ruinsNobodyCame = new ProceedStage(
     new Listener(
         new Blcon(),
-        new Callback(
-            GMLCodeClass.StopTime
-        )
+        GMLCodeClass.StopTime
     ),
     new Listener(
         new EnterBattle(),
-        new Callback(
-            GMLCodeClass.NobodyCameSegments
-        )
+        @$"
+        if (obj_time.nobody_came == 0) {{
+            {GMLCodeClass.StartSegment("ruins-switches")}
+        }} else if (obj_time.nobody_came == 1) {{
+            {GMLCodeClass.StartSegment("perspective-a")}
+        }} else if (obj_time.nobody_came == 2) {{
+            {GMLCodeClass.StartSegment("perspective-b")}
+        }} else if (obj_time.nobody_came == 3) {{
+            {GMLCodeClass.StartSegment("perspective-c")}
+        }} else if (obj_time.nobody_came == 4) {{
+            {GMLCodeClass.StartSegment("perspective-d")}
+        }} else {{
+            {GMLCodeClass.StartSegment("ruins-end")}
+            obj_time.stage++;
+        }}
+        obj_time.nobody_came++;
+        "
     )
 );
 
@@ -1929,10 +1862,10 @@ var ruinsNobodyCame = new ProceedStage(
 var ruinsEnd = new ProceedStage(
     new Listener(
         new Door("Amusic", 41),
-        new Callback(
-            GMLCodeClass.StopTime,
-            GMLCodeClass.Next
-        )
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.Next}
+        "
     )
 );
 
@@ -2205,7 +2138,7 @@ if (use_frogskip) {{
 // placing all listeners for all stages
 
 // first, create a map of all unique events mapped to a map of all stages and their respective code
-var events = new Dictionary<UndertaleEvent, Dictionary<int, Callback>>();
+var events = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
 
 // only ruinScript supported for now
 // TO-DO: add other session support
@@ -2213,9 +2146,10 @@ for (int i = 0; i < ruinsScript.Stages.Length; i++) {
     var stage = ruinsScript.Stages[i];
     foreach (Listener listener in stage.Listeners) {
         if (!events.ContainsKey(listener.Event)) {
-            events[listener.Event] = new Dictionary<int, Callback>();
+            events[listener.Event] = new Dictionary<int, List<string>>();
         }
-        events[listener.Event][i] = listener.ListenerCallback;
+        if (!events[listener.Event].ContainsKey(i)) events[listener.Event][i] = new List<string>();
+        events[listener.Event][i].Add(listener.ListenerCallback);
     }
 }
 
@@ -2227,11 +2161,12 @@ var eventCodes = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
 // the code for each unique event is just an if-else block separating each of the stages
 foreach (UndertaleEvent undertaleEvent in events.Keys) {
     var stageCodeBlocks = new List<string>();
-    Dictionary<int, Callback> eventStages = events[undertaleEvent];
+    var eventStages = events[undertaleEvent];
     foreach (int stage in eventStages.Keys) {
         stageCodeBlocks.Add(@$"
         if (obj_time.stage == {stage}) {{
-            {eventStages[stage].GMLCode}
+            {// join the codes since it is a list
+            String.Join("\n", eventStages[stage])}
         }}
         ");
 
