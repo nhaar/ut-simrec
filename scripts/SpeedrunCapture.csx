@@ -75,6 +75,19 @@ static class RoomClass {
 
 }
 
+enum Battlegroup {
+    FirstFroggit = 3,
+    SingleFroggit = 4,
+    Whimsun = 5,
+    FroggitWhimsun = 6,
+    SingleMoldsmal = 7,
+    TripleMoldsmal = 8,
+    
+    DoubleFroggit = 9,
+    DoubleMoldsmal = 10,
+    SnowdinDouble = 35,
+    SnowdinTriple = 36
+}
 
 // Class for a GML if-else code block
 class IfElseBlock {
@@ -506,9 +519,9 @@ static class GMLCodeClass {
     /// </summary>
     /// <param name="battlegroup">Battlegroup id</param>
     /// <returns></returns>
-    public static string RigEncounter (int battlegroup) {
+    public static string RigEncounter (Battlegroup? battlegroup) {
         return @$"
-        global.battlegroup = {battlegroup};
+        global.battlegroup = {(int)battlegroup};
         ";
     }
 
@@ -1479,6 +1492,45 @@ class GrindStage : Stage {
     ) {}
 }
 
+class SingleBattleStage : Stage {
+    private static Listener[] Init (string currentSegment, Battlegroup? battlegroup, string? nextSegment, bool disable, string victoryCode, UndertaleRoom? tpRoom, int x, int y) {
+        var nextString = nextSegment == null ? GMLCodeClass.Next : GMLCodeClass.NextSegment(nextSegment);
+        
+        var tpCode = tpRoom == null ? "" : GMLCodeClass.TPTo(tpRoom, x, y);
+
+        var disableEncounters = disable ? GMLCodeClass.DisableEncounters : "";
+
+        var listeners = new List<Listener> {
+            new Listener(
+                new EnterBattle(),
+                @$"
+                {GMLCodeClass.StartSegment(currentSegment)}
+                "
+            ),
+            new Listener(
+                new LeaveBattle(),
+                @$"
+                {tpCode}
+                {victoryCode}
+                {nextString}
+                "
+            )
+        };
+
+        if (battlegroup != null) {
+            listeners.Add(new RigBattleListener(battlegroup));
+        }
+
+        return listeners.ToArray();
+
+    }
+    
+    public SingleBattleStage (string currentSegment, string msg = "PROCEED", Battlegroup? battlegroup = null, string? nextSegment = null, bool disable = false, string victoryCode = "", UndertaleRoom? tpRoom = null, int x = 0, int y = 0) : base(
+        msg,
+        Init(currentSegment, battlegroup, nextSegment, disable, victoryCode, tpRoom, x, y)
+    ) {}
+}
+
 /*
 GENERAL CLASSES FOR THE SESSIONS
 */
@@ -1534,7 +1586,7 @@ class RigBattleListener : Listener {
     /// Create listener for a battlegroup
     /// </summary>
     /// <param name="battlegroup"></param>
-    public RigBattleListener (int battlegroup) : base (
+    public RigBattleListener (Battlegroup? battlegroup) : base (
         new BeforeBattle(),
         GMLCodeClass.RigEncounter(battlegroup)
     ) {}
@@ -1547,7 +1599,7 @@ class WhimsunRigListener : RigBattleListener {
     /// <summary>
     /// Create listener
     /// </summary>
-    public WhimsunRigListener () : base (5) {}
+    public WhimsunRigListener () : base (Battlegroup.Whimsun) {}
 }
 
 /*
@@ -1909,21 +1961,16 @@ to simulate the Froggit Whimsun attacks
 /// <summary>
 /// Battling triple moldsmal killing two enemies and fleeing
 /// </summary>
-var inTripleMold = new Stage(
+var inTripleMold = new SingleBattleStage(
+    "tpl-mold-18",
     "GRIND (KILL ONLY TWO)",
-    new RigBattleListener(8),
-    new Listener(
-        new EnterBattle(),
-        GMLCodeClass.StartSegment("tpl-mold-18")
-    ),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.ExitSegment(RoomClass.RuinsThreeRock, 500, 100)}
-        // max out ruins kills
-        global.flag[202] = 20;
-        "
-    )
+    Battlegroup.TripleMoldsmal,
+    victoryCode: @$"
+    global.flag[202] = 20;
+    ",
+    tpRoom: RoomClass.RuinsThreeRock,
+    x: 500,
+    y: 100
 );
 
 /// <summary>
@@ -2030,18 +2077,9 @@ and proceed
     ", RoomClass.SnowdinHumanRock, 320, 140
 );
 
-var inSingleSnowdrake = new ProceedStage(
-    new Listener(
-        new EnterBattle(),
-        GMLCodeClass.StartSegment("sgl-snowdrake")
-    ),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("box-road-transition")}
-        "
-    )
+var inSingleSnowdrake = new SingleBattleStage(
+    "sgl-snowdrake",
+    nextSegment: "box-road-transition"
 );
 
 var boxRoadTransition = new ProceedExitRoomStage(
@@ -2064,19 +2102,7 @@ optimally
     ", RoomClass.SnowdinDoggo, 480, 140
 );
 
-var inSingleIcecap = new ProceedStage(
-    new Listener(
-        new EnterBattle(),
-        GMLCodeClass.StartSegment("sgl-icecap")
-    ),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.Next}
-        "
-    )
-);
+var inSingleIcecap = new SingleBattleStage("sgl-icecap");
 
 var preDoggo = new Stage(
     @$"
@@ -2107,16 +2133,7 @@ var preLesserDog = new PreGrindStage(
 Now, grind for Lesser Dog and kill it optimally
     ", RoomClass.SnowdinElectricMaze, 40, 140);
 
-var inLesserDog = new ProceedStage(
-    new Listener(
-        new EnterBattle(),
-        GMLCodeClass.StartSegment("lesser-dog")
-    ),
-    new Listener(
-        new LeaveBattle(),
-        GMLCodeClass.ExitSegment(RoomClass.SnowdinDirectionsSign, 560, 140)
-    )
-);
+var inLesserDog = new SingleBattleStage("lesser-dog", tpRoom: RoomClass.SnowdinDirectionsSign, x: 560, y: 140);
 
 var preElectricMaze = new Stage(
     @$"
@@ -2154,7 +2171,7 @@ var dogiDowntime = new ProceedStage(
 );
 
 var dogiEncounter = new ProceedStage(
-    new RigBattleListener(35),
+    new RigBattleListener(Battlegroup.SnowdinDouble),
     new Listener(
         new EnterBattle(),
         GMLCodeClass.StartSegment("snowdin-dbl")
@@ -2226,21 +2243,10 @@ stopped
     "
 );
 
-var snowdinGrindFirst = new ProceedStage(
-    new RigBattleListener(36),
-    new Listener(
-        new EnterBattle(),
-        @$"
-        {GMLCodeClass.StartSegment("snowdin-tpl")}
-        "
-    ),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("snowdin-right-transition")}
-        "
-    )
+var snowdinGrindFirst = new SingleBattleStage(
+    "snowdin-tpl",
+    battlegroup: Battlegroup.SnowdinTriple,
+    nextSegment: "snowdin-right-transition"
 );
 
 var snowdinRightTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinTown, 520, 140, RoomClass.SnowdinPoffZone, false);
@@ -2252,24 +2258,13 @@ and then do a leftside transition
     "
 );
 
-var leftSideJerry = new Stage(
+var leftSideJerry = new SingleBattleStage(
+    "snowdin-dbl-jerry",
     @"
 KILL JERRY AND LEFT TRANSITION
     ",
-    new RigBattleListener(35),
-    new Listener(
-        new EnterBattle(),
-        @$"
-        {GMLCodeClass.StartSegment("snowding-dbl-jerry")}
-        "
-    ),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("snowdin-left-transition")}
-        "
-    )
+    Battlegroup.SnowdinDouble,
+    "snowdin-left-transition"
 );
 
 var snowdinLeftTransition = new ProceedExitRoomStage(false, RoomClass.SnowdinPoffZone, 40, 120, RoomClass.SnowdinTown);
@@ -2284,21 +2279,10 @@ it is a normal run again)
     "
 );
 
-var snowdinRightJerry = new ProceedStage(
-    new RigBattleListener(36),
-    new Listener(
-        new EnterBattle(),
-        @$"
-        {GMLCodeClass.StartSegment("snowdin-tpl-jerry")}
-        "
-    ),
-    new Listener(
-        new LeaveBattle(),
-        @$"
-        {GMLCodeClass.StopTime}
-        {GMLCodeClass.NextSegment("snowdin-end")}
-        "
-    )
+var snowdinRightJerry = new SingleBattleStage(
+    "snowdin-tpl-jerry",
+    battlegroup: Battlegroup.SnowdinTriple,
+    nextSegment: "snowidn-end"
 );
 
 var snowdinEnd = new ProceedStage(
