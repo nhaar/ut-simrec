@@ -89,6 +89,7 @@ enum Battlegroup {
     SnowdinTriple = 36
 }
 
+
 // Class for a GML if-else code block
 class IfElseBlock {
     /// <summary>
@@ -556,6 +557,68 @@ static class GMLCodeClass {
         {GMLCodeClass.AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
     }}
     ";
+
+    public static string SetMurderLevel (int level) {
+        string code = @"
+        global.flag[26] = 0;
+        ";
+        var flagMaps = new [] {
+            new Dictionary<int, int> { { 202,  20 } },
+            new Dictionary<int, int> { { 45,  4 } },
+            new Dictionary<int, int> { { 52, 1 } },
+            new Dictionary<int, int> { { 53, 1 } },
+            new Dictionary<int, int> { { 54, 1 } },
+            new Dictionary<int, int> { { 57, 2 } },
+            new Dictionary<int, int> { { 203, 16 } },
+            new Dictionary<int, int> { { 67, 1 } },
+            new Dictionary<int, int> { { 81, 1 } },
+            new Dictionary<int, int> { { 252, 1 } },
+            new Dictionary<int, int> { { 204, 18 } },
+            new Dictionary<int, int> { { 251, 1 }, { 350, 1 } },
+            new Dictionary<int, int> { { 402, 1 } },
+            new Dictionary<int, int> { { 397, 1 } },
+            new Dictionary<int, int> { { 205, 40 } },
+            new Dictionary<int, int> { { 425, 1 } }
+        };
+
+        for (int i = 0; i < flagMaps.Length; i++) {
+            var flagMap = flagMaps[i];
+            
+            foreach (int flag in flagMap.Keys) {
+                int flagValue = 0;
+                if (level > i) {
+                    flagValue = flagMap[flag];
+                }
+                code += @$"
+                global.flag[{flag}] = {flagValue}
+                ";
+            }
+        }
+
+        return code;
+    }
+
+    public static string WarpTo (int stage, int xp, int plot, int murderLevel, UndertaleRoom room, int x, int y) {
+        return @$"
+        is_timer_running = 0;
+        obj_time.stage = {stage};
+        global.xp = {xp};
+        script_execute(scr_levelup);
+        global.plot = {plot};
+        {SetMurderLevel(murderLevel)}
+        {TPTo(room, x, y)}
+        ";
+    }
+
+    public static string GetShortcutCondition (string shortcut) {
+        var conditions = new List<string>() {};
+        foreach (char c in shortcut) {
+            conditions.Add(@$"
+            keyboard_check(ord('{c}'))
+            ");
+        }
+        return String.Join(" && ", conditions);
+    }
 }
 
 /// <summary>
@@ -590,31 +653,14 @@ void useDebug () {
     // ");
 
     append(CodeEntryClass.step, @$"
-    if (keyboard_check(ord('Q')) && keyboard_check(ord('1'))) {{
-        is_timer_running = 0;
-        obj_time.stage = 0;
-        global.xp = 190;
-        script_execute(scr_levelup);
-        global.plot = 28;
-        global.flag[202] = 20;
-        global.flag[45] = 4;
-        {GMLCodeClass.TPTo(RoomClass.RuinsExit, 150, 210)}
+    if ({GMLCodeClass.GetShortcutCondition("Q1")}) {{
+        {GMLCodeClass.WarpTo(0, 190, 28, 2, RoomClass.RuinsExit, 150, 210)}
     }}
     ");
 
-        append(CodeEntryClass.step, @$"
-    if (keyboard_check(ord('Q')) && keyboard_check(ord('2'))) {{
-        is_timer_running = 0;
-        obj_time.stage = 21;
-        global.xp = 200;
-        script_execute(scr_levelup);
-        global.plot = 51;
-        global.flag[202] = 20;
-        global.flag[45] = 4;
-        global.flag[52] = 1;
-        global.flag[53] = 1;
-        global.flag[55] = 1;
-        {GMLCodeClass.TPTo(RoomClass.SnowdinPoffZone, 150, 210)}
+    append(CodeEntryClass.step, @$"
+    if ({GMLCodeClass.GetShortcutCondition("Q2")}) {{
+        {GMLCodeClass.WarpTo(21, 200, 51, 4, RoomClass.SnowdinPoffZone, 150, 210)}
     }}
     ");
 
@@ -1061,6 +1107,7 @@ class GreaterDogTurnEnd : UniqueEvent {
 /*
 STAGE CLASSES
 */
+
 
 /// <summary>
 /// Class for a stage in a session
