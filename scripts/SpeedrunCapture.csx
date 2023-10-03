@@ -172,6 +172,8 @@ public static class CodeEntryClass {
     /// Code for touching `doorC`
     /// </summary>
     public static string doorC = "gml_Object_obj_doorC_Other_19";
+
+    public static string GreaterDog = "gml_Object_obj_greatdog_Step_0";
 }
 
 /*
@@ -458,6 +460,17 @@ static class GMLCodeClass {
 
         return block.GetCode();
     }
+
+    public static string StopDowntime = @$"
+    // in case the downtime ends during a downtime, must not lose the time being counted
+    if (obj_time.is_downtime_mode) {{
+        if (obj_time.is_downtime_running) {{
+            obj_time.downtime += get_timer() + obj_time.downtime_start
+        }}
+        obj_time.is_downtime_mode = 0;
+        {GMLCodeClass.AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
+    }}
+    ";
 }
 
 /// <summary>
@@ -469,25 +482,54 @@ void useDebug () {
     append(CodeEntryClass.step, "global.debug = 1;");
 
     // stage skip keybinds
+    // append(CodeEntryClass.step, @$"
+    // if (keyboard_check_pressed(ord('Q'))) {{
+    //     is_timer_running = 0;
+    //     stage = 3;
+    //     global.xp = 10;
+    //     script_execute(scr_levelup);
+    //     global.plot = 9;
+    //     {GMLCodeClass.TPTo(11, 2400, 80)}
+    // }}
+    // ");
+
+    // append(CodeEntryClass.step, @$"
+    // if (keyboard_check_pressed(ord('E'))) {{
+    //     is_timer_running = 0;
+    //     obj_time.stage = 7;
+    //     global.xp = 30;
+    //     script_execute(scr_levelup);
+    //     global.plot = 9.5;
+    //     {GMLCodeClass.TPTo(12, 240, 340)}
+    // }}
+    // ");
+
     append(CodeEntryClass.step, @$"
-    if (keyboard_check_pressed(ord('Q'))) {{
+    if (keyboard_check(ord('Q')) && keyboard_check(ord('1'))) {{
         is_timer_running = 0;
-        stage = 3;
-        global.xp = 10;
+        obj_time.stage = 0;
+        global.xp = 190;
         script_execute(scr_levelup);
-        global.plot = 9;
-        {GMLCodeClass.TPTo(11, 2400, 80)}
+        global.plot = 28;
+        global.flag[202] = 20;
+        global.flag[45] = 4;
+        {GMLCodeClass.TPTo(43, 150, 210)}
     }}
     ");
 
-    append(CodeEntryClass.step, @$"
-    if (keyboard_check_pressed(ord('E'))) {{
+        append(CodeEntryClass.step, @$"
+    if (keyboard_check(ord('Q')) && keyboard_check(ord('2'))) {{
         is_timer_running = 0;
-        obj_time.stage = 7;
-        global.xp = 30;
+        obj_time.stage = 21;
+        global.xp = 200;
         script_execute(scr_levelup);
-        global.plot = 9.5;
-        {GMLCodeClass.TPTo(12, 240, 340)}
+        global.plot = 51;
+        global.flag[202] = 20;
+        global.flag[45] = 4;
+        global.flag[52] = 1;
+        global.flag[53] = 1;
+        global.flag[55] = 1;
+        {GMLCodeClass.TPTo(66, 150, 210)}
     }}
     ");
 
@@ -905,6 +947,37 @@ class Door : UndertaleEvent {
     }
 }
 
+class ScrSteps : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "steps = 10000"; // TO-DO: maybe reduce redundancy of this code with the one in scrSteps
+
+    public override string CodeEntry () {
+        return CodeEntryClass.scrSteps;
+    }
+
+}
+
+class GreaterDogTurnStart : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.Place;
+    
+    public override string Replacement => "(global.firingrate * 1.7)";
+
+    public override string CodeEntry () {
+        return CodeEntryClass.GreaterDog;
+    }
+}
+
+class GreaterDogTurnEnd : UniqueEvent {
+    public override PlaceMethod Method => PlaceMethod.PlaceInIf;
+
+    public override string Replacement => "attacked = 0";
+
+    public override string CodeEntry() {
+        return CodeEntryClass.GreaterDog;
+    }
+}
+
 /*
 STAGE CLASSES
 */
@@ -1037,14 +1110,7 @@ WALK
     ", new Listener(
         new Door(door, room),
         @$"
-        // in case the downtime ends during a downtime, must not lose the time being counted
-        if (obj_time.is_downtime_mode) {{
-            if (obj_time.is_downtime_running) {{
-                obj_time.downtime += get_timer() + obj_time.downtime_start
-            }}
-            obj_time.is_downtime_mode = 0;
-            {GMLCodeClass.AppendNewTime("obj_time.downtime_name", "obj_time.downtime")}
-        }}
+        {GMLCodeClass.StopDowntime}
         {GMLCodeClass.Next}
         obj_time.fast_encounters = 1;
         "
@@ -1793,10 +1859,6 @@ var inTripleMold = new Stage(
     "GRIND (KILL ONLY TWO)",
     new RigBattleListener(8),
     new Listener(
-        new BeforeBattle(),
-        GMLCodeClass.RigEncounter(8)
-    ),
-    new Listener(
         new EnterBattle(),
         GMLCodeClass.StartSegment("tpl-mold-18")
     ),
@@ -1869,14 +1931,332 @@ var ruinsEnd = new ProceedStage(
     )
 );
 
+var ruinsToSnowdin = new ProceedStage(
+    new Listener(
+        new RoomTransition(325, 44),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("snowdin-start")}
+        "
+    )
+);
+
+/*
+SNOWDIN STUFF
+*/
+var snowdinSessionStart = new Stage(
+    @"
+GO THROUGH THE RUINS DOOR TO BEGIN THE SESSION
+    ",
+    new Listener(
+        new RoomTransition(325, 44),
+        @$"
+        {GMLCodeClass.StartSession}
+        {GMLCodeClass.NextSegment("snowdin-start")}
+        "
+    )
+);
+
+var snowdinStart = new ProceedExitRoomStage(true, 45, 46, 45, 2620, 160);
+
+var preBoxRoad = new PreDowntimeStage(
+    @"
+Next, go through the next room as normal
+but without grinding the encounter
+    ",
+    45, 46, "box-road-downtime"
+);
+
+var boxRoadDowntime = new DowntimeStage("C", 46);
+
+var preSingleSnowdrake = new PreGrindStage(
+    @"
+Now, grind Snowdrake at the end of this room
+and proceed
+    ", 48, 46, 320, 140
+);
+
+var inSingleSnowdrake = new ProceedStage(
+    new Listener(
+        new EnterBattle(),
+        GMLCodeClass.StartSegment("sgl-snowdrake")
+    ),
+    new Listener(
+        new LeaveBattle(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("box-road-transition")}
+        "
+    )
+);
+
+var boxRoadTransition = new ProceedExitRoomStage(true, 46, 48, 46, 320, 140);
+
+var preHumanRockDowntime = new PreDowntimeStage(
+    @"
+Next, go through the next room normally
+(you will not get an encounter)
+    ", 46, 48, "human-rock-downtime");
+
+var inHumanRockDowntime = new DowntimeStage("A", 48);
+
+var preSingleIcecap = new PreGrindStage(
+    @"
+Now, grind the Ice Cap encounter and kill it
+optimally
+    ", 49, 48, 480, 140
+);
+
+var inSingleIcecap = new ProceedStage(
+    new Listener(
+        new EnterBattle(),
+        GMLCodeClass.StartSegment("sgl-icecap")
+    ),
+    new Listener(
+        new LeaveBattle(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.Next}
+        "
+    )
+);
+
+var preDoggo = new Stage(
+    @$"
+Now, keep going and play as normally
+until you are stopped
+    ",
+    new Listener(
+        new Door("A", 48),
+        GMLCodeClass.NextSegment("doggo")
+    )
+);
+
+var inDoggo = new ProceedExitRoomStage(
+    true, 49, 50, 49, 400, 160
+);
+
+var preIceSlideDowntime = new PreDowntimeStage(
+    @$"
+Now, go through the next room (you will not)
+    ", 49, 50, "ice-slide-downtime" // TO-DO ADD MAX HERE
+);
+
+var inIceSlideDowntime = new DowntimeStage("C", 50);
+
+var preLesserDog = new PreGrindStage(
+    @"
+Now, grind for Lesser Dog and kill it optimally
+    ", 52, 50, 40, 140);
+
+var inLesserDog = new ProceedStage(
+    new Listener(
+        new EnterBattle(),
+        GMLCodeClass.StartSegment("lesser-dog")
+    ),
+    new Listener(
+        new LeaveBattle(),
+        GMLCodeClass.ExitSegment(50, 560, 140)
+    )
+);
+
+var preElectricMaze = new Stage(
+    @$"
+Now, go through the right and keep going as normal
+until you are stopped
+    ",
+    new Listener(
+        new Door("C", 50),
+        GMLCodeClass.NextSegment("before-dogi")
+    )
+);
+
+
+var beforeDogi = new ProceedStage(
+    new Listener(
+        new RoomTransition(56, 57),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextDowntime("dogi-downtime")}
+        "
+    )
+);
+var dogiDowntime = new ProceedStage(
+    new Listener(
+        new ScrSteps(),
+        "steps = 841"
+    ),
+    new Listener(
+        new Blcon(),
+        @$"
+        {GMLCodeClass.StopDowntime}
+        {GMLCodeClass.Next}
+        "
+    )
+);
+
+var dogiEncounter = new ProceedStage(
+    new RigBattleListener(35),
+    new Listener(
+        new EnterBattle(),
+        GMLCodeClass.StartSegment("snowdin-dbl")
+    ),
+    new Listener(
+        new LeaveBattle(),
+        $@"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("post-dogi")}
+        "
+    )
+);
+
+var postDogi = new ProceedStage(
+    new Listener(
+        new EnterBattle(26),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("greater-dog-1")}
+        "
+    )
+);
+
+var inGreaterDogOne = new ProceedStage(
+    new Listener(
+        new GreaterDogTurnStart(),
+        @$"
+        mycommand = 0;
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("dogskip")}
+        "
+    )
+);
+
+var inGreaterDogTwo = new ProceedStage(
+    new Listener(
+        new GreaterDogTurnEnd(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.StartSegment("greater-dog-2")}
+        "
+    ),
+    new Listener(
+        new GreaterDogTurnStart(),
+        @$"
+        mycommand = 100;
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("not-dogskip")}
+        "
+    )
+);
+
+var inGreaterDogEnd = new ProceedStage(
+    new Listener(
+        new GreaterDogTurnEnd(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("greater-dog-end")}
+        "
+    )
+);
+
+var postGreaterDog = new ProceedExitRoomStage(false, 67, 68, 68, 80, 120);
+
+var preSnowdinGrind = new PreGrindStage(
+    @"
+Now, go back and grind for an encounter as normal until you are
+stopped
+    "
+);
+
+var snowdinGrindFirst = new ProceedStage(
+    new RigBattleListener(36),
+    new Listener(
+        new EnterBattle(),
+        @$"
+        {GMLCodeClass.StartSegment("snowdin-tpl")}
+        "
+    ),
+    new Listener(
+        new LeaveBattle(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("snowdin-right-transition")}
+        "
+    )
+);
+
+var snowdinRightTransition = new ProceedExitRoomStage(false, 68, 67, 66, 520, 140);
+
+var preLeftSnowdinGrind = new PreGrindStage(
+    @"
+Now, go to the right and grind an encounter, KILL JERRY,
+and then do a leftside transition
+    "
+);
+
+var leftSideJerry = new Stage(
+    @"
+KILL JERRY AND LEFT TRANSITION
+    ",
+    new RigBattleListener(35),
+    new Listener(
+        new EnterBattle(),
+        @$"
+        {GMLCodeClass.StartSegment("snowding-dbl-jerry")}
+        "
+    ),
+    new Listener(
+        new LeaveBattle(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("snowdin-left-transition")}
+        "
+    )
+);
+
+var snowdinLeftTransition = new ProceedExitRoomStage(false, 66, 67, 68, 40, 120);
+
+var preSnowdinRightJerry = new PreGrindStage(
+    @$"
+Now, go to the left and grind for an encounter,
+kill JERRY, and proceed to the end of Snowdin
+as normal after the encounter ends
+(in short, once the encounter begins,
+it is a normal run again)
+    "
+);
+
+var snowdinRightJerry = new ProceedStage(
+    new RigBattleListener(36),
+    new Listener(
+        new EnterBattle(),
+        @$"
+        {GMLCodeClass.StartSegment("snowdin-tpl-jerry")}
+        "
+    ),
+    new Listener(
+        new LeaveBattle(),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.NextSegment("snowdin-end")}
+        "
+    )
+);
+
+var snowdinEnd = new ProceedStage(
+    new Listener(
+        new Door("Amusic", 81),
+        @$"
+        {GMLCodeClass.StopTime}
+        {GMLCodeClass.Next}
+        "
+    )
+);
+
 /// <summary>
 /// After the session is finished
 /// </summary>
-var sessionFinished = new Stage(
-    @"
-Session finished!
-    "
-);
+var sessionFinished = new Stage("Session finished!");
 
 /*
 SESSION DEFINITIONS
@@ -1915,6 +2295,44 @@ var ruinsScript = new Session(
     ruinsNobodyCame,
     ruinsEnd,
     sessionFinished
+);
+
+var snowdinScript = new Session(
+    snowdinSessionStart,
+    snowdinStart,
+    preBoxRoad,
+    boxRoadDowntime,
+    preSingleSnowdrake,
+    inSingleSnowdrake,
+    boxRoadTransition,
+    preHumanRockDowntime,
+    inHumanRockDowntime,
+    preSingleIcecap,
+    inSingleIcecap,
+    preDoggo,
+    inDoggo,
+    preIceSlideDowntime,
+    inIceSlideDowntime,
+    preLesserDog,
+    inLesserDog,
+    preElectricMaze,
+    beforeDogi,
+    dogiDowntime,
+    dogiEncounter,
+    postDogi,
+    inGreaterDogOne,
+    inGreaterDogTwo,
+    inGreaterDogEnd,
+    postGreaterDog,
+    preSnowdinGrind,
+    snowdinGrindFirst,
+    snowdinRightTransition,
+    preLeftSnowdinGrind,
+    leftSideJerry,
+    snowdinLeftTransition,
+    preSnowdinRightJerry,
+    snowdinRightJerry,
+    snowdinEnd
 );
 
 /******
@@ -2113,10 +2531,10 @@ draw_text(20, 0, current_msg);
 // code that assigns the current_msg variable
 // TO-DO: Current only takes for ruins. Refactor once more sessions are supported
 var messageList = new List<string>();
-for (int i = 0; i < ruinsScript.Stages.Length; i++) {
+for (int i = 0; i < snowdinScript.Stages.Length; i++) {
     messageList.Add($@"
     if (stage == {i}) {{
-        current_msg = ""{ruinsScript.Stages[i].Message}"";
+        current_msg = ""{snowdinScript.Stages[i].Message}"";
     }}
     ");
 }
@@ -2142,8 +2560,8 @@ var events = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
 
 // only ruinScript supported for now
 // TO-DO: add other session support
-for (int i = 0; i < ruinsScript.Stages.Length; i++) {
-    var stage = ruinsScript.Stages[i];
+for (int i = 0; i < snowdinScript.Stages.Length; i++) {
+    var stage = snowdinScript.Stages[i];
     foreach (Listener listener in stage.Listeners) {
         if (!events.ContainsKey(listener.Event)) {
             events[listener.Event] = new Dictionary<int, List<string>>();
