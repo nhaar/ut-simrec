@@ -116,7 +116,7 @@
     <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="false">
         <name>ruins-one-rock</name>
         <start><RoomTransition room="RuinsLeafFall" backwards="false" /></start>
-        <end><Door name="C" room="RuinsOneRock" backwards="false" /></end>
+        <end><Door name="A" room="RuinsOneRock" backwards="false" /></end>
         <x>280</x>
         <y>102</y>
     </segment>
@@ -135,13 +135,13 @@
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
         <name>ruins-maze</name>
         <start><LeaveBattle /></start>
-        <end><RoomTransition room="RuinsOneRock" backwards="false" /></end>
+        <end><RoomTransition room="RuinsLeafMaze" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
         <name>three-rock-downtime</name>
         <start><RoomTransition room="RuinsLeafMaze" backwards="false" /></start>
-        <end><Door name="C" room="RuinsThreeRock" backwards="false" /></end>
+        <end><Door name="A" room="RuinsThreeRock" backwards="false" /></end>
         <room>RuinsLeafMaze</room>
         <x>530</x>
         <y>220</y>
@@ -175,8 +175,8 @@
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
         <name>ruins-second-transition</name>
-        <start><EnterBattle /></start>
-        <end><LeaveBattle /></end>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsCheese" backwards="true" /></end>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">

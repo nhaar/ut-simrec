@@ -1721,6 +1721,12 @@ void main ()
         global.flag[argument3] = 0;
         // max hp for the user convenience due to unusual amount of encounters and frog skips
         global.hp = global.maxhp;
+
+        steps = 60;
+    }}
+    else
+    {{
+        steps = 10000;
     }}
     ");
 
@@ -1792,9 +1798,6 @@ void main ()
         global.interact = 0;
         is_timer_running = 0;
         is_downtime_mode = 0;
-        global.xp = segment_xp;
-        script_execute(scr_levelup);
-        {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
         {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
     }}
     ");
@@ -1891,7 +1894,6 @@ void main ()
             segment_x = {segment.X};
             segment_y = {segment.Y};
             segment_xp = {segment.XP};
-            global.xp = segment_xp;
             segment_plot = {segment.Plot};
             segment_murder_lv = {segment.MurderLevel};
         }}
@@ -1931,6 +1933,11 @@ void main ()
     if (segment_changed)
     {{
         {initBlock.GetCode()}
+
+        global.xp = segment_xp;
+        script_execute(scr_levelup);
+        {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
+
         var encounter_steps;
         if (fast_encounters)
         {{
