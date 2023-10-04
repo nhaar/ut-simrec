@@ -147,7 +147,7 @@
         <room>RuinsThreeRock</room>
         <x>480</x>
         <y>110</y>
-        <next-encounter>SingleMold</next-encounter>
+        <next-encounter>SingleMoldsmal</next-encounter>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
@@ -163,7 +163,7 @@
         <room>RuinsCheese</room>
         <x>20</x>
         <y>120</y>
-        <next-encounter>DoubleMold</next-encounter>
+        <next-encounter>DoubleMoldsmal</next-encounter>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">

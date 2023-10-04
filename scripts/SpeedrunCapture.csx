@@ -43,7 +43,7 @@ class Segment {
 
     public UndertaleEvent End = null;
 
-    public UndertaleEvent[] Other;
+    public List<UndertaleEvent> Other = new List<UndertaleEvent>();
 
     public bool Uninterruptable = false;
 
@@ -134,6 +134,14 @@ class Segment {
                     reader.Read();
                     End = ParseXmlEvent(reader);
                     break;
+                case "other":
+                    while (reader.Name != "other") {
+                        reader.Read();
+                        if (reader.NodeType == XmlNodeType.Element) {
+                            Other.Add(ParseXmlEvent(reader));
+                        }
+                    }
+                    break;
                 case "plot":
                     reader.Read();
                     Plot = reader.Value;
@@ -154,8 +162,16 @@ class Segment {
                     reader.Read();
                     Message = reader.Value;
                     break;
+                case "next-encounter":
+                    reader.Read();
+                    object battlegroup;
+                    Console.WriteLine(reader.Value);
+                    Enum.TryParse(typeof(Battlegroup), reader.Value, out battlegroup);
+                    Other.Add(new BeforeBattle(
+                        GMLCodeClass.RigEncounter((Battlegroup)battlegroup)
+                    ));
+                    break;
             }
-
         }
         SetStartCode();
         SetEndCode();
@@ -893,10 +909,11 @@ void useDebug () {
         "is_downtime_mode",
         "is_downtime_running",
         "downtime_name",
-        "segment_x",
+        "fast_encounters",
         "segment_y",
         "segment_plot",
-        "segment_room"        
+        "segment_room",
+        "segment_changed" 
     };
 
     // start just with line break just to not interefere with anything
@@ -1014,6 +1031,10 @@ abstract class UndertaleEvent {
 
     public string Code = "";
 
+    public UndertaleEvent (string code) {
+        Code = code;
+    }
+
     public UndertaleEvent (XmlReader reader) {
         ParseAttributes(reader);
         if (reader.HasValue) {
@@ -1026,7 +1047,9 @@ abstract class UndertaleEvent {
 /// <summary>
 /// Class for a Undertale Event that takes no arguments (is unique)
 /// </summary>
-abstract class UniqueEvent : UndertaleEvent {
+abstract class UniqueEvent : UndertaleEvent {    
+    public UniqueEvent (string code) : base(code) {}
+    
     public UniqueEvent (XmlReader reader) : base(reader) {}
 
     protected override void ParseAttributes (XmlReader reader) {}
@@ -1202,6 +1225,8 @@ class LeaveBattle : UniqueEvent {
 /// Event for before entering a battle
 /// </summary>
 class BeforeBattle : UniqueEvent {
+    public BeforeBattle (string code) : base(code) {}
+
     public BeforeBattle (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
@@ -2794,6 +2819,9 @@ for (int j = 0; j < segments.Count; j++) {
     var eventListeners = new List<UndertaleEvent>();
     if (j != segments.Count - 1) {
         var next = segments[j + 1];
+        segment.End.Code += @$"
+            obj_time.fast_encounters = {GMLCodeClass.GMLBool(next.FastEncounters)};
+        ";
         if (segment.End.Equals(next.Start)) {
             if (segment.Uninterruptable) {
                 var condition = next.Tutorial ? "!obj_time.read_tutorial" : "1";
@@ -2823,6 +2851,10 @@ for (int j = 0; j < segments.Count; j++) {
     }
     eventListeners.Add(segment.End);
     eventListeners.Add(segment.Start);
+    if (segment.Other.Count > 0) {
+        Console.WriteLine("stuff!!");
+        eventListeners.AddRange(segment.Other);
+    }
     // eventListeners = eventListeners.Concat(segment.Other);
     
     // how it will be done:
