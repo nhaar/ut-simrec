@@ -106,7 +106,7 @@
         <end><RoomTransition room="RuinsLeafFall" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="false">
         <name>ruins-one-rock</name>
         <start><RoomTransition room="RuinsLeafFall" backwards="false" /></start>
         <end><Door name="C" room="RuinsOneRock" backwards="false" /></end>

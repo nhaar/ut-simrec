@@ -1639,430 +1639,460 @@ class GreaterDogTurnEnd : UniqueEvent
 start of main script
 ******/
 
-// testing script-game compatibility
-EnsureDataLoaded();
-
-if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale")
+void main ()
 {
-    ScriptError("Error 0: Script must be used in Undertale");
-}
+    // testing script-game compatibility
+    EnsureDataLoaded();
 
-// make drawing work
-Data.GameObjects.ByName("obj_time").Visible = true;
+    if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale")
+    {
+        ScriptError("Error 0: Script must be used in Undertale");
+    }
 
-// initializing variables
-append(CodeEntryClass.create, $@"
-// where recording text files will be saved
-directory_create('recordings');
+    // make drawing work
+    Data.GameObjects.ByName("obj_time").Visible = true;
 
-// name is a ""date timestamp""
-session_name = 0;
+    // initializing variables
+    append(CodeEntryClass.create, $@"
+    // where recording text files will be saved
+    directory_create('recordings');
 
-// keeps track of segments
-segment = 0;
-previous_segment = -1;
-segment_changed = 0;
-segment_name = '';
+    // name is a ""date timestamp""
+    session_name = 0;
 
-// continuous segment variables
-is_timer_running = 0;
-time_start = 0;
-time_end = 0;
-
-// this flag will control if explanations should be given
-read_tutorial = 0;
-
-// store message to display
-current_msg = '';
-
-// this flag will controll how encounters are given
-// if `0`, then encounters will be disabled
-// else if `1` then encounters will be given quickly
-fast_encounters = 0;
-
-// downtime segment variables
-// mode is for when downtime is being watched
-// running is for when downtime is being watched and a downtime has been reached
-is_downtime_mode = 0;
-is_downtime_running = 0;
-downtime_start = 0;
-downtime = 0;
-step_count = 0;
-previous_time = 0;
-
-// room tracker
-previous_room = 0;
-current_room = 0;
-
-// see in step for explanation on tp
-tp_flag = 0;
-tp_x = 0;
-tp_y = 0;
-lock_player = 0;
-");
-
-// add switch for enabling and disabling encounters
-replace(CodeEntryClass.scrSteps, @"
-    populationfactor = (argument2 / (argument2 - global.flag[argument3]))
-    if (populationfactor > 8)
-        populationfactor = 8
-    steps = ((argument0 + round(random(argument1))) * populationfactor)
-", $@"
-if (obj_time.fast_encounters)
-{{
-    // if we want fast encounters, we are probably killing things, so setting kills to 0 is
-    // a control method to not go over the limit which is manually set always 
-    global.flag[argument3] = 0;
-    // max hp for the user convenience due to unusual amount of encounters and frog skips
-    global.hp = global.maxhp;
-    steps = argument0;
-}}
-else
-{{
-    // practically disabling encounters with an arbitrarily high number since GMS1 does not have infinity
-    // this would be ~5 minutes of walking
-    steps = 10000;
-}}
-");
-
-// track segment changes
-append(CodeEntryClass.step, $@"
-if (previous_segment != segment)
-{{
-    segment_changed = 1;
-}}
-else
-{{
+    // keeps track of segments
+    segment = 0;
+    previous_segment = -1;
     segment_changed = 0;
-}}
-previous_segment = segment;
-");
+    segment_name = '';
 
-// room tracker, widely used for room transition events
-append(CodeEntryClass.step, @"
-previous_room = current_room;
-current_room = room;
-");
+    // continuous segment variables
+    is_timer_running = 0;
+    time_start = 0;
+    time_end = 0;
 
-// in order to tp to the proper places, will be using the tp flag which notifies the
-// next frame that a room teleportation was carried out last frame
-// and we have a specific x,y position to go to
-append(CodeEntryClass.step, @$"
-// use two flags to wait a frame
-// wait a frame to overwrite the default position
-if (tp_flag)
-{{
+    // this flag will control if explanations should be given
+    read_tutorial = 0;
+
+    // store message to display
+    current_msg = '';
+
+    // this flag will controll how encounters are given
+    // if `0`, then encounters will be disabled
+    // else if `1` then encounters will be given quickly
+    fast_encounters = 0;
+
+    // downtime segment variables
+    // mode is for when downtime is being watched
+    // running is for when downtime is being watched and a downtime has been reached
+    is_downtime_mode = 0;
+    is_downtime_running = 0;
+    downtime_start = 0;
+    downtime = 0;
+    step_count = 0;
+    previous_time = 0;
+
+    // room tracker
+    previous_room = 0;
+    current_room = 0;
+
+    // see in step for explanation on tp
     tp_flag = 0;
-    // to avoid the player moving to places they don't want to
-    // player will be locked until they stop moving after teleporting
-    if ({GMLCodeClass.IsMoving})
-    {{
-        lock_player = 1;
-        global.interact = 1;
-    }}
-    if (instance_exists(obj_mainchara))
-    {{
-        obj_mainchara.x = tp_x;
-        obj_mainchara.y = tp_y;
-        // previous x and y must be updated too due to how obj_mainchara's collision events work
-        obj_mainchara.xprevious = tp_x;
-        obj_mainchara.yprevious = tp_y;
-    }}
-}}
-else if (lock_player && !({GMLCodeClass.IsMoving}))
-{{
+    tp_x = 0;
+    tp_y = 0;
     lock_player = 0;
-    global.interact = 0;
-}}
-");
+    ");
 
-// add keybinds for changing segments and warping
-append(CodeEntryClass.step, $@"
-if (keyboard_check_pressed(vk_pageup))
-{{
-    segment++;
-}}
-else if (keyboard_check_pressed(vk_pagedown))
-{{
-    segment--;
-}}
-
-if (keyboard_check_pressed(ord('T')))
-{{
-    global.plot = segment_plot;
-    {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
-    {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
-}}
-");
-
-// downtime timer controller
-append(CodeEntryClass.step, @"
-// downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
-// since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
-if (is_downtime_mode)
-{
-    if (is_downtime_running)
-    {
-        // being greater means it has incremented
-        // but it also means that last frame was the first one incrementing, thus use previous time
-        if (global.encounter > step_count)
-        {
-            downtime += previous_time - downtime_start;
-            is_downtime_running = 0;
-        }
-    }
-    else
-    {
-        // being equals means global.encounter did not increment, thus downtime has begun
-        // but it also means that it stopped incrementing last frame, thus use previous_time
-        // also, the frame it goes above optimal steps is when downtime begins (since we're using is previous_time it also
-        // means we use step_count instead of global.encounter)
-        if (global.encounter == step_count || step_count > optimal_steps)
-        {
-            downtime_start = previous_time;
-            is_downtime_running = 1;
-        }
-    }
-}
-previous_time = get_timer();
-step_count = global.encounter;
-");
-
-// message drawer
-append(CodeEntryClass.draw, @"
-draw_set_font(fnt_main)
-draw_set_color(c_yellow);
-draw_text(20, 0, current_msg);
-");
-
-// rigging frogskip for all froggit encounters to speed up practice
-// it is placed right after mycommand declaration
-place(CodeEntryClass.froggitAlarm, "0))", @$"
-var use_frogskip = 1;
-if (use_frogskip)
-{{
-    mycommand = 0;
-}}
-else
-{{
-    mycommand = 100;
-}}
-");
-
-// reading all segments from the XML file
-var segments = new List<Segment>();
-
-using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml")))
-{
-    // use a blank one for the first previous, it won't be used for anything
-    var previous = new Segment();
-    while (reader.Read()) {
-        if (reader.NodeType == XmlNodeType.Element)
-        {
-            if (reader.Name == "segment")
-            {
-                Segment segment = new Segment(reader, previous);
-                previous = segment;
-                segments.Add(segment);
-            }
-            else if (reader.Name != "segments")
-            {
-                throw new Exception(@$"Expected to find a segment node, instead found {reader.Name.ToString()}");
-            }
-        }
-    }
-}
-
-// create if-else block that updates the state variables when a segment changes
-var initBlock = new IfElseBlock();
-for (int i = 0; i < segments.Count; i++) {
-    var segment = segments[i];
-    initBlock.AddIfBlock(@$"
-    if (segment == {i})
+    // add convenient settings for the encounters
+    place(CodeEntryClass.scrSteps, @"steps = ((argument0 + round(random(argument1))) * populationfactor)", $@"
+    if (obj_time.fast_encounters)
     {{
-        segment_name = {GMLCodeClass.GMLString(segment.Name)};
-        current_msg = {GMLCodeClass.GMLString(segment.Message)};
-        fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)};
-        segment_room = {segment.Room.RoomId};
-        segment_x = {segment.X};
-        segment_y = {segment.Y};
-        segment_plot = {segment.Plot};
-        segment_murder_lv = {segment.MurderLevel};
+        // if we want fast encounters, we are probably killing things, so setting kills to 0 is
+        // a control method to not go over the limit which is manually set always 
+        global.flag[argument3] = 0;
+        // max hp for the user convenience due to unusual amount of encounters and frog skips
+        global.hp = global.maxhp;
     }}
     ");
-}
 
-append(CodeEntryClass.step, @$"
-if (segment_changed)
-{{
-    {initBlock.GetCode()}
-}}
-");
+    // track segment changes
+    append(CodeEntryClass.step, $@"
+    if (previous_segment != segment)
+    {{
+        segment_changed = 1;
+    }}
+    else
+    {{
+        segment_changed = 0;
+    }}
+    previous_segment = segment;
+    ");
 
-// below, we add the code to run when each event is fired
-// the events are created split across each each segment, so the goal is to merge them all into one
-// and add a segment check in that merging
+    // room tracker, widely used for room transition events
+    append(CodeEntryClass.step, @"
+    previous_room = current_room;
+    current_room = room;
+    ");
 
-// first, create a map of all unique events mapped to a map of all segments and the code that run for that event in
-// that segment
-var events = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
+    // in order to tp to the proper places, will be using the tp flag which notifies the
+    // next frame that a room teleportation was carried out last frame
+    // and we have a specific x,y position to go to
+    append(CodeEntryClass.step, @$"
+    // use two flags to wait a frame
+    // wait a frame to overwrite the default position
+    if (tp_flag)
+    {{
+        tp_flag = 0;
+        // to avoid the player moving to places they don't want to
+        // player will be locked until they stop moving after teleporting
+        if ({GMLCodeClass.IsMoving})
+        {{
+            lock_player = 1;
+            global.interact = 1;
+        }}
+        if (instance_exists(obj_mainchara))
+        {{
+            obj_mainchara.x = tp_x;
+            obj_mainchara.y = tp_y;
+            // previous x and y must be updated too due to how obj_mainchara's collision events work
+            obj_mainchara.xprevious = tp_x;
+            obj_mainchara.yprevious = tp_y;
+        }}
+    }}
+    else if (lock_player && !({GMLCodeClass.IsMoving}))
+    {{
+        lock_player = 0;
+        global.interact = 0;
+    }}
+    ");
 
-for (int j = 0; j < segments.Count; j++)
-{
-    var segment = segments[j];
-    var eventListeners = new List<UndertaleEvent>();
-    // if not the last segment, we check if we need to start the next segment while this one is ending
-    // or if we need to teleport at the end of this segment to setup the next one
-    if (j != segments.Count - 1)
+    // add keybinds for changing segments and warping
+    append(CodeEntryClass.step, $@"
+    if (keyboard_check_pressed(vk_pageup))
+    {{
+        segment++;
+    }}
+    else if (keyboard_check_pressed(vk_pagedown))
+    {{
+        segment--;
+    }}
+
+    if (keyboard_check_pressed(ord('T')))
+    {{
+        global.plot = segment_plot;
+        global.interact = 0;
+        is_timer_running = 0;
+        is_downtime_mode = 0;  
+        {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
+        {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
+    }}
+    ");
+
+    // downtime timer controller
+    append(CodeEntryClass.step, @"
+    // downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
+    // since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
+    if (is_downtime_mode)
     {
-        var next = segments[j + 1];
-        // carry out an early update of this variable because otherwise it sometimes will not be updated
-        // by the time the scr_steps script is executed
-        segment.End.Code += @$"
-            obj_time.fast_encounters = {GMLCodeClass.GMLBool(next.FastEncounters)};
-        ";
-
-        // equal to next one: do checks if the segment will be interrupted, if not, start next segment
-        if (segment.End.Equals(next.Start))
+        if (is_downtime_running)
         {
-            if (segment.Uninterruptable) {
-                var condition = next.Tutorial ? "!obj_time.read_tutorial" : "1";
+            // being greater means it has incremented
+            // but it also means that last frame was the first one incrementing, thus use previous time
+            if (global.encounter > step_count)
+            {
+                downtime += previous_time - downtime_start;
+                is_downtime_running = 0;
+            }
+        }
+        else
+        {
+            // being equals means global.encounter did not increment, thus downtime has begun
+            // but it also means that it stopped incrementing last frame, thus use previous_time
+            // also, the frame it goes above optimal steps is when downtime begins (since we're using is previous_time it also
+            // means we use step_count instead of global.encounter)
+            if (global.encounter == step_count || step_count > optimal_steps)
+            {
+                downtime_start = previous_time;
+                is_downtime_running = 1;
+            }
+        }
+    }
+    previous_time = get_timer();
+    step_count = global.encounter;
+    ");
+
+    // message drawer
+    append(CodeEntryClass.draw, @"
+    draw_set_font(fnt_main)
+    draw_set_color(c_yellow);
+    draw_text(20, 0, current_msg);
+    ");
+
+    // rigging frogskip for all froggit encounters to speed up practice
+    // it is placed right after mycommand declaration
+    place(CodeEntryClass.froggitAlarm, "0))", @$"
+    var use_frogskip = 1;
+    if (use_frogskip)
+    {{
+        mycommand = 0;
+    }}
+    else
+    {{
+        mycommand = 100;
+    }}
+    ");
+
+    // reading all segments from the XML file
+    var segments = new List<Segment>();
+
+    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml")))
+    {
+        // use a blank one for the first previous, it won't be used for anything
+        var previous = new Segment();
+        while (reader.Read()) {
+            if (reader.NodeType == XmlNodeType.Element)
+            {
+                if (reader.Name == "segment")
+                {
+                    Segment segment = new Segment(reader, previous);
+                    previous = segment;
+                    segments.Add(segment);
+                }
+                else if (reader.Name != "segments")
+                {
+                    throw new Exception(@$"Expected to find a segment node, instead found {reader.Name.ToString()}");
+                }
+            }
+        }
+    }
+
+    // create if-else block that updates the state variables when a segment changes
+    var initBlock = new IfElseBlock();
+    for (int i = 0; i < segments.Count; i++) {
+        var segment = segments[i];
+        initBlock.AddIfBlock(@$"
+        if (segment == {i})
+        {{
+            segment_name = {GMLCodeClass.GMLString(segment.Name)};
+            current_msg = {GMLCodeClass.GMLString(segment.Message)};
+            fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)};
+            segment_room = {segment.Room.RoomId};
+            segment_x = {segment.X};
+            segment_y = {segment.Y};
+            segment_plot = {segment.Plot};
+            segment_murder_lv = {segment.MurderLevel};
+        }}
+        ");
+    }
+
+    var encounterers = new []
+    {
+        "obj_encount_core1",
+        "obj_encount_fire1",
+        "obj_encounter_ruins1",
+        "obj_encounter_ruins2",
+        "obj_encounterer_glyde",
+        "obj_encounterer_jerry",
+        "obj_encounterer_ruins3",
+        "obj_encounterer_ruins4",
+        "obj_encounterer_ruins5",
+        "obj_encounterer_ruins6",
+        "obj_encounterer_tundra1",
+        "obj_encounterer_water1",
+        "obj_encounterer_water2",
+        "obj_encoutnerer_gyftrot"
+    };
+
+    var encountererUpdate = new IfElseBlock();
+    foreach (string encounterer in encounterers)
+    {
+        encountererUpdate.AddIfBlock(@$"
+        if (instance_exists({encounterer}))
+        {{
+            {encounterer}.steps = encounter_steps;
+        }}
+        ");
+    }
+
+    append(CodeEntryClass.step, @$"
+    if (segment_changed)
+    {{
+        {initBlock.GetCode()}
+        var encounter_steps;
+        if (fast_encounters)
+        {{
+            encounter_steps = 60;
+        }}
+        else
+        {{
+            encounter_steps = 10000;
+        }}
+        {encountererUpdate.GetCode()}
+    }}
+    ");
+
+    // below, we add the code to run when each event is fired
+    // the events are created split across each each segment, so the goal is to merge them all into one
+    // and add a segment check in that merging
+
+    // first, create a map of all unique events mapped to a map of all segments and the code that run for that event in
+    // that segment
+    var events = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
+
+    for (int j = 0; j < segments.Count; j++)
+    {
+        var segment = segments[j];
+        var eventListeners = new List<UndertaleEvent>();
+        // if not the last segment, we check if we need to start the next segment while this one is ending
+        // or if we need to teleport at the end of this segment to setup the next one
+        if (j != segments.Count - 1)
+        {
+            var next = segments[j + 1];
+
+            // equal to next one: do checks if the segment will be interrupted, if not, start next segment
+            if (segment.End.Equals(next.Start))
+            {
+                if (segment.Uninterruptable) {
+                    var condition = next.Tutorial ? "!obj_time.read_tutorial" : "1";
+                    segment.End.Code += @$"
+                    if ({condition})
+                    {{
+                        {next.Start.Code}
+                    }}
+                    ";
+                }
+            }
+
+            // doing checks to see if we need to teleport to setup for the next segment
+            var tpCondition = "0";
+            if (!segment.Uninterruptable)
+            {
+                tpCondition = "1";
+            }
+            else if (next.Tutorial)
+            {
+                tpCondition = "obj_time.read_tutorial";
+            }
+            if (tpCondition != "0")
+            {
                 segment.End.Code += @$"
-                if ({condition})
+                if ({tpCondition})
                 {{
-                    {next.Start.Code}
+                    {GMLCodeClass.TPTo(next.Room, next.X, next.Y)}
                 }}
                 ";
             }
         }
 
-        // doing checks to see if we need to teleport to setup for the next segment
-        var tpCondition = "0";
-        if (!segment.Uninterruptable)
+        eventListeners.Add(segment.End);
+        eventListeners.Add(segment.Start);
+        if (segment.Other.Count > 0)
         {
-            tpCondition = "1";
+            eventListeners.AddRange(segment.Other);
         }
-        else if (next.Tutorial)
+        
+        foreach (UndertaleEvent eventListener in eventListeners)
         {
-            tpCondition = "obj_time.read_tutorial";
+            if (!events.ContainsKey(eventListener))
+            {
+                events[eventListener] = new Dictionary<int, List<string>>();
+            }
+            if (!events[eventListener].ContainsKey(j)) events[eventListener][j] = new List<string>();
+            events[eventListener][j].Add(eventListener.Code);
         }
-        if (tpCondition != "0")
+    }
+
+    // then, group all the event types and their unique events, so that we can properly split events of same type
+    // but different arguments
+
+    // this is a map of event names to a map of unique events and their respective code
+    var eventCodes = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
+
+    // now that we mapped the segments, we just need to separate them in a if-else block
+    foreach (UndertaleEvent undertaleEvent in events.Keys)
+    {
+        var segmentCodeBlocks = new List<string>();
+        var eventStages = events[undertaleEvent];
+        foreach (int stage in eventStages.Keys)
         {
-            segment.End.Code += @$"
-            if ({tpCondition})
+            segmentCodeBlocks.Add(@$"
+            if (obj_time.segment == {stage})
             {{
-                {GMLCodeClass.TPTo(next.Room, next.X, next.Y)}
-            }}
-            ";
-        }
-    }
-
-    eventListeners.Add(segment.End);
-    eventListeners.Add(segment.Start);
-    if (segment.Other.Count > 0)
-    {
-        eventListeners.AddRange(segment.Other);
-    }
-    
-    foreach (UndertaleEvent eventListener in eventListeners)
-    {
-        if (!events.ContainsKey(eventListener))
-        {
-            events[eventListener] = new Dictionary<int, List<string>>();
-        }
-        if (!events[eventListener].ContainsKey(j)) events[eventListener][j] = new List<string>();
-        events[eventListener][j].Add(eventListener.Code);
-    }
-}
-
-// then, group all the event types and their unique events, so that we can properly split events of same type
-// but different arguments
-
-// this is a map of event names to a map of unique events and their respective code
-var eventCodes = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
-
-// now that we mapped the segments, we just need to separate them in a if-else block
-foreach (UndertaleEvent undertaleEvent in events.Keys)
-{
-    var segmentCodeBlocks = new List<string>();
-    var eventStages = events[undertaleEvent];
-    foreach (int stage in eventStages.Keys)
-    {
-        segmentCodeBlocks.Add(@$"
-        if (obj_time.segment == {stage})
-        {{
-            {// join the codes since it is a list
-            String.Join("\n", eventStages[stage])}
-        }}
-        ");
-    }
-    string eventCode = IfElseBlock.GetIfElseBlock(segmentCodeBlocks);
-    var eventName = undertaleEvent.GetType().Name;
-
-    if (!eventCodes.ContainsKey(eventName)) eventCodes[eventName] = new Dictionary<UndertaleEvent, string>();
-    eventCodes[eventName][undertaleEvent] = eventCode;
-}
-
-
-// finally, go through each event type to merge all the code for each event and determine how it will be placed
-foreach (string eventName in eventCodes.Keys)
-{
-    // get the map of unique events to their code
-    var eventMap = eventCodes[eventName];
-    
-    // pick any of the events (in this case the first) to access the general methods of this event type
-    // and to be used as a "dummy" event to place the code for each entry
-    UndertaleEvent baseEvent = eventMap.Keys.ToList()[0];
-
-    // split the events based on the code entries they edit
-    // so create a map of code entries to the if-else block for the events in the code entry
-    // in short, since the unique events are already separated, we presume that we want to access only one of them
-    // and that is filtered by doing an if-else block in all of their conditions
-    var entryMap = new Dictionary<string, IfElseBlock>();
-
-    foreach (UndertaleEvent undertaleEvent in eventMap.Keys)
-    {
-        var eventCode = eventMap[undertaleEvent];
-        var eventEntry = undertaleEvent.CodeEntry();
-        if (!entryMap.ContainsKey(eventEntry))
-        {
-            entryMap[eventEntry] = new IfElseBlock();
-        }
-        var condition = undertaleEvent.GMLCondition();
-        if (condition == "1")
-        {
-            entryMap[eventEntry].SetElseBlock(eventCode);
-        }
-        else
-        {    
-            entryMap[eventEntry].AddIfBlock(@$"
-            if ({undertaleEvent.GMLCondition()})
-            {{
-                {eventCode}
+                {// join the codes since it is a list
+                String.Join("\n", eventStages[stage])}
             }}
             ");
         }
+        string eventCode = IfElseBlock.GetIfElseBlock(segmentCodeBlocks);
+        var eventName = undertaleEvent.GetType().Name;
+
+        if (!eventCodes.ContainsKey(eventName)) eventCodes[eventName] = new Dictionary<UndertaleEvent, string>();
+        eventCodes[eventName][undertaleEvent] = eventCode;
     }
 
 
-
-    foreach (string entry in entryMap.Keys)
+    // finally, go through each event type to merge all the code for each event and determine how it will be placed
+    foreach (string eventName in eventCodes.Keys)
     {
-        baseEvent.Code = entryMap[entry].GetCode();
-        switch (baseEvent.Method)
-        {        
-            case PlaceMethod.Append:
-                append(entry, baseEvent.Placement());
-                break;
-            case PlaceMethod.Place:
-                place(entry, baseEvent.Replacement, baseEvent.Placement());
-                break;
-            case PlaceMethod.PlaceInIf:
-                placeInIf(entry, baseEvent.Replacement, baseEvent.Placement());
-                break;
+        // get the map of unique events to their code
+        var eventMap = eventCodes[eventName];
+        
+        // pick any of the events (in this case the first) to access the general methods of this event type
+        // and to be used as a "dummy" event to place the code for each entry
+        UndertaleEvent baseEvent = eventMap.Keys.ToList()[0];
+
+        // split the events based on the code entries they edit
+        // so create a map of code entries to the if-else block for the events in the code entry
+        // in short, since the unique events are already separated, we presume that we want to access only one of them
+        // and that is filtered by doing an if-else block in all of their conditions
+        var entryMap = new Dictionary<string, IfElseBlock>();
+
+        foreach (UndertaleEvent undertaleEvent in eventMap.Keys)
+        {
+            var eventCode = eventMap[undertaleEvent];
+            var eventEntry = undertaleEvent.CodeEntry();
+            if (!entryMap.ContainsKey(eventEntry))
+            {
+                entryMap[eventEntry] = new IfElseBlock();
+            }
+            var condition = undertaleEvent.GMLCondition();
+            if (condition == "1")
+            {
+                entryMap[eventEntry].SetElseBlock(eventCode);
+            }
+            else
+            {    
+                entryMap[eventEntry].AddIfBlock(@$"
+                if ({undertaleEvent.GMLCondition()})
+                {{
+                    {eventCode}
+                }}
+                ");
+            }
+        }
+
+
+
+        foreach (string entry in entryMap.Keys)
+        {
+            baseEvent.Code = entryMap[entry].GetCode();
+            switch (baseEvent.Method)
+            {        
+                case PlaceMethod.Append:
+                    append(entry, baseEvent.Placement());
+                    break;
+                case PlaceMethod.Place:
+                    place(entry, baseEvent.Replacement, baseEvent.Placement());
+                    break;
+                case PlaceMethod.PlaceInIf:
+                    placeInIf(entry, baseEvent.Replacement, baseEvent.Placement());
+                    break;
+            }
         }
     }
 }
+
+main();
 
 // debug mode - REMOVE FOR PRODUCTION BUILD!!
 useDebug();
