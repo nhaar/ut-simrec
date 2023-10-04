@@ -1,0 +1,312 @@
+<segments>
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-start</name>
+        <start><PickName /></start>
+        <end><Blcon /></end>
+        <plot>0</plot>
+        <room>GameMenu</room>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-hallway</name>
+        <start><EnterBattle /></start>
+        <end><RoomTransition room="RuinsHallway" backwards="false" /></end>
+        <plot>7</plot>
+        <room>RuinsSpikeMaze</room>
+        <x>400</x>
+        <y>115</y>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+        <name>ruins-leaf-pile</name>
+        <start><RoomTransition room="RuinsHallway" backwards="false" /></start>
+        <end><Door name="C" room="RuinsLeafPile" /></end>
+        <plot>9</plot>
+        <room>RuinsHallway</room>
+        <x>2400</x>
+        <y>100</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>froggit-lv2</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>9.2</plot>
+        <room>RuinsLeafPile</room>
+        <x>200</x>
+        <y>330</y>
+        <next-encounter>SingleFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>leaf-pile-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsLeafPile" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>not-frogskip</name>
+        <start><FroggitTurnStart /></start>
+        <end><FroggitTurnEnd /></end>
+        <room>RuinsLeafFall</room>
+        <x>20</x>
+        <y>100</y>
+        <next-encounter>SingleFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>lv-up</name>
+        <start><YouWon /></start>
+        <end><LeaveBattle /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-first-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsLeafFall" backwards="true" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>whim</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>RuinsLeafPile</room>
+        <x>280</x>
+        <y>340</y>
+        <next-encounter>Whimsun</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+        <name>leaf-fall-downtime</name>
+        <start><RoomTransition room="RuinsLeafPile" backwards="false" /></start>
+        <end><Door name="A" room="RuinsLeafFall" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>frogskip</name>
+        <start><FroggitTurnStart /></start>
+        <end><FroggitTurnEnd /></end>
+        <room>RuinsLeafFall</room>
+        <x>210</x>
+        <y>90</y>
+        <next-encounter>SingleFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>you-won</name>
+        <start><YouWon /></start>
+        <end><LeaveBattle /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>leaf-fall-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsLeafFall" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-one-rock</name>
+        <start><RoomTransition room="RuinsLeafFall" backwards="false" /></start>
+        <end><Door name="C" room="RuinsOneRock" backwards="false" /></end>
+        <x>280</x>
+        <y>102</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>froggit-lv3</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>9.8</plot>
+        <room>RuinsOneRock</room>
+        <x>360</x>
+        <y>94</y>
+        <next-encounter>SingleFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-maze</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsOneRock" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="continuous" tutorial="true">
+        <name>three-rock-downtime</name>
+        <start><RoomTransition room="RuinsLeafMaze" backwards="false" /></start>
+        <end><Door name="C" room="RuinsThreeRock" backwards="false" /></end>
+        <room>RuinsLeafMaze</room>
+        <x>530</x>
+        <y>220</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>sgl-mold</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>RuinsThreeRock</room>
+        <x>480</x>
+        <y>110</y>
+        <next-encounter>SingleMold</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>three-rock-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsCheese" backwards="true"/></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>dbl-mold</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>RuinsCheese</room>
+        <x>20</x>
+        <y>120</y>
+        <next-encounter>DoubleMold</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-second-transition</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>tpl-mold</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>RuinsThreeRock</room>
+        <x>520</x>
+        <y>120</y>
+        <next-encounter>TripleMoldsmal</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>dbl-frog</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>DoubleFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>frog-whim</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>FroggitWhimsun</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>dbl-mold-19</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>DoubleMoldsmal</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>tpl-mold-19</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>TripleMoldsmal</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>dbl-frog-19</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>DoubleFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>frog-whim-19</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>FroggitWhimsun</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>tpl-mold-18</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>TripleMoldsmal</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="true">
+        <name>ruins-napsta</name>
+        <start><LeaveBattle /></start>
+        <end><Blcon /></end>
+        <room>RuinsCheese</room>
+        <x>20</x>
+        <y>120</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-switches</name>
+        <start><EnterBattle /></start>
+        <end><Blcon /></end>
+        <plot>11</plot>
+        <room>RuinsNapstablook</room>
+        <x>210</x>
+        <y>75</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>perspective-a</name>
+        <start><EnterBattle /></start>
+        <end><Blcon /></end>
+        <plot>12</plot>
+        <room>RuinsThreeFrogs</room>
+        <x>590</x>
+        <y>150</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>perspective-b</name>
+        <start><EnterBattle /></start>
+        <end><Blcon /></end>
+        <plot>13</plot>
+        <room>RuinsSwitches</room>
+        <x>580</x>
+        <y>160</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>perspective-c</name>
+        <start><EnterBattle /></start>
+        <end><Blcon /></end>
+        <room>PerspectiveA</room>
+        <x>250</x>
+        <y>370</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>perspective-d</name>
+        <start><EnterBattle /></start>
+        <end><Blcon /></end>
+        <plot>14</plot>
+        <room>PerspectiveB</room>
+        <x>30</x>
+        <y>320</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>ruins-end</name>
+        <start><EnterBattle /></start>
+        <end><Door name="Amusic" room="RuinsTorielFight" /></end>
+        <plot>15</plot>
+        <room>PerspectiveC</room>
+        <x>130</x>
+        <y>120</y>
+    </segment>
+
+<!-- 
+    <segment uninterruptable="">
+        <name>perspective-b</name>
+        <start>< /></start>
+        <end>< /></end>
+        <plot></plot>
+        <room></room>
+        <x></x>
+        <y></y>
+        <message></message>
+        <next-encounter></next-encounter>
+    </segment> -->
+</segments>
