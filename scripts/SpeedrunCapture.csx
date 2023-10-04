@@ -150,6 +150,11 @@ class Segment
     public int Y = 0;
 
     /// <summary>
+    /// The XP the player should have at the start of the segment
+    /// </summary>
+    public int XP = 0;
+
+    /// <summary>
     /// The battlegroup to rig the next encounter with, or `null` if it doesn't need to be rigged
     /// </summary>
     public Battlegroup? NextEncounter = null;
@@ -254,6 +259,10 @@ class Segment
                     reader.Read();
                     Y = Int32.Parse(reader.Value);
                     break;
+                case "xp":
+                    reader.Read();
+                    XP = Int32.Parse(reader.Value);
+                    break;
                 case "message":
                     reader.Read();
                     Message = reader.Value;
@@ -286,6 +295,7 @@ class Segment
         if (Room == null) Room = Previous.Room;
         if (X == 0) X = Previous.X;
         if (Y == 0) Y = Previous.Y;
+        if (XP == 0) XP = Previous.XP;
     }
 }
 
@@ -1782,7 +1792,9 @@ void main ()
         global.plot = segment_plot;
         global.interact = 0;
         is_timer_running = 0;
-        is_downtime_mode = 0;  
+        is_downtime_mode = 0;
+        global.xp = segment_xp;
+        script_execute(scr_levelup);
         {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
         {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
     }}
@@ -1879,6 +1891,7 @@ void main ()
             segment_room = {segment.Room.RoomId};
             segment_x = {segment.X};
             segment_y = {segment.Y};
+            segment_xp = {segment.XP}
             segment_plot = {segment.Plot};
             segment_murder_lv = {segment.MurderLevel};
         }}

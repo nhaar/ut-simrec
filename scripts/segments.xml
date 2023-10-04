@@ -37,6 +37,7 @@
         <room>RuinsLeafPile</room>
         <x>200</x>
         <y>330</y>
+        <xp>29</xp>
         <next-encounter>SingleFroggit</next-encounter>
     </segment>
 
@@ -60,6 +61,7 @@
         <name>lv-up</name>
         <start><YouWon /></start>
         <end><LeaveBattle /></end>
+        <xp>30</xp>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
