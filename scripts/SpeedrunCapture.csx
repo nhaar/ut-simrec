@@ -234,7 +234,7 @@ class Segment
                     End = ParseXmlEvent(reader);
                     break;
                 case "other":
-                    while (reader.Name != "other")
+                    do
                     {
                         reader.Read();
                         if (reader.NodeType == XmlNodeType.Element)
@@ -242,6 +242,7 @@ class Segment
                             Other.Add(ParseXmlEvent(reader));
                         }
                     }
+                    while (reader.Name != "other");
                     break;
                 case "plot":
                     reader.Read();
@@ -1234,10 +1235,8 @@ abstract class UndertaleEvent
     public UndertaleEvent (XmlReader reader)
     {
         ParseAttributes(reader);
-        if (reader.HasValue) {
-            reader.Read();
-            Code = reader.Value;
-        }
+        reader.Read();
+        Code += '\n' + reader.Value;
     }
 }
 
@@ -1891,7 +1890,8 @@ void main ()
             segment_room = {segment.Room.RoomId};
             segment_x = {segment.X};
             segment_y = {segment.Y};
-            segment_xp = {segment.XP}
+            segment_xp = {segment.XP};
+            global.xp = segment_xp;
             segment_plot = {segment.Plot};
             segment_murder_lv = {segment.MurderLevel};
         }}

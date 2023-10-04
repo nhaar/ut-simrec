@@ -51,6 +51,11 @@
         <name>not-frogskip</name>
         <start><FroggitTurnStart /></start>
         <end><FroggitTurnEnd /></end>
+        <other>
+            <FroggitAttack>
+                use_frogskip = 0;
+            </FroggitAttack>
+        </other>
         <room>RuinsLeafFall</room>
         <x>20</x>
         <y>100</y>
