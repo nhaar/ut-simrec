@@ -5,6 +5,7 @@
         <end><Blcon /></end>
         <plot>0</plot>
         <room>GameMenu</room>
+        <message>Hey!!</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
@@ -25,6 +26,7 @@
         <room>RuinsHallway</room>
         <x>2400</x>
         <y>100</y>
+        <message>TEST!!!!</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">

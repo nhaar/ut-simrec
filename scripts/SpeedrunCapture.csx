@@ -63,7 +63,7 @@ class Segment {
 
     public Battlegroup? NextEncounter = null;
 
-    public bool IncrementMurder = false;
+    public int MurderLevel = 0;
 
     private class SegmentTypeException : Exception {
         public SegmentTypeException(string type) : base($"\"{type}\" is not a valid segment type") {}
@@ -101,8 +101,12 @@ class Segment {
         // read attributes
         Uninterruptable = XmlBool.ParseXmlBool(reader, "uninterruptable");
         FastEncounters = XmlBool.ParseXmlBool(reader, "fast-encounters");
-        IncrementMurder = XmlBool.ParseXmlBool(reader, "increment-murder");
+        var incrementMurder = XmlBool.ParseXmlBool(reader, "increment-murder");
         Tutorial = XmlBool.ParseXmlBool(reader, "tutorial");
+        
+        MurderLevel = Previous.MurderLevel;
+        if (incrementMurder) MurderLevel++;
+
         string type = reader.GetAttribute("type");
         if (type == "continuous") Type = SegmentType.Continuous;
         else if (type == "downtime") Type = SegmentType.Downtime;
@@ -146,6 +150,10 @@ class Segment {
                     reader.Read();
                     Y = Int32.Parse(reader.Value);
                     break;
+                case "message":
+                    reader.Read();
+                    Message = reader.Value;
+                    break;
             }
 
         }
@@ -153,8 +161,8 @@ class Segment {
         SetEndCode();
         if (Plot == null) Plot = Previous.Plot;
         if (Room == null) Room = Previous.Room;
-        if (X == null) X = Previous.X;
-        if (Y == null) Y = Previous.Y;
+        if (X == 0) X = Previous.X;
+        if (Y == 0) Y = Previous.Y;
     }
 }
 
@@ -676,9 +684,13 @@ static class GMLCodeClass {
     /// <param name="y">y position to telport to</param>
     /// <returns></returns>
     public static string TPTo (UndertaleRoom room, int x, int y) {
+        return TPTo(room.RoomId.ToString(), x.ToString(), y.ToString());
+    }
+
+    public static string TPTo (string room, string x, string y) {
         return @$"
         obj_time.tp_flag = 1;
-        room = {room.RoomId};
+        room = {room};
         obj_time.tp_x = {x};
         obj_time.tp_y = {y};
         ";
@@ -756,8 +768,9 @@ static class GMLCodeClass {
     }}
     ";
 
-    public static string SetMurderLevel (int level) {
-        string code = @"
+    public static string SetMurderLevel (string value) {
+        string code = @$"
+        var murder_lv = {value};
         global.flag[26] = 0;
         ";
         var flagMaps = new [] {
@@ -781,32 +794,42 @@ static class GMLCodeClass {
 
         for (int i = 0; i < flagMaps.Length; i++) {
             var flagMap = flagMaps[i];
-            
-            foreach (int flag in flagMap.Keys) {
-                int flagValue = 0;
-                if (level > i) {
-                    flagValue = flagMap[flag];
+            var ifBlock = new IfElseBlock();
+            for (int j = 0; j < 2; j ++) {
+                var assignmentCode = "";
+                foreach (int flag in flagMap.Keys) {
+                    int flagValue = j == 0 ? 0 : flagMap[flag];
+                    assignmentCode += @$"
+                    global.flag[{flag}] = {flagValue};
+                    ";
                 }
-                code += @$"
-                global.flag[{flag}] = {flagValue}
-                ";
+                if (j == 0) {
+                    ifBlock.SetElseBlock(assignmentCode);
+                } else {
+                    ifBlock.AddIfBlock(@$"
+                    if (murder_lv > {i}) {{
+                        {assignmentCode}
+                    }}
+                    ");
+                }
             }
+            code += ifBlock.GetCode();
         }
 
         return code;
     }
 
-    public static string WarpTo (int stage, int xp, int plot, int murderLevel, UndertaleRoom room, int x, int y) {
-        return @$"
-        is_timer_running = 0;
-        obj_time.stage = {stage};
-        global.xp = {xp};
-        script_execute(scr_levelup);
-        global.plot = {plot};
-        {SetMurderLevel(murderLevel)}
-        {TPTo(room, x, y)}
-        ";
-    }
+    // public static string WarpTo (int segment, int xp, int plot, int murderLevel, UndertaleRoom room, int x, int y) {
+    //     return @$"
+    //     is_timer_running = 0;
+    //     obj_time.stage = {stage};
+    //     global.xp = {xp};
+    //     script_execute(scr_levelup);
+    //     global.plot = {plot};
+    //     {SetMurderLevel(murderLevel)}
+    //     {TPTo(room, x, y)}
+    //     ";
+    // }
 
     public static string GetShortcutCondition (string shortcut) {
         var conditions = new List<string>() {};
@@ -850,17 +873,17 @@ void useDebug () {
     // }}
     // ");
 
-    append(CodeEntryClass.step, @$"
-    if ({GMLCodeClass.GetShortcutCondition("Q1")}) {{
-        {GMLCodeClass.WarpTo(0, 190, 28, 2, RoomClass.RuinsExit, 150, 210)}
-    }}
-    ");
+    // append(CodeEntryClass.step, @$"
+    // if ({GMLCodeClass.GetShortcutCondition("Q1")}) {{
+    //     {GMLCodeClass.WarpTo(0, 190, 28, 2, RoomClass.RuinsExit, 150, 210)}
+    // }}
+    // ");
 
-    append(CodeEntryClass.step, @$"
-    if ({GMLCodeClass.GetShortcutCondition("Q2")}) {{
-        {GMLCodeClass.WarpTo(21, 200, 51, 4, RoomClass.SnowdinPoffZone, 150, 210)}
-    }}
-    ");
+    // append(CodeEntryClass.step, @$"
+    // if ({GMLCodeClass.GetShortcutCondition("Q2")}) {{
+    //     {GMLCodeClass.WarpTo(21, 200, 51, 4, RoomClass.SnowdinPoffZone, 150, 210)}
+    // }}
+    // ");
 
     // variables to print
     string[] watchVars = {
@@ -870,10 +893,10 @@ void useDebug () {
         "is_downtime_mode",
         "is_downtime_running",
         "downtime_name",
-        "global.encounter", 
-        "step_count",
-        "get_timer()",
-        "previous_time",
+        "segment_x",
+        "segment_y",
+        "segment_plot",
+        "segment_room"        
     };
 
     // start just with line break just to not interefere with anything
@@ -2573,14 +2596,6 @@ previous_segment = segment;
 ");
 
 
-append(CodeEntryClass.step, $@"
-if (keyboard_check_pressed(vk_pageup)) {{
-    session++;
-}} else if (keyboard_check_pressed(vk_pagedown)) {{
-    session--;
-}}
-");
-
 // room tracker, widely used for room transition events
 append(CodeEntryClass.step, @"
 previous_room = current_room;
@@ -2601,14 +2616,30 @@ if (tp_flag) {{
         lock_player = 1;
         global.interact = 1;
     }}
-    obj_mainchara.x = tp_x;
-    obj_mainchara.y = tp_y;
-    // previous x and y must be updated too due to how obj_mainchara's collision events work
-    obj_mainchara.xprevious = tp_x;
-    obj_mainchara.yprevious = tp_y;
+    if (instance_exists(obj_mainchara)) {{
+        obj_mainchara.x = tp_x;
+        obj_mainchara.y = tp_y;
+        // previous x and y must be updated too due to how obj_mainchara's collision events work
+        obj_mainchara.xprevious = tp_x;
+        obj_mainchara.yprevious = tp_y;
+    }}
 }} else if (lock_player && !({GMLCodeClass.IsMoving})) {{
     lock_player = 0;
     global.interact = 0;
+}}
+");
+
+append(CodeEntryClass.step, $@"
+if (keyboard_check_pressed(vk_pageup)) {{
+    segment++;
+}} else if (keyboard_check_pressed(vk_pagedown)) {{
+    segment--;
+}}
+
+if (keyboard_check_pressed(ord('T'))) {{
+    global.plot = segment_plot;
+    {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
+    {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
 }}
 ");
 
@@ -2693,7 +2724,7 @@ void Main() {
     int currentSegment = -1;
 
     Segment previous = new Segment();
-    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\test.xml"))) {
+    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml"))) {
         while (reader.Read()) {
             // Console.WriteLine(currentSegment);
             if (reader.NodeType == XmlNodeType.Element) {
@@ -2726,9 +2757,14 @@ void Main() {
         var segment = segments[i];
         initBlock.AddIfBlock(@$"
         if (segment == {i}) {{
-            segment_name = {GMLCodeClass.GMLString(segment.Name)}
-            current_msg = {GMLCodeClass.GMLString(segment.Message)}
-            fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)}
+            segment_name = {GMLCodeClass.GMLString(segment.Name)};
+            current_msg = {GMLCodeClass.GMLString(segment.Message)};
+            fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)};
+            segment_room = {segment.Room.RoomId};
+            segment_x = {segment.X};
+            segment_y = {segment.Y};
+            segment_plot = {segment.Plot};
+            segment_murder_lv = {segment.MurderLevel};
         }}
         ");
     }
