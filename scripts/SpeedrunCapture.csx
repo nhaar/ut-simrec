@@ -9,13 +9,15 @@ helper classes
 /// <summary>
 /// Class for getting the assembly name of classes
 /// </summary>
-static class AssemblyNameClass {
+static class AssemblyNameClass
+{
     /// <summary>
     /// Get what the assembly qualified name for a type is (assuming the type exists)
     /// </summary>
     /// <param name="typeName"></param>
     /// <returns></returns>
-    public static string GetAssemblyName (string typeName) {
+    public static string GetAssemblyName (string typeName)
+    {
         return typeof(AssemblyNameClass).AssemblyQualifiedName.Replace("AssemblyNameClass", typeName);
     }
 }
@@ -23,11 +25,13 @@ static class AssemblyNameClass {
 /// <summary>
 /// Class for a bool attribute in the segments XML
 /// </summary>
-static class XmlBool {
+static class XmlBool
+{
     /// <summary>
     /// Thrown if an attribute is not a boolean
     /// </summary>
-    private class XmlBoolException : Exception {
+    private class XmlBoolException : Exception
+    {
         public XmlBoolException(string attribute) : base($"Bool attribute \"{attribute}\" was not \"true\" or \"false\"") {}
     }
 
@@ -38,7 +42,8 @@ static class XmlBool {
     /// <param name="attribute">Name of the attribute</param>
     /// <returns></returns>
     /// <exception cref="XmlBoolException"></exception>
-    public static bool ParseXmlBool (XmlReader reader, string attribute) {
+    public static bool ParseXmlBool (XmlReader reader, string attribute)
+    {
         var value = reader.GetAttribute(attribute);
         if (value == "true") return true;
         if (value == "false") return false;
@@ -49,7 +54,8 @@ static class XmlBool {
 /// <summary>
 /// The types a segment can take
 /// </summary>
-enum SegmentType {
+enum SegmentType
+{
     /// <summary>
     /// If a segment is timed from start to finish non-stop
     /// </summary>
@@ -64,7 +70,8 @@ enum SegmentType {
 /// <summary>
 /// A time segment to be recorded
 /// </summary>
-class Segment {
+class Segment
+{
     /// <summary>
     /// Its type
     /// </summary>
@@ -155,7 +162,8 @@ class Segment {
     /// <summary>
     /// Thrown if the segment type from the XML is invalid
     /// </summary>
-    private class SegmentTypeException : Exception {
+    private class SegmentTypeException : Exception
+    {
         public SegmentTypeException(string type) : base($"\"{type}\" is not a valid segment type") {}
     }
 
@@ -164,7 +172,8 @@ class Segment {
     /// </summary>
     /// <param name="reader">Reader with the node for the event</param>
     /// <returns></returns>
-    private static UndertaleEvent ParseXmlEvent (XmlReader reader) {
+    private static UndertaleEvent ParseXmlEvent (XmlReader reader)
+    {
         var type = System.Type.GetType(AssemblyNameClass.GetAssemblyName(reader.Name));
         UndertaleEvent instance = (UndertaleEvent)Activator.CreateInstance(type, args: new XmlReader[] { reader });
         return instance;
@@ -181,7 +190,8 @@ class Segment {
     /// <param name="reader">Reader with the node for the segment</param>
     /// <param name="previous">Segment previous to this one</param>
     /// <exception cref="SegmentTypeException"></exception>
-    public Segment (XmlReader reader, Segment previous) {
+    public Segment (XmlReader reader, Segment previous)
+    {
         Previous = previous;
 
         // read attributes
@@ -196,13 +206,16 @@ class Segment {
         else throw new SegmentTypeException("");
 
         bool finishedSegment = false;
-        while (!finishedSegment && reader.Read()) {
+        while (!finishedSegment && reader.Read())
+        {
             // skip end ones to avoid the switch bugging out and look out for segment end
-            if (reader.NodeType == XmlNodeType.EndElement) {
+            if (reader.NodeType == XmlNodeType.EndElement)
+            {
                 if (reader.Name == "segment") finishedSegment = true;
                 else reader.Read();
             }
-            switch (reader.Name) {
+            switch (reader.Name)
+            {
                 case "name":
                     reader.Read();
                     Name = reader.Value;
@@ -216,9 +229,11 @@ class Segment {
                     End = ParseXmlEvent(reader);
                     break;
                 case "other":
-                    while (reader.Name != "other") {
+                    while (reader.Name != "other")
+                    {
                         reader.Read();
-                        if (reader.NodeType == XmlNodeType.Element) {
+                        if (reader.NodeType == XmlNodeType.Element)
+                        {
                             Other.Add(ParseXmlEvent(reader));
                         }
                     }
@@ -255,10 +270,13 @@ class Segment {
         }
 
         // updating boundary event code
-        if (Type == SegmentType.Continuous) {
+        if (Type == SegmentType.Continuous)
+        {
             Start.Code = GMLCodeClass.StartSegment(Name);
             End.Code = GMLCodeClass.StopTime;
-        } else if (Type == SegmentType.Downtime) {
+        }
+        else if (Type == SegmentType.Downtime)
+        {
             Start.Code = GMLCodeClass.StartDowntime(Name);
             End.Code = GMLCodeClass.StopDowntime;
         }
@@ -274,7 +292,8 @@ class Segment {
 /// <summary>
 /// Represent a room from Undertale
 /// </summary>
-class UndertaleRoom {
+class UndertaleRoom
+{
     /// <summary>
     /// The room that comes before this room in the "chronological" order
     /// </summary>
@@ -295,7 +314,8 @@ class UndertaleRoom {
     /// </summary>
     /// <param name="id"></param>
     /// <param name="prev"></param>
-    private void Init (int id, UndertaleRoom prev) {
+    private void Init (int id, UndertaleRoom prev)
+    {
         Previous = prev;
         RoomId = id;
 
@@ -312,7 +332,8 @@ class UndertaleRoom {
     /// Initiate room without any neighbors
     /// </summary>
     /// <param name="id"></param>
-    public UndertaleRoom (int id) {
+    public UndertaleRoom (int id)
+    {
         Init(id, new UndertaleRoom());
     }
 
@@ -321,7 +342,8 @@ class UndertaleRoom {
     /// </summary>
     /// <param name="id"></param>
     /// <param name="prev"></param>
-    public UndertaleRoom (int id, UndertaleRoom prev) {
+    public UndertaleRoom (int id, UndertaleRoom prev)
+    {
         Init(id, prev);
     }
 }
@@ -329,18 +351,22 @@ class UndertaleRoom {
 /// <summary>
 /// Class containing all the rooms
 /// </summary>
-static class RoomClass {
+static class RoomClass
+{
     /// <summary>
     /// Get a room by its name (the name as defined in this class)
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="Exception">Room does not exist</exception>
-    public static UndertaleRoom GetRoom (string name) {
-        try {
+    public static UndertaleRoom GetRoom (string name)
+    {
+        try
+        {
             return (UndertaleRoom) typeof(RoomClass).GetField(name).GetValue(null);
         }
-        catch (System.Exception) {
+        catch (System.Exception)
+        {
             throw new Exception($"Invalid room {name}");
         }
     }
@@ -505,7 +531,8 @@ static class RoomClass {
 /// <summary>
 /// Represent a battlegroup in-game
 /// </summary>
-enum Battlegroup {
+enum Battlegroup
+{
     /// <summary>
     /// Scripted first froggit
     /// </summary>
@@ -558,7 +585,8 @@ enum Battlegroup {
 }
 
 // Class for a GML if-else code block
-class IfElseBlock {
+class IfElseBlock
+{
     /// <summary>
     /// List of strings of GML code of the form `if (CONDITION) {CODE}`
     /// </summary>
@@ -573,7 +601,8 @@ class IfElseBlock {
     /// Add all if blocks from an array of blocks
     /// </summary>
     /// <param name="blocks"></param>
-    public void AddBlocks (string[] blocks) {
+    public void AddBlocks (string[] blocks)
+    {
         foreach (string block in blocks) AddIfBlock(block);
     }
 
@@ -581,7 +610,8 @@ class IfElseBlock {
     /// Add all if blocks from a list of blocks
     /// </summary>
     /// <param name="blocks"></param>
-    public void AddBlocks(List<string> blocks) {
+    public void AddBlocks(List<string> blocks)
+    {
         AddBlocks(blocks.ToArray());
     }
 
@@ -589,7 +619,8 @@ class IfElseBlock {
     /// Add a block from a string
     /// </summary>
     /// <param name="code"></param>
-    public void AddIfBlock (string code) {
+    public void AddIfBlock (string code)
+    {
         IfBlocks.Add(code);
     } 
 
@@ -597,7 +628,8 @@ class IfElseBlock {
     /// Set the value of the `else` block
     /// </summary>
     /// <param name="code"></param>
-    public void SetElseBlock (string code) {
+    public void SetElseBlock (string code)
+    {
         ElseBlock = code;
     }
 
@@ -605,11 +637,13 @@ class IfElseBlock {
     /// Get the final GML code for the block
     /// </summary>
     /// <returns></returns>
-    public string GetCode () {
+    public string GetCode ()
+    {
         // if there are no if statements, then the `else` block should not be wrapped on anything
         if (IfBlocks.Any()) {
             return String.Join("else ", IfBlocks) + $"else {{ {ElseBlock} }}";
-        } else return ElseBlock;
+        }
+        else return ElseBlock;
     }
 
     /// <summary>
@@ -621,7 +655,8 @@ class IfElseBlock {
     /// Create an if-else block with if statements from a list
     /// </summary>
     /// <param name="blocks"></param>
-    public IfElseBlock (List<string> blocks) {
+    public IfElseBlock (List<string> blocks)
+    {
         AddBlocks(blocks);
     }
 
@@ -629,7 +664,8 @@ class IfElseBlock {
     /// Create an if-else block with if statements from an array
     /// </summary>
     /// <param name="blocks"></param>
-    public IfElseBlock (string[] blocks) {
+    public IfElseBlock (string[] blocks)
+    {
         AddBlocks(blocks);
     }
 
@@ -638,7 +674,8 @@ class IfElseBlock {
     /// </summary>
     /// <param name="blocks"></param>
     /// <returns></returns>
-    public static string GetIfElseBlock (string[] blocks) {
+    public static string GetIfElseBlock (string[] blocks)
+    {
         var block = new IfElseBlock(blocks);
         return block.GetCode();
     }
@@ -648,7 +685,8 @@ class IfElseBlock {
     /// </summary>
     /// <param name="blocks"></param>
     /// <returns></returns>
-    public static string GetIfElseBlock (List<string> blocks) {
+    public static string GetIfElseBlock (List<string> blocks)
+    {
         return GetIfElseBlock(blocks.ToArray());
     }
 }
@@ -656,7 +694,8 @@ class IfElseBlock {
 /// <summary>
 /// Contains the name of all code entries that are used
 /// </summary>
-public static class CodeEntryClass {
+public static class CodeEntryClass
+{
     // will be using obj_time for the API of the mod
 
     /// <summary>
@@ -738,7 +777,8 @@ UNDERTALE CODE MANIPULATION
 /// </summary>
 /// <param name="codeName">Name of the code entry</param>
 /// <param name="code">Code to append</param>
-void append (string codeName, string code) {
+void append (string codeName, string code)
+{
     Data.Code.ByName(codeName).AppendGML(code, Data);
 }
 
@@ -748,7 +788,8 @@ void append (string codeName, string code) {
 /// <param name="codeName">Name of the code entry</param>
 /// <param name="text">Exact text to be replaced</param>
 /// <param name="replacement">Text to overwrite the old text</param>
-void replace (string codeName, string text, string replacement) {
+void replace (string codeName, string text, string replacement)
+{
     ReplaceTextInGML(codeName, text, replacement);
 }
 
@@ -758,7 +799,8 @@ void replace (string codeName, string text, string replacement) {
 /// <param name="codeName">Name of the code entry</param>
 /// <param name="preceding">String matching the exact text that precedes where the code should be placed</param>
 /// <param name="placement">New code to place</param>
-void place (string codeName, string preceding, string placement) {
+void place (string codeName, string preceding, string placement)
+{
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
 }
 
@@ -769,7 +811,8 @@ void place (string codeName, string preceding, string placement) {
 /// <param name="codeName">Name of the code entry</param>
 /// <param name="preceding">String matching the exact text for the statement inside if</param>
 /// <param name="placement">New code to place</param>
-void placeInIf (string codeName, string preceding, string placement) {
+void placeInIf (string codeName, string preceding, string placement)
+{
     ReplaceTextInGML(codeName, preceding, @$"
     {{
         {preceding};
@@ -781,13 +824,15 @@ void placeInIf (string codeName, string preceding, string placement) {
 /// <summary>
 /// Contains all GML code, code generator and GML variable methods and fields 
 /// </summary>
-static class GMLCodeClass {
+static class GMLCodeClass
+{
     /// <summary>
     /// Converts a boolean into a GMS 1 bool
     /// </summary>
     /// <param name="boolean"></param>
     /// <returns></returns>
-    public static string GMLBool (bool boolean) {
+    public static string GMLBool (bool boolean)
+    {
         return boolean ? "1" : "0";
     }
 
@@ -796,7 +841,8 @@ static class GMLCodeClass {
     /// </summary>
     /// <param name="str"></param>
     /// <returns></returns>
-    public static string GMLString (string str) {
+    public static string GMLString (string str)
+    {
         return $"\"{str}\"";
     }
 
@@ -805,7 +851,8 @@ static class GMLCodeClass {
     /// </summary>
     /// <param name="time">String containing the total time obtained (in microseconds)</param>
     /// <returns></returns>
-    public static string AppendNewTime (string time) {
+    public static string AppendNewTime (string time)
+    {
         return @$"
         var file = file_text_open_append('recordings/recording_' + string(obj_time.session_name));
         file_text_write_string(file, obj_time.segment_name + '=' + string({time}) + ';');
@@ -827,9 +874,11 @@ static class GMLCodeClass {
     /// </summary>
     /// <param name="segmentName">Name of the segment</param>
     /// <returns></returns>
-    public static string StartSegment (string segmentName) {
+    public static string StartSegment (string segmentName)
+    {
         return @$"
-        if (!obj_time.is_timer_running) {{
+        if (!obj_time.is_timer_running)
+        {{
             obj_time.is_timer_running = 1;
             obj_time.time_start = get_timer();
             obj_time.segment_name = {GMLString(segmentName)};
@@ -843,9 +892,11 @@ static class GMLCodeClass {
     /// <param name="downtimeName">Name of the segment</param>
     /// <param name="steps">Number of optimals steps for the downtime to end, or left out if it is not important</param>
     /// <returns></returns>
-    public static string StartDowntime (string downtimeName, int steps = 10000) {
+    public static string StartDowntime (string downtimeName, int steps = 10000)
+    {
         return @$"
-        if (!obj_time.is_downtime_mode) {{
+        if (!obj_time.is_downtime_mode)
+        {{
             obj_time.is_downtime_mode = 1;
             obj_time.downtime = 0;
             obj_time.downtime_start = 0;
@@ -860,7 +911,8 @@ static class GMLCodeClass {
     /// GML code that stops the segment timer
     /// </summary>
     public static string StopTime = @$"
-    if (obj_time.is_timer_running) {{
+    if (obj_time.is_timer_running)
+    {{
         obj_time.is_timer_running = 0;
         obj_time.segment++;
         {AppendNewTime("get_timer() - obj_time.time_start")}
@@ -872,8 +924,10 @@ static class GMLCodeClass {
     /// </summary>
     public static string StopDowntime = @$"
     // in case the downtime ends during a downtime, must not lose the time being counted
-    if (obj_time.is_downtime_mode) {{
-        if (obj_time.is_downtime_running) {{
+    if (obj_time.is_downtime_mode)
+    {{
+        if (obj_time.is_downtime_running)
+        {{
             obj_time.downtime += get_timer() + obj_time.downtime_start
         }}
         obj_time.is_downtime_mode = 0;
@@ -889,7 +943,8 @@ static class GMLCodeClass {
     /// <param name="x">x position to teleport to</param>
     /// <param name="y">y position to telport to</param>
     /// <returns></returns>
-    public static string TPTo (UndertaleRoom room, int x, int y) {
+    public static string TPTo (UndertaleRoom room, int x, int y)
+    {
         return TPTo(room.RoomId.ToString(), x.ToString(), y.ToString());
     }
 
@@ -900,7 +955,8 @@ static class GMLCodeClass {
     /// <param name="x">Valid name for a number</param>
     /// <param name="y">Valid name for a number</param>
     /// <returns></returns>
-    public static string TPTo (string room, string x, string y) {
+    public static string TPTo (string room, string x, string y)
+    {
         return @$"
         obj_time.tp_flag = 1;
         room = {room};
@@ -921,7 +977,8 @@ static class GMLCodeClass {
     /// </summary>
     /// <param name="battlegroup"></param>
     /// <returns></returns>
-    public static string RigEncounter (Battlegroup? battlegroup) {
+    public static string RigEncounter (Battlegroup? battlegroup)
+    {
         return @$"
         global.battlegroup = {(int)battlegroup};
         ";
@@ -932,7 +989,8 @@ static class GMLCodeClass {
     /// </summary>
     /// <param name="value">Valid number name</param>
     /// <returns></returns>
-    public static string SetMurderLevel (string value) {
+    public static string SetMurderLevel (string value)
+    {
         string code = @$"
         var murder_lv = {value};
         // ""redemption"" flag
@@ -940,7 +998,8 @@ static class GMLCodeClass {
         ";
 
         // maps for each index (murder level) the flags and their values needed
-        var flagMaps = new [] {
+        var flagMaps = new []
+        {
             new Dictionary<int, int> { { 202,  20 } },
             new Dictionary<int, int> { { 45,  4 } },
             new Dictionary<int, int> { { 52, 1 } },
@@ -960,10 +1019,12 @@ static class GMLCodeClass {
         };
 
         // generate hardcoded GML to do checks
-        for (int i = 0; i < flagMaps.Length; i++) {
+        for (int i = 0; i < flagMaps.Length; i++)
+        {
             var flagMap = flagMaps[i];
             var ifBlock = new IfElseBlock();
-            for (int j = 0; j < 2; j ++) {
+            for (int j = 0; j < 2; j ++)
+            {
                 var assignmentCode = "";
                 foreach (int flag in flagMap.Keys) {
                     int flagValue = j == 0 ? 0 : flagMap[flag];
@@ -971,9 +1032,12 @@ static class GMLCodeClass {
                     global.flag[{flag}] = {flagValue};
                     ";
                 }
-                if (j == 0) {
+                if (j == 0)
+                {
                     ifBlock.SetElseBlock(assignmentCode);
-                } else {
+                }
+                else
+                {
                     ifBlock.AddIfBlock(@$"
                     if (murder_lv > {i}) {{
                         {assignmentCode}
@@ -991,13 +1055,15 @@ static class GMLCodeClass {
 /// <summary>
 /// Function that if called will add debug functions to the game
 /// </summary>
-void useDebug () {
+void useDebug ()
+{
     // updating it every frame is just a lazy way of doing it since it can't be done in obj_time's create event
     // since it gets overwritten by gamestart
     append(CodeEntryClass.step, "global.debug = 1;");
 
     // variables to print
-    string[] watchVars = {
+    string[] watchVars =
+    {
         "segment",
         "is_timer_running",
         "segment_name",
@@ -1014,7 +1080,8 @@ void useDebug () {
     string code = @"
     ";
     int i = 0;
-    foreach (string watchVar in watchVars) {
+    foreach (string watchVar in watchVars)
+    {
         code += $"draw_text(20, {110 + i * 25}, '{watchVar}: ' + string({watchVar}));";
         i++;
     }
@@ -1022,7 +1089,8 @@ void useDebug () {
 
     // print coordinates
     append(CodeEntryClass.draw, @$"
-    if (instance_exists(obj_mainchara)) {{
+    if (instance_exists(obj_mainchara))
+    {{
         draw_text(20, {(110 + i * 25)}, 'x:' +  string(obj_mainchara.x));
         draw_text(20, {(110 + (i + 1) * 25)}, 'y:' + string(obj_mainchara.y));
     }}
@@ -1032,7 +1100,8 @@ void useDebug () {
 /// <summary>
 /// Name for all GML placement methods
 /// </summary>
-enum PlaceMethod {
+enum PlaceMethod
+{
     /// <summary>
     /// Appends to the end of file
     /// </summary>
@@ -1056,7 +1125,8 @@ EVENT CLASSES
 /// <summary>
 /// Abstract class for the events that run code
 /// </summary>
-abstract class UndertaleEvent {
+abstract class UndertaleEvent
+{
     /// <summary>
     /// Must return a string that is unique and the same for all instances with the same "arguments"
     /// </summary>
@@ -1069,7 +1139,8 @@ abstract class UndertaleEvent {
     /// If none in particular exist, the method should return "1"
     /// </summary>
     /// <returns></returns>
-    public virtual string GMLCondition () {
+    public virtual string GMLCondition ()
+    {
         return "1";
     }
 
@@ -1088,7 +1159,8 @@ abstract class UndertaleEvent {
     /// </summary>
     /// <param name="code">Base code</param>
     /// <returns></returns>
-    public virtual string Placement () {
+    public virtual string Placement ()
+    {
         return Code;
     }
 
@@ -1102,7 +1174,8 @@ abstract class UndertaleEvent {
     /// Get a unique identifier for all instances with the same arguments and same type
     /// </summary>
     /// <returns></returns>
-    public string EventId () {
+    public string EventId ()
+    {
         var type = this.GetType().Name;
         var args = EventArgs();
         return args == "" ? type : $"{type},{args}";
@@ -1110,12 +1183,15 @@ abstract class UndertaleEvent {
 
     // the two methods below are for using this class inside dictionaries
 
-    public override int GetHashCode () {
+    public override int GetHashCode ()
+    {
         return EventId().GetHashCode();
     }
 
-    public override bool Equals (object obj) {
-        if (obj is UndertaleEvent otherObj) {
+    public override bool Equals (object obj)
+    {
+        if (obj is UndertaleEvent otherObj)
+        {
             return otherObj.EventId() == this.EventId();
         }
         return false;
@@ -1136,7 +1212,8 @@ abstract class UndertaleEvent {
     /// Build event only with its execution code
     /// </summary>
     /// <param name="code"></param>
-    public UndertaleEvent (string code) {
+    public UndertaleEvent (string code)
+    {
         Code = code;
     }
 
@@ -1144,7 +1221,8 @@ abstract class UndertaleEvent {
     /// Build event from its XML node
     /// </summary>
     /// <param name="reader">Reader with the XML node for the event</param>
-    public UndertaleEvent (XmlReader reader) {
+    public UndertaleEvent (XmlReader reader)
+    {
         ParseAttributes(reader);
         if (reader.HasValue) {
             reader.Read();
@@ -1156,14 +1234,16 @@ abstract class UndertaleEvent {
 /// <summary>
 /// Class for a Undertale Event that takes no arguments (all instances of this event are the same)
 /// </summary>
-abstract class UniqueEvent : UndertaleEvent {    
+abstract class UniqueEvent : UndertaleEvent
+{    
     public UniqueEvent (string code) : base(code) {}
     
     public UniqueEvent (XmlReader reader) : base(reader) {}
 
     protected override void ParseAttributes (XmlReader reader) {}
 
-    public override string EventArgs () {
+    public override string EventArgs ()
+    {
         return "";
     }
 }
@@ -1171,14 +1251,16 @@ abstract class UniqueEvent : UndertaleEvent {
 /// <summary>
 /// Event that fires when the player picks the name
 /// </summary>
-class PickName : UniqueEvent {   
+class PickName : UniqueEvent
+{   
     public PickName (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.PlaceInIf;
 
     public override string Replacement => "naming = 4";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.naming;
     }
 }
@@ -1186,12 +1268,14 @@ class PickName : UniqueEvent {
 /// <summary>
 /// Event that fires when the blcon shows up in the screen before an encounter
 /// </summary>
-class Blcon : UniqueEvent {
+class Blcon : UniqueEvent
+{
     public Blcon (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Append;
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.blcon;
     }
 }
@@ -1199,7 +1283,8 @@ class Blcon : UniqueEvent {
 /// <summary>
 /// Event that fires when a battle starts
 /// </summary>
-class EnterBattle : UndertaleEvent {
+class EnterBattle : UndertaleEvent
+{
     /// <summary>
     /// Battlegroup id for the battle that is being watched, equal to `-1` if all battles are being watched
     /// </summary>
@@ -1209,7 +1294,8 @@ class EnterBattle : UndertaleEvent {
 
     public override PlaceMethod Method => PlaceMethod.Append;
 
-    public override string Placement () {
+    public override string Placement ()
+    {
         return @$"
         if (obj_time.previous_room != room_battle && room == room_battle) {{
             {Code}
@@ -1217,27 +1303,34 @@ class EnterBattle : UndertaleEvent {
         ";
     }
 
-    public override string GMLCondition () {
-        if (BattlegroupId < 0) {
+    public override string GMLCondition ()
+    {
+        if (BattlegroupId < 0)
+        {
             return "1";
-        } else return $"global.battlegroup == {BattlegroupId}";
+        }
+        else return $"global.battlegroup == {BattlegroupId}";
     }
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.step;
     }
 
-    protected override void ParseAttributes (XmlReader reader) {
+    protected override void ParseAttributes (XmlReader reader)
+    {
         object battlegroup;
         var attribute = reader.GetAttribute("battlegroup");
         if (attribute == null) BattlegroupId = -1;
-        else {
+        else
+        {
             Enum.TryParse(typeof(Battlegroup), attribute, out battlegroup);
             BattlegroupId = (int)(Battlegroup)battlegroup;
         }
     }
 
-    public override string EventArgs () {
+    public override string EventArgs ()
+    {
         return BattlegroupId > -1 ? BattlegroupId.ToString() : "";
     }
 }
@@ -1246,7 +1339,8 @@ class EnterBattle : UndertaleEvent {
 /// <summary>
 /// Event that fires at the end of a room transition
 /// </summary>
-class RoomTransition : UndertaleEvent {
+class RoomTransition : UndertaleEvent
+{
     /// <summary>
     /// Room id for the room where the transition begins in
     /// </summary>
@@ -1261,15 +1355,18 @@ class RoomTransition : UndertaleEvent {
     
     public override PlaceMethod Method => PlaceMethod.Append;
 
-    public override string GMLCondition () {
+    public override string GMLCondition ()
+    {
         return $"obj_time.previous_room == {Start} && room == {End}";
     }
     
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.step;
     }
 
-    protected override void ParseAttributes(XmlReader reader) {
+    protected override void ParseAttributes(XmlReader reader)
+    {
         var startRoom = RoomClass.GetRoom(reader.GetAttribute("room"));
         Start = startRoom.RoomId;
         var backwards = XmlBool.ParseXmlBool(reader, "backwards");
@@ -1277,7 +1374,8 @@ class RoomTransition : UndertaleEvent {
         else End = startRoom.Next.RoomId;
     }
 
-    public override string EventArgs () {
+    public override string EventArgs ()
+    {
         return $"{Start},{End}";
     }
 }
@@ -1285,7 +1383,8 @@ class RoomTransition : UndertaleEvent {
 /// <summary>
 /// Event that fires when the player is found to be in a room
 /// </summary>
-class RoomEvent : UndertaleEvent {
+class RoomEvent : UndertaleEvent
+{
     /// <summary>
     /// Id of the room to watch
     /// </summary>
@@ -1295,19 +1394,23 @@ class RoomEvent : UndertaleEvent {
 
     public override PlaceMethod Method => PlaceMethod.Append;
 
-    public override string GMLCondition () {
+    public override string GMLCondition ()
+    {
         return $"room == {RoomId}";
     }
     
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.step;
     }
 
-    protected override void ParseAttributes(XmlReader reader) {
+    protected override void ParseAttributes(XmlReader reader)
+    {
         RoomId = RoomClass.GetRoom(reader.GetAttribute("room")).RoomId;
     }
 
-    public override string EventArgs () {
+    public override string EventArgs ()
+    {
         return RoomId.ToString();
     }
 }
@@ -1315,14 +1418,17 @@ class RoomEvent : UndertaleEvent {
 /// <summary>
 /// Event that fires when a battle is left (access to the "overworld")
 /// </summary>
-class LeaveBattle : UniqueEvent {
+class LeaveBattle : UniqueEvent
+{
     public LeaveBattle (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Append;
 
-    public override string Placement () {
+    public override string Placement ()
+    {
         return @$"
-        if (obj_time.previous_room == room_battle && room != room_battle) {{
+        if (obj_time.previous_room == room_battle && room != room_battle)
+        {{
             // prevent player from getting locked if they TP out of battle
             room_persistent = false;
             {Code}
@@ -1330,7 +1436,8 @@ class LeaveBattle : UniqueEvent {
         ";
     }
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.step;
     }
 }
@@ -1338,7 +1445,8 @@ class LeaveBattle : UniqueEvent {
 /// <summary>
 /// Event that fires the frame before entering a attle
 /// </summary>
-class BeforeBattle : UniqueEvent {
+class BeforeBattle : UniqueEvent
+{
     public BeforeBattle (string code) : base(code) {}
 
     public BeforeBattle (XmlReader reader) : base(reader) {}
@@ -1347,7 +1455,8 @@ class BeforeBattle : UniqueEvent {
 
     public override string Replacement => "battle = 1";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.blconAlarm;
     }
 }
@@ -1355,14 +1464,16 @@ class BeforeBattle : UniqueEvent {
 /// <summary>
 /// Event that fires when Froggit's attack is decided
 /// </summary>
-class FroggitAttack : UniqueEvent {
+class FroggitAttack : UniqueEvent
+{
     public FroggitAttack (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
 
     public override string Replacement => "use_frogskip = 1";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.froggitAlarm;
     }
 }
@@ -1370,14 +1481,16 @@ class FroggitAttack : UniqueEvent {
 /// <summary>
 /// Event that fires when Froggit's turn ends
 /// </summary>
-class FroggitTurnEnd : UniqueEvent {
+class FroggitTurnEnd : UniqueEvent
+{
     public FroggitTurnEnd (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.PlaceInIf;
 
     public override string Replacement => "attacked = 0";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.froggitStep;
     }
 }
@@ -1385,14 +1498,16 @@ class FroggitTurnEnd : UniqueEvent {
 /// <summary>
 /// Event that fires Froggit's turn starts
 /// </summary>
-class FroggitTurnStart : UniqueEvent {
+class FroggitTurnStart : UniqueEvent
+{
     public FroggitTurnStart (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
 
     public override string Replacement => "if (global.mnfight == 2)\n{";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.froggitStep;
     }
 }
@@ -1400,14 +1515,16 @@ class FroggitTurnStart : UniqueEvent {
 /// <summary>
 /// Event that fires when the "YOU WON" message in battle begins displaying
 /// </summary>
-class YouWon : UniqueEvent {
+class YouWon : UniqueEvent
+{
     public YouWon (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
 
     public override string Replacement => "earned \"";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.battlecontrol;
     }
 }
@@ -1415,8 +1532,8 @@ class YouWon : UniqueEvent {
 /// <summary>
 /// Event that fires when a door is touched
 /// </summary>
-class Door : UndertaleEvent {
-
+class Door : UndertaleEvent
+{
     /// <summary>
     /// Name of the door to listen to
     /// </summary>
@@ -1431,29 +1548,36 @@ class Door : UndertaleEvent {
     
     public override PlaceMethod Method => PlaceMethod.Append;
 
-    public override string GMLCondition () {
+    public override string GMLCondition ()
+    {
         return $"room == {Room}";
     }
     
-    public override string CodeEntry () {
-        if (Name == "A") {
+    public override string CodeEntry ()
+    {
+        if (Name == "A")
+        {
             return CodeEntryClass.doorA;
         }
-        if (Name == "C") {
+        if (Name == "C")
+        {
             return CodeEntryClass.doorC;
         }
-        if (Name == "Amusic") {
+        if (Name == "Amusic")
+        {
             return CodeEntryClass.doorAmusic;
         }
         return "";
     }
 
-    protected override void ParseAttributes(XmlReader reader) {
+    protected override void ParseAttributes(XmlReader reader)
+    {
         Name = reader.GetAttribute("name");
         Room = RoomClass.GetRoom(reader.GetAttribute("room")).RoomId;
     }
 
-    public override string EventArgs () {
+    public override string EventArgs ()
+    {
         return $"{Name},{Room}";
     }
 }
@@ -1461,14 +1585,16 @@ class Door : UndertaleEvent {
 /// <summary>
 /// Event that fires when the steps for the next encounter are calculated
 /// </summary>
-class ScrSteps : UniqueEvent {
+class ScrSteps : UniqueEvent
+{
     public ScrSteps (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
 
     public override string Replacement => "steps = 10000"; // TO-DO: maybe reduce redundancy of this code with the one in scrSteps
 
-    public override string CodeEntry () {
+    public override string CodeEntry ()
+    {
         return CodeEntryClass.scrSteps;
     }
 
@@ -1477,14 +1603,16 @@ class ScrSteps : UniqueEvent {
 /// <summary>
 /// Event that fires when Greater Dog's turn starts
 /// </summary>
-class GreaterDogTurnStart : UniqueEvent {
+class GreaterDogTurnStart : UniqueEvent
+{
     public GreaterDogTurnStart (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
     
     public override string Replacement => "(global.firingrate * 1.7)";
 
-    public override string CodeEntry () {
+    public override string CodeEntry ()
+    {
         return CodeEntryClass.GreaterDog;
     }
 }
@@ -1493,14 +1621,16 @@ class GreaterDogTurnStart : UniqueEvent {
 /// <summary>
 /// Event that fires when Greater Dog's turn ends
 /// </summary>
-class GreaterDogTurnEnd : UniqueEvent {
+class GreaterDogTurnEnd : UniqueEvent
+{
     public GreaterDogTurnEnd (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.PlaceInIf;
 
     public override string Replacement => "attacked = 0";
 
-    public override string CodeEntry() {
+    public override string CodeEntry()
+    {
         return CodeEntryClass.GreaterDog;
     }
 }
@@ -1512,7 +1642,8 @@ start of main script
 // testing script-game compatibility
 EnsureDataLoaded();
 
-if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale") {
+if (Data?.GeneralInfo?.DisplayName?.Content.ToLower() != "undertale")
+{
     ScriptError("Error 0: Script must be used in Undertale");
 }
 
@@ -1577,14 +1708,17 @@ replace(CodeEntryClass.scrSteps, @"
         populationfactor = 8
     steps = ((argument0 + round(random(argument1))) * populationfactor)
 ", $@"
-if (obj_time.fast_encounters) {{
+if (obj_time.fast_encounters)
+{{
     // if we want fast encounters, we are probably killing things, so setting kills to 0 is
     // a control method to not go over the limit which is manually set always 
     global.flag[argument3] = 0;
     // max hp for the user convenience due to unusual amount of encounters and frog skips
     global.hp = global.maxhp;
     steps = argument0;
-}} else {{
+}}
+else
+{{
     // practically disabling encounters with an arbitrarily high number since GMS1 does not have infinity
     // this would be ~5 minutes of walking
     steps = 10000;
@@ -1593,9 +1727,12 @@ if (obj_time.fast_encounters) {{
 
 // track segment changes
 append(CodeEntryClass.step, $@"
-if (previous_segment != segment) {{
+if (previous_segment != segment)
+{{
     segment_changed = 1;
-}} else {{
+}}
+else
+{{
     segment_changed = 0;
 }}
 previous_segment = segment;
@@ -1613,22 +1750,27 @@ current_room = room;
 append(CodeEntryClass.step, @$"
 // use two flags to wait a frame
 // wait a frame to overwrite the default position
-if (tp_flag) {{
+if (tp_flag)
+{{
     tp_flag = 0;
     // to avoid the player moving to places they don't want to
     // player will be locked until they stop moving after teleporting
-    if ({GMLCodeClass.IsMoving}) {{
+    if ({GMLCodeClass.IsMoving})
+    {{
         lock_player = 1;
         global.interact = 1;
     }}
-    if (instance_exists(obj_mainchara)) {{
+    if (instance_exists(obj_mainchara))
+    {{
         obj_mainchara.x = tp_x;
         obj_mainchara.y = tp_y;
         // previous x and y must be updated too due to how obj_mainchara's collision events work
         obj_mainchara.xprevious = tp_x;
         obj_mainchara.yprevious = tp_y;
     }}
-}} else if (lock_player && !({GMLCodeClass.IsMoving})) {{
+}}
+else if (lock_player && !({GMLCodeClass.IsMoving}))
+{{
     lock_player = 0;
     global.interact = 0;
 }}
@@ -1636,13 +1778,17 @@ if (tp_flag) {{
 
 // add keybinds for changing segments and warping
 append(CodeEntryClass.step, $@"
-if (keyboard_check_pressed(vk_pageup)) {{
+if (keyboard_check_pressed(vk_pageup))
+{{
     segment++;
-}} else if (keyboard_check_pressed(vk_pagedown)) {{
+}}
+else if (keyboard_check_pressed(vk_pagedown))
+{{
     segment--;
 }}
 
-if (keyboard_check_pressed(ord('T'))) {{
+if (keyboard_check_pressed(ord('T')))
+{{
     global.plot = segment_plot;
     {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
     {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
@@ -1653,20 +1799,26 @@ if (keyboard_check_pressed(ord('T'))) {{
 append(CodeEntryClass.step, @"
 // downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
 // since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
-if (is_downtime_mode) {
-    if (is_downtime_running) {
+if (is_downtime_mode)
+{
+    if (is_downtime_running)
+    {
         // being greater means it has incremented
         // but it also means that last frame was the first one incrementing, thus use previous time
-        if (global.encounter > step_count) {
+        if (global.encounter > step_count)
+        {
             downtime += previous_time - downtime_start;
             is_downtime_running = 0;
         }
-    } else {
+    }
+    else
+    {
         // being equals means global.encounter did not increment, thus downtime has begun
         // but it also means that it stopped incrementing last frame, thus use previous_time
         // also, the frame it goes above optimal steps is when downtime begins (since we're using is previous_time it also
         // means we use step_count instead of global.encounter)
-        if (global.encounter == step_count || step_count > optimal_steps) {
+        if (global.encounter == step_count || step_count > optimal_steps)
+        {
             downtime_start = previous_time;
             is_downtime_running = 1;
         }
@@ -1687,9 +1839,12 @@ draw_text(20, 0, current_msg);
 // it is placed right after mycommand declaration
 place(CodeEntryClass.froggitAlarm, "0))", @$"
 var use_frogskip = 1;
-if (use_frogskip) {{
+if (use_frogskip)
+{{
     mycommand = 0;
-}} else {{
+}}
+else
+{{
     mycommand = 100;
 }}
 ");
@@ -1697,16 +1852,21 @@ if (use_frogskip) {{
 // reading all segments from the XML file
 var segments = new List<Segment>();
 
-using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml"))) {
+using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml")))
+{
     // use a blank one for the first previous, it won't be used for anything
     var previous = new Segment();
     while (reader.Read()) {
-        if (reader.NodeType == XmlNodeType.Element) {
-            if (reader.Name == "segment") {
+        if (reader.NodeType == XmlNodeType.Element)
+        {
+            if (reader.Name == "segment")
+            {
                 Segment segment = new Segment(reader, previous);
                 previous = segment;
                 segments.Add(segment);
-            } else if (reader.Name != "segments") {
+            }
+            else if (reader.Name != "segments")
+            {
                 throw new Exception(@$"Expected to find a segment node, instead found {reader.Name.ToString()}");
             }
         }
@@ -1718,7 +1878,8 @@ var initBlock = new IfElseBlock();
 for (int i = 0; i < segments.Count; i++) {
     var segment = segments[i];
     initBlock.AddIfBlock(@$"
-    if (segment == {i}) {{
+    if (segment == {i})
+    {{
         segment_name = {GMLCodeClass.GMLString(segment.Name)};
         current_msg = {GMLCodeClass.GMLString(segment.Message)};
         fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)};
@@ -1732,7 +1893,8 @@ for (int i = 0; i < segments.Count; i++) {
 }
 
 append(CodeEntryClass.step, @$"
-if (segment_changed) {{
+if (segment_changed)
+{{
     {initBlock.GetCode()}
 }}
 ");
@@ -1745,12 +1907,14 @@ if (segment_changed) {{
 // that segment
 var events = new Dictionary<UndertaleEvent, Dictionary<int, List<string>>>();
 
-for (int j = 0; j < segments.Count; j++) {
+for (int j = 0; j < segments.Count; j++)
+{
     var segment = segments[j];
     var eventListeners = new List<UndertaleEvent>();
     // if not the last segment, we check if we need to start the next segment while this one is ending
     // or if we need to teleport at the end of this segment to setup the next one
-    if (j != segments.Count - 1) {
+    if (j != segments.Count - 1)
+    {
         var next = segments[j + 1];
         // carry out an early update of this variable because otherwise it sometimes will not be updated
         // by the time the scr_steps script is executed
@@ -1759,11 +1923,13 @@ for (int j = 0; j < segments.Count; j++) {
         ";
 
         // equal to next one: do checks if the segment will be interrupted, if not, start next segment
-        if (segment.End.Equals(next.Start)) {
+        if (segment.End.Equals(next.Start))
+        {
             if (segment.Uninterruptable) {
                 var condition = next.Tutorial ? "!obj_time.read_tutorial" : "1";
                 segment.End.Code += @$"
-                if ({condition}) {{
+                if ({condition})
+                {{
                     {next.Start.Code}
                 }}
                 ";
@@ -1772,14 +1938,19 @@ for (int j = 0; j < segments.Count; j++) {
 
         // doing checks to see if we need to teleport to setup for the next segment
         var tpCondition = "0";
-        if (!segment.Uninterruptable) {
+        if (!segment.Uninterruptable)
+        {
             tpCondition = "1";
-        } else if (next.Tutorial) {
+        }
+        else if (next.Tutorial)
+        {
             tpCondition = "obj_time.read_tutorial";
         }
-        if (tpCondition != "0") {
+        if (tpCondition != "0")
+        {
             segment.End.Code += @$"
-            if ({tpCondition}) {{
+            if ({tpCondition})
+            {{
                 {GMLCodeClass.TPTo(next.Room, next.X, next.Y)}
             }}
             ";
@@ -1788,12 +1959,15 @@ for (int j = 0; j < segments.Count; j++) {
 
     eventListeners.Add(segment.End);
     eventListeners.Add(segment.Start);
-    if (segment.Other.Count > 0) {
+    if (segment.Other.Count > 0)
+    {
         eventListeners.AddRange(segment.Other);
     }
     
-    foreach (UndertaleEvent eventListener in eventListeners) {
-        if (!events.ContainsKey(eventListener)) {
+    foreach (UndertaleEvent eventListener in eventListeners)
+    {
+        if (!events.ContainsKey(eventListener))
+        {
             events[eventListener] = new Dictionary<int, List<string>>();
         }
         if (!events[eventListener].ContainsKey(j)) events[eventListener][j] = new List<string>();
@@ -1808,12 +1982,15 @@ for (int j = 0; j < segments.Count; j++) {
 var eventCodes = new Dictionary<string, Dictionary<UndertaleEvent, string>>();
 
 // now that we mapped the segments, we just need to separate them in a if-else block
-foreach (UndertaleEvent undertaleEvent in events.Keys) {
+foreach (UndertaleEvent undertaleEvent in events.Keys)
+{
     var segmentCodeBlocks = new List<string>();
     var eventStages = events[undertaleEvent];
-    foreach (int stage in eventStages.Keys) {
+    foreach (int stage in eventStages.Keys)
+    {
         segmentCodeBlocks.Add(@$"
-        if (obj_time.segment == {stage}) {{
+        if (obj_time.segment == {stage})
+        {{
             {// join the codes since it is a list
             String.Join("\n", eventStages[stage])}
         }}
@@ -1828,7 +2005,8 @@ foreach (UndertaleEvent undertaleEvent in events.Keys) {
 
 
 // finally, go through each event type to merge all the code for each event and determine how it will be placed
-foreach (string eventName in eventCodes.Keys) {
+foreach (string eventName in eventCodes.Keys)
+{
     // get the map of unique events to their code
     var eventMap = eventCodes[eventName];
     
@@ -1842,18 +2020,24 @@ foreach (string eventName in eventCodes.Keys) {
     // and that is filtered by doing an if-else block in all of their conditions
     var entryMap = new Dictionary<string, IfElseBlock>();
 
-    foreach (UndertaleEvent undertaleEvent in eventMap.Keys) {
+    foreach (UndertaleEvent undertaleEvent in eventMap.Keys)
+    {
         var eventCode = eventMap[undertaleEvent];
         var eventEntry = undertaleEvent.CodeEntry();
-        if (!entryMap.ContainsKey(eventEntry)) {
+        if (!entryMap.ContainsKey(eventEntry))
+        {
             entryMap[eventEntry] = new IfElseBlock();
         }
         var condition = undertaleEvent.GMLCondition();
-        if (condition == "1") {
+        if (condition == "1")
+        {
             entryMap[eventEntry].SetElseBlock(eventCode);
-        } else {    
+        }
+        else
+        {    
             entryMap[eventEntry].AddIfBlock(@$"
-            if ({undertaleEvent.GMLCondition()}) {{
+            if ({undertaleEvent.GMLCondition()})
+            {{
                 {eventCode}
             }}
             ");
@@ -1862,9 +2046,11 @@ foreach (string eventName in eventCodes.Keys) {
 
 
 
-    foreach (string entry in entryMap.Keys) {
+    foreach (string entry in entryMap.Keys)
+    {
         baseEvent.Code = entryMap[entry].GetCode();
-        switch (baseEvent.Method) {        
+        switch (baseEvent.Method)
+        {        
             case PlaceMethod.Append:
                 append(entry, baseEvent.Placement());
                 break;
