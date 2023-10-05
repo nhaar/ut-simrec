@@ -1172,12 +1172,9 @@ static class GMLCodeClass
     public static string StartSegment (string segmentName)
     {
         return @$"
-        if (!obj_time.is_timer_running)
-        {{
-            obj_time.is_timer_running = 1;
-            obj_time.time_start = get_timer();
-            obj_time.segment_name = {GMLString(segmentName)};
-        }}
+        obj_time.is_timer_running = 1;
+        obj_time.time_start = get_timer();
+        obj_time.segment_name = {GMLString(segmentName)};
         ";
     }
 
@@ -1190,15 +1187,12 @@ static class GMLCodeClass
     public static string StartDowntime (string downtimeName, int steps = 10000)
     {
         return @$"
-        if (!obj_time.is_downtime_mode)
-        {{
-            obj_time.is_downtime_mode = 1;
-            obj_time.downtime = 0;
-            obj_time.downtime_start = 0;
-            obj_time.step_count = global.encounter;
-            obj_time.optimal_steps = {steps}
-            obj_time.segment_name = '{downtimeName}';
-        }}
+        obj_time.is_downtime_mode = 1;
+        obj_time.downtime = 0;
+        obj_time.downtime_start = 0;
+        obj_time.step_count = global.encounter;
+        obj_time.optimal_steps = {steps}
+        obj_time.segment_name = '{downtimeName}';
         ";
     }
 
@@ -1206,12 +1200,9 @@ static class GMLCodeClass
     /// GML code that stops the segment timer
     /// </summary>
     public static string StopTime = @$"
-    if (obj_time.is_timer_running)
-    {{
-        obj_time.is_timer_running = 0;
-        obj_time.segment++;
-        {AppendNewTime("get_timer() - obj_time.time_start")}
-    }}
+    obj_time.is_timer_running = 0;
+    obj_time.segment++;
+    {AppendNewTime("get_timer() - obj_time.time_start")}
     ";
 
     /// <summary>
@@ -1219,16 +1210,13 @@ static class GMLCodeClass
     /// </summary>
     public static string StopDowntime = @$"
     // in case the downtime ends during a downtime, must not lose the time being counted
-    if (obj_time.is_downtime_mode)
+    if (obj_time.is_downtime_running)
     {{
-        if (obj_time.is_downtime_running)
-        {{
-            obj_time.downtime += get_timer() + obj_time.downtime_start
-        }}
-        obj_time.is_downtime_mode = 0;
-        obj_time.segment++;
-        {GMLCodeClass.AppendNewTime("obj_time.downtime")}
+        obj_time.downtime += get_timer() + obj_time.downtime_start
     }}
+    obj_time.is_downtime_mode = 0;
+    obj_time.segment++;
+    {GMLCodeClass.AppendNewTime("obj_time.downtime")}
     ";
 
     /// <summary>
@@ -2417,6 +2405,25 @@ void main ()
             }
         }
 
+
+        // wrap code so that it wont run in unintended orders (run end without start and etc)
+        var runningVariable = "";
+        if (segment.Type == SegmentType.Continuous) runningVariable = "is_timer_running";
+        else if (segment.Type == SegmentType.Downtime) runningVariable = "is_downtime_mode";
+
+        segment.Start.Code = @$"
+        if (!{runningVariable})
+        {{
+            {segment.Start.Code}
+        }}
+        ";
+        segment.End.Code = @$"
+        if ({runningVariable})
+        {{
+            {segment.End.Code}
+        }}
+        ";
+
         eventListeners.Add(segment.End);
         eventListeners.Add(segment.Start);
         if (segment.Other.Count > 0)
@@ -2503,8 +2510,6 @@ void main ()
                 ");
             }
         }
-
-
 
         foreach (string entry in entryMap.Keys)
         {
