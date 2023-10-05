@@ -1307,9 +1307,13 @@ static class GMLCodeClass
     /// GML code that starts a new recording session
     /// </summary>
     public static string StartSession = @"
-    obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
-    var file = file_text_open_write('recordings/recording_' + string(obj_time.session_name));
-    file_text_close(file);
+    if (!is_session_running)
+    {{
+        is_session_running = 1;
+        obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
+        var file = file_text_open_write('recordings/recording_' + string(obj_time.session_name));
+        file_text_close(file);
+    }}
     ";
 
     /// <summary>
@@ -1320,6 +1324,7 @@ static class GMLCodeClass
     public static string StartSegment (string segmentName)
     {
         return @$"
+        {GMLCodeClass.StartSession}
         obj_time.is_timer_running = 1;
         obj_time.time_start = get_timer();
         obj_time.segment_name = {GMLString(segmentName)};
@@ -1335,6 +1340,7 @@ static class GMLCodeClass
     public static string StartDowntime (string downtimeName, int steps = 10000)
     {
         return @$"
+        {GMLCodeClass.StartSession}
         obj_time.is_downtime_mode = 1;
         obj_time.downtime = 0;
         obj_time.downtime_start = 0;
@@ -1571,9 +1577,7 @@ void useDebug ()
     // variables to print
     string[] watchVars =
     {
-        "segment",
         "is_timer_running",
-        "segment_name",
         "is_downtime_mode",
         "is_downtime_running",
         "segment_changed",
@@ -2233,6 +2237,33 @@ void main ()
         ScriptError("Error 0: Script must be used in Undertale");
     }
 
+    // reading all segments from the XML file
+    var segments = new List<Segment>();
+
+    XmlReaderSettings settings = new XmlReaderSettings();
+    settings.IgnoreWhitespace = true;
+    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml"), settings))
+    {
+        // use a blank one for the first previous, it won't be used for anything
+        var previous = new Segment();
+        while (reader.Read()) {
+            if (reader.NodeType == XmlNodeType.Element)
+            {
+                if (reader.Name == "segment")
+                {
+                    Segment segment = new Segment(reader, previous);
+                    Console.WriteLine($"Successfully read segment \"{segment.Name}\"");
+                    previous = segment;
+                    segments.Add(segment);
+                }
+                else if (reader.Name != "segments")
+                {
+                    throw new Exception(@$"Expected to find a segment node, instead found {reader.Name.ToString()}");
+                }
+            }
+        }
+    }
+
     // make drawing work
     Data.GameObjects.ByName("obj_time").Visible = true;
 
@@ -2244,8 +2275,11 @@ void main ()
     // name is a ""date timestamp""
     session_name = 0;
 
+    is_session_running = 0;
+
     // keeps track of segments
     segment = 0;
+    segment_total = {segments.Count};
     previous_segment = -1;
     segment_changed = 0;
     segment_name = '';
@@ -2354,27 +2388,37 @@ void main ()
 
     // add keybinds for changing segments and warping
     append(CodeEntryClass.step, $@"
-    var segment_increment = 1;
-    if (keyboard_check(vk_shift))
-    {{
-        segment_increment = 5;
-    }}
-    if (keyboard_check_pressed(vk_pageup))
-    {{
-        segment += segment_increment;
-    }}
-    else if (keyboard_check_pressed(vk_pagedown))
-    {{
-        segment -= segment_increment;
-    }}
 
-    if (keyboard_check_pressed(ord('T')))
+    if (global.debug || !is_session_running)
     {{
-        global.plot = segment_plot;
-        global.interact = 0;
-        is_timer_running = 0;
-        is_downtime_mode = 0;
-        {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
+        var segment_increment = 1;
+        if (keyboard_check(vk_shift))
+        {{
+            segment_increment = 5;
+        }}
+        else if (keyboard_check(vk_control))
+        {{
+            segment_increment = 20;
+        }}
+        if (keyboard_check_pressed(vk_pageup))
+        {{
+            segment += segment_increment;
+        }}
+        else if (keyboard_check_pressed(vk_pagedown))
+        {{
+            segment -= segment_increment;
+        }}
+
+        segment = clamp(segment, 0, segment_total);
+
+        if ( keyboard_check_pressed(ord('T')))
+        {{
+            global.plot = segment_plot;
+            global.interact = 0;
+            is_timer_running = 0;
+            is_downtime_mode = 0;
+            {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
+        }}
     }}
     ");
 
@@ -2415,7 +2459,9 @@ void main ()
     append(CodeEntryClass.draw, @"
     draw_set_font(fnt_main)
     draw_set_color(c_yellow);
-    draw_text(20, 0, current_msg);
+    draw_text(20, 0, 'segment: ' + string(segment) + '/' + string(segment_total));
+    draw_text(20, 20, 'name: ' + string(segment_name));
+    draw_text(20, 40, current_msg);
     ");
 
     // rigging frogskip for all froggit encounters to speed up practice
@@ -2436,33 +2482,6 @@ void main ()
     append(CodeEntryClass.GreaterDogCreate, @$"
     current_turn = 0;
     ");
-
-    // reading all segments from the XML file
-    var segments = new List<Segment>();
-
-    XmlReaderSettings settings = new XmlReaderSettings();
-    settings.IgnoreWhitespace = true;
-    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml"), settings))
-    {
-        // use a blank one for the first previous, it won't be used for anything
-        var previous = new Segment();
-        while (reader.Read()) {
-            if (reader.NodeType == XmlNodeType.Element)
-            {
-                if (reader.Name == "segment")
-                {
-                    Segment segment = new Segment(reader, previous);
-                    Console.WriteLine($"Successfully read segment \"{segment.Name}\"");
-                    previous = segment;
-                    segments.Add(segment);
-                }
-                else if (reader.Name != "segments")
-                {
-                    throw new Exception(@$"Expected to find a segment node, instead found {reader.Name.ToString()}");
-                }
-            }
-        }
-    }
 
     // create if-else block that updates the state variables when a segment changes
     var initBlock = new IfElseBlock();
