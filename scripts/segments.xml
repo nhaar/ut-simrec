@@ -249,13 +249,19 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
-        <name>ruins-switches</name>
+        <name>nobody-came</name>
         <start><EnterBattle /></start>
-        <end><Blcon /></end>
+        <end><LeaveBattle /></end>
         <plot>11</plot>
         <room>RuinsNapstablook</room>
         <x>210</x>
         <y>75</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
+        <name>ruins-switches</name>
+        <start><LeaveBattle /></start>
+        <end><Blcon /></end>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -918,7 +924,7 @@
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
         <name>core-warrior-path</name>
         <start><Door name="B" room="CoreLeftGrindRoom" /></start>
-        <end><RoomTransition room="CoreCenter" backwards="false" /></end>
+        <end><Door name="A" room="CoreBridge" /></end>
         <room>CoreLeftGrindRoom</room>
         <x>20</x>
         <y>100</y>
