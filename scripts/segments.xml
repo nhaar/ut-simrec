@@ -336,7 +336,10 @@
         <x>300</x>
         <y>142</y>
         <next-encounter>SingleSnowdrake</next-encounter>
-        <weapon>ToughGlove</weapon>
+        <items>
+            <get>ToughGlove</get>
+            <equip>0</equip>
+        </items>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
@@ -581,7 +584,10 @@
         <room>WaterfallBalletShoes</room>
         <x>255</x>
         <y>110</y>
-        <weapon>BalletShoes</weapon>
+        <items>
+            <get>BalletShoes</get>
+            <equip>1</equip>
+        </items>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -589,7 +595,6 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>SingleWoshua</next-encounter>
-        <weapon>BalletShoes</weapon>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -631,6 +636,10 @@
         <x>270</x>
         <y>110</y>
         <next-encounter>Temmie</next-encounter>
+        <items>
+            <drop>0</drop>
+            <drop>0</drop>
+        </items>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -762,6 +771,9 @@
         <x>150</x>
         <y>1510</y>
         <next-encounter>Vulkin</next-encounter>
+        <items>
+            <get>BurntPan</get>
+        </items>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
@@ -801,7 +813,9 @@
         <x>10</x>
         <y>100</y>
         <next-encounter>SingleAstigmatism</next-encounter>
-        <weapon>BurntPan</weapon>
+        <items>
+            <equip>0</equip>
+        </items>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">

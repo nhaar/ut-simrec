@@ -169,7 +169,10 @@ class Segment
     /// </summary>
     public int MurderLevel = 0;
 
-    public UndertaleWeapon Weapon = UndertaleWeapon.Stick;
+    /// <summary>
+    /// All items the player holds at the start of the segment
+    /// </summary>
+    public UndertaleInventory Inventory = new UndertaleInventory();
 
     /// <summary>
     /// Optional and only for type "downtime", the amount of optimal steps to complete the downtime's room
@@ -223,6 +226,8 @@ class Segment
         if (type == "continuous") Type = SegmentType.Continuous;
         else if (type == "downtime") Type = SegmentType.Downtime;
         else throw new SegmentTypeException("");
+
+        Inventory.CopyFrom(Previous.Inventory);
 
         bool finishedSegment = false;
         while (!finishedSegment && reader.Read())
@@ -301,11 +306,37 @@ class Segment
                         throw new Exception ($"Error reading battlegroup \"{reader.Value}\"");
                     }
                     break;
-                case "weapon":
-                    reader.Read();
-                    object weapon;
-                    Enum.TryParse(typeof(UndertaleWeapon), reader.Value, out weapon);
-                    Weapon = (UndertaleWeapon)weapon;
+                case "items":
+                    while (reader.Read() && reader.Name != "items")
+                    {
+                        if (reader.NodeType == XmlNodeType.Element)
+                        {
+                            var name = reader.Name;
+                            reader.Read();
+                            var value = reader.Value;
+                            switch (name)
+                            {
+                                case "get":
+                                    object item;
+                                    try
+                                    {                        
+                                        Enum.TryParse(typeof(UndertaleWeapon), value, out item);
+                                    }
+                                    catch (System.Exception)
+                                    {     
+                                        throw new Exception ($"Error reading item \"{value}\"");
+                                    }
+                                    Inventory.PickUp((UndertaleWeapon)item);
+                                    break;
+                                case "drop":
+                                    Inventory.Drop(Int32.Parse(value));
+                                    break;
+                                case "equip":
+                                    Inventory.Equip(Int32.Parse(value));
+                                    break;
+                            }
+                        }
+                    }
                     break;
                 case "optimal-steps":
                     reader.Read();
@@ -332,7 +363,6 @@ class Segment
         if (X == 0) X = Previous.X;
         if (Y == 0) Y = Previous.Y;
         if (XP == 0) XP = Previous.XP;
-        if (Weapon == UndertaleWeapon.Stick) Weapon = Previous.Weapon;
     }
 }
 
@@ -863,10 +893,119 @@ enum Battlegroup
 }
 
 /// <summary>
+/// Represents all items a player can hold
+/// </summary>
+/// <remarks>
+/// For the time being, the inventory is assumed to contain only weapons, and all are equippable (and nothing
+/// more than that has been necessary so far)
+/// </remarks>
+class UndertaleInventory
+{
+    /// <summary>
+    /// Weapon the player holds
+    /// </summary>
+    private UndertaleWeapon EquippedWeapon = UndertaleWeapon.Stick;
+
+    /// <summary>
+    /// Maximum number of items one can hold
+    /// </summary>
+    private static int Capacity = 8;
+
+    /// <summary>
+    /// All items stored in the inventory
+    /// </summary>
+    private UndertaleWeapon[] Inventory = new UndertaleWeapon[Capacity];
+
+    /// <summary>
+    /// Number of items in the inventory
+    /// </summary>
+    private int InventoryCount = 0;
+
+    /// <summary>
+    /// Representing picking up an item
+    /// </summary>
+    /// <param name="item"></param>
+    public void PickUp (UndertaleWeapon item)
+    {
+        if (InventoryCount < Capacity)
+        {
+            Inventory[InventoryCount] = item;
+        }
+        InventoryCount++;
+    }
+
+    /// <summary>
+    /// Represent dropping the item at an index
+    /// </summary>
+    /// <param name="index"></param>
+    public void Drop (int index)
+    {
+        Inventory[index] = UndertaleWeapon.None;
+        for (int i = index + 1; i < Capacity; i++)
+        {
+            Inventory[i - 1] = Inventory[i];
+        }
+        Inventory[Capacity - 1] = UndertaleWeapon.None;
+        InventoryCount--;
+    }
+
+    /// <summary>
+    /// Represent equipping a weapon at an index
+    /// </summary>
+    /// <param name="index"></param>
+    public void Equip (int index)
+    {
+        var indexItem = Inventory[index];
+        Inventory[index] = EquippedWeapon;
+        EquippedWeapon = indexItem;
+    }
+
+    /// <summary>
+    /// Get the GML code that updates all the item slots to match with the items in this inventory
+    /// </summary>
+    /// <returns></returns>
+    public string GetInventoryInitializer ()
+    {
+
+        var code = @$"
+        global.weapon = {(int)EquippedWeapon}
+        ";
+
+        for (int i = 0; i < Capacity; i++)
+        {
+            code += @$"global.item[{i}] = {(int)Inventory[i]};";
+        }
+
+        return code;
+    }
+
+    /// <summary>
+    /// Copy another inventory's items
+    /// </summary>
+    /// <param name="other"></param>
+    public void CopyFrom (UndertaleInventory other)
+    {
+        InventoryCount = 0;
+        for (int i = 0; i < Capacity; i++)
+        {
+            Inventory[i] = other.Inventory[i];
+            if (Inventory[i] != UndertaleWeapon.None) InventoryCount++;
+        }
+        EquippedWeapon = other.EquippedWeapon;
+    }
+
+    /// <summary>
+    /// Build with empty inventory
+    /// </summary>
+    public UndertaleInventory () {}
+}
+
+/// <summary>
 /// Represent a weapon in-game
 /// </summary>
 enum UndertaleWeapon
 {
+    None = 0,
     Stick = 3,
     ToughGlove = 14,
     BalletShoes = 25,
@@ -1385,9 +1524,40 @@ static class GMLCodeClass
         }}
         ";
     }
+
+    /// <summary>
+    /// Generate GML code that updates the AT stat to the proper one based on the equipped weapon
+    /// </summary>
+    /// <returns></returns>
+    public static string UpdateAT ()
+    {
+        // copied straight out of gml_Script_scr_weaponeq
+        return @$"
+        if (global.weapon == 3)
+            global.wstrength = 0
+        if (global.weapon == 13)
+            global.wstrength = 3
+        if (global.weapon == 14)
+            global.wstrength = 5
+        if (global.weapon == 25)
+            global.wstrength = 7
+        if (global.weapon == 45)
+            global.wstrength = 2
+        if (global.weapon == 47)
+            global.wstrength = 10
+        if (global.weapon == 49)
+            global.wstrength = 12
+        if (global.weapon == 51)
+            global.wstrength = 15
+        if (global.weapon == 52)
+            global.wstrength = 99
+        if (global.armor == 48)
+            global.wstrength += 5
+        if (global.armor == 64)
+            global.wstrength += 10
+        ";
+    }
 }
-
-
 
 /// <summary>
 /// Function that if called will add debug functions to the game
@@ -2311,8 +2481,7 @@ void main ()
             segment_plot = {segment.Plot};
             next_step_count = {segment.NextStepCount};
             segment_murder_lv = {segment.MurderLevel};
-            // POSSIBLE SOUCE OF CONFLICT: assuming all weapons will be on first inventory slot
-            script_execute(scr_weaponeq, 0, {(int)segment.Weapon});
+            {segment.Inventory.GetInventoryInitializer()}
         }}
         ");
     }
@@ -2358,6 +2527,7 @@ void main ()
         var encounter_steps;
         {GMLCodeClass.SetSteps("encounter_steps")}
         {encountererUpdate.GetCode()}
+        {GMLCodeClass.UpdateAT()}
     }}
     ");
 
