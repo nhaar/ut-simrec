@@ -172,6 +172,11 @@ class Segment
     public UndertaleWeapon Weapon = UndertaleWeapon.Stick;
 
     /// <summary>
+    /// Optional and only for type "downtime", the amount of optimal steps to complete the downtime's room
+    /// </summary>
+    public int OptimalSteps = 10000;
+
+    /// <summary>
     /// Thrown if the segment type from the XML is invalid
     /// </summary>
     private class SegmentTypeException : Exception
@@ -302,6 +307,10 @@ class Segment
                     Enum.TryParse(typeof(UndertaleWeapon), reader.Value, out weapon);
                     Weapon = (UndertaleWeapon)weapon;
                     break;
+                case "optimal-steps":
+                    reader.Read();
+                    OptimalSteps = Int32.Parse(reader.Value);
+                    break;
             }
         }
 
@@ -313,7 +322,7 @@ class Segment
         }
         else if (Type == SegmentType.Downtime)
         {
-            Start.Code += '\n' + GMLCodeClass.StartDowntime(Name);
+            Start.Code += '\n' + GMLCodeClass.StartDowntime(Name, OptimalSteps);
             End.Code += '\n' + GMLCodeClass.StopDowntime;
         }
 

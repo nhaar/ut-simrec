@@ -20,6 +20,7 @@
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>ruins-leaf-pile</name>
+        <optimal-steps>97</optimal-steps>
         <start><RoomTransition room="RuinsHallway" backwards="false" /></start>
         <end><Door name="C" room="RuinsLeafPile" /></end>
         <plot>9</plot>
@@ -684,6 +685,7 @@
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>mushroom-maze</name>
+        <optimal-steps>355</optimal-steps>
         <start><RoomTransition room="WaterfallBeforeMazes" backwards="false" /></start>
         <end><Door name="C" room="WaterfallMushroomMaze" /></end>
         <room>WaterfallBeforeMazes</room>
@@ -704,6 +706,7 @@
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>crystal-maze</name>
+        <optimal-steps>638</optimal-steps>
         <start><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></start>
         <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
     </segment>
