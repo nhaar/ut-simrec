@@ -182,6 +182,60 @@ class Segment
     public int OptimalSteps = 10000;
 
     /// <summary>
+    /// Format the messages as they are read in XML to a readable format
+    /// </summary>
+    /// <param name="msg"></param>
+    /// <returns></returns>
+    private string FormatMessage (string msg)
+    {
+        // to remove single line breaks which are part of the same line
+        var output = Regex.Replace(msg, @"\n(?=[^\S\r\n]*[\S])", "");
+        // to remove double line breaks which are just a single line break
+        output = Regex.Replace(output, @"\n[^\S\r\n]*\n", @"\n");
+
+        // remove all chunks of whitespace with a single space
+        output = Regex.Replace(output, @"[^\S\r\n]+", " ");
+
+        var lines = output.Split("\n");
+        var trimmedLines = lines.Select(lines => lines.TrimStart());
+        var finalLines = new List<string>();
+        int currentLine = -1;
+        int currentChars = 0;
+        int CharLimit = 43;
+        // transform from trimmed lines to an array with lines capped at a number of characters
+        foreach (string line in trimmedLines)
+        {
+            currentLine++;
+            var words = line.Split(" ");
+            bool isFirstWord = true;
+            foreach (string word in words)
+            {
+                if (isFirstWord)
+                {
+                    isFirstWord = false;
+                    finalLines.Add(word);
+                    currentChars = word.Length;
+                }
+                else
+                {
+                    if (currentChars + word.Length > CharLimit)
+                    {
+                        currentLine++;
+                        currentChars = word.Length;
+                        finalLines.Add(word);
+                    }
+                    else
+                    {
+                        finalLines[currentLine] += $" {word}";
+                        currentChars+= word.Length + 1;
+                    }
+                }
+            }
+        }
+        return String.Join("\n", finalLines);
+    }
+
+    /// <summary>
     /// Thrown if the segment type from the XML is invalid
     /// </summary>
     private class SegmentTypeException : Exception
@@ -291,11 +345,11 @@ class Segment
                     break;
                 case "message":
                     reader.Read();
-                    Message = reader.Value;
+                    Message = FormatMessage(reader.Value);
                     break;
                 case "explanation":
                     reader.Read();
-                    Explanation = reader.Value;
+                    Explanation = FormatMessage(reader.Value);
                     break;
                 case "next-encounter":
                     reader.Read();
@@ -1596,6 +1650,7 @@ void useDebug ()
 
     // start with line break just to not interefere with anything
     string code = @"
+    draw_set_color(c_red);
     ";
     int i = 0;
     foreach (string watchVar in watchVars)

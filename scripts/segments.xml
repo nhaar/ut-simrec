@@ -5,8 +5,23 @@
         <end><Blcon /></end>
         <plot>0</plot>
         <room>GameMenu</room>
-        <message>Hey!!</message>
-        <explanation>This, is a nice explanation!</explanation>
+        <message></message>
+        <explanation>
+            Welcome to the Undertale time recorder.
+
+            To start recording, start a new run and keep running until you are stopped.
+
+            INSTRUCTIONS:
+
+            If starting a new run, make sure to 0-reset.
+            You can change the segment to start the run with Page Up and Page Down.
+            Also, hold SHIFT and CTRL to speed up swapping segments.
+            Press T to warp to a segment.
+            Press R to restart a segment.
+            Make sure to read the explanations to each segment!
+
+            Good recording!
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -28,7 +43,7 @@
         <room>RuinsHallway</room>
         <x>2400</x>
         <y>100</y>
-        <message>TEST!!!!</message>
+        <message></message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
