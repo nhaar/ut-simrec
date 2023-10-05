@@ -334,6 +334,7 @@
         <room>SnowdinBoxRoad</room>
         <x>300</x>
         <y>142</y>
+        <weapon>ToughGlove</weapon>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
@@ -415,6 +416,7 @@
         <name>before-greater-dog</name>
         <start><LeaveBattle /></start>
         <end><EnterBattle battlegroup="GreaterDog" /></end>
+        <xp>300</xp>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="true" type="continuous" tutorial="false">
@@ -474,6 +476,7 @@
         <name>snowdin-right-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
+        <xp>500</xp>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">

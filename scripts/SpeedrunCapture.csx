@@ -169,6 +169,8 @@ class Segment
     /// </summary>
     public int MurderLevel = 0;
 
+    public UndertaleWeapon Weapon = UndertaleWeapon.Stick;
+
     /// <summary>
     /// Thrown if the segment type from the XML is invalid
     /// </summary>
@@ -285,6 +287,12 @@ class Segment
                         GMLCodeClass.RigEncounter((Battlegroup)battlegroup)
                     ));
                     break;
+                case "weapon":
+                    reader.Read();
+                    object weapon;
+                    Enum.TryParse(typeof(UndertaleWeapon), reader.Value, out weapon);
+                    Weapon = (UndertaleWeapon)weapon;
+                    break;
             }
         }
 
@@ -306,6 +314,7 @@ class Segment
         if (X == 0) X = Previous.X;
         if (Y == 0) Y = Previous.Y;
         if (XP == 0) XP = Previous.XP;
+        if (Weapon == UndertaleWeapon.Stick) Weapon = Previous.Weapon;
     }
 }
 
@@ -611,6 +620,14 @@ enum Battlegroup
     /// Ice Cap, Jerry
     /// </summary>
     SnowdinTriple = 36
+}
+
+enum UndertaleWeapon
+{
+    Stick = 3,
+    ToughGlove = 14,
+    BalletShoes = 25,
+    BurntPan = 47
 }
 
 // Class for a GML if-else code block
@@ -1137,7 +1154,7 @@ void useDebug ()
         "segment_name",
         "is_downtime_mode",
         "is_downtime_running",
-        "segment_changed" ,
+        "segment_changed",
         "global.plot",
         "room",
         "segment_murder_lv"
@@ -2009,6 +2026,7 @@ void main ()
             segment_plot = {segment.Plot};
             next_step_count = {segment.NextStepCount};
             segment_murder_lv = {segment.MurderLevel};
+            global.weapon = {(int)segment.Weapon};
         }}
         ");
     }
