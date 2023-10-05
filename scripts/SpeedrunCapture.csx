@@ -647,6 +647,54 @@ static class RoomClass
     /// Room where Undyne the Undying is fought
     /// </summary>
     public static UndertaleRoom WaterfallMonsterKidBridge = new UndertaleRoom(132);
+
+    /// <summary>
+    /// Room immediately after Alphy's Lab
+    /// </summary>
+    public static UndertaleRoom HotlandPostLab = new UndertaleRoom(143);
+
+    /// <summary>
+    /// Room with the very long vertical conveyor belt in Hotland, where you first fight Vulkin
+    /// </summary>
+    public static UndertaleRoom HotlandLongConveyor = new UndertaleRoom(144, HotlandPostLab);
+
+    /// <summary>
+    /// Room with the vents that has access to the room with the Burnt Pan
+    /// </summary>
+    public static UndertaleRoom HotlandNearPan = new UndertaleRoom(145, HotlandLongConveyor);
+    
+    // making a simplification for now that there's a linear path from warrior room to mettaton, if it ever becomes
+    // necessary to do otherwise, UndertaleRoom will need to be expanded to have more endpoints
+    
+    /// <summary>
+    /// Room with the warrior path in Core
+    /// </summary>
+    public static UndertaleRoom CoreWarrior = new UndertaleRoom(208);
+
+    /// <summary>
+    /// Room immediately before the warrior path
+    /// </summary>
+    public static UndertaleRoom CorePreWarrior = new UndertaleRoom(200, CoreWarrior);
+
+    /// <summary>
+    /// Room where the player grind for encounters in Core after moving to the left side
+    /// </summary>
+    public static UndertaleRoom CoreLeftGrindRoom = new UndertaleRoom(201, CorePreWarrior);
+
+    /// <summary>
+    /// Room immediately before the Core bridge, where the forcefield would be
+    /// </summary>
+    public static UndertaleRoom CoreCenter = new UndertaleRoom(202, CoreLeftGrindRoom);
+
+    /// <summary>
+    /// Room with the long bridge in Core before the room with the elevator
+    /// </summary>
+    public static UndertaleRoom CoreBridge = new UndertaleRoom(209, CoreCenter);
+
+    /// <summary>
+    /// Room with the elevator and before the room where the final Mettaton battle is
+    /// </summary>
+    public static UndertaleRoom CorePreMettaton = new UndertaleRoom(210, CoreBridge);
 }
 
 /// <summary>
@@ -740,6 +788,16 @@ enum Battlegroup
     WaterfallImpostorMoldsmal = 42,
 
     /// <summary>
+    /// Lonely Tsunderplane
+    /// </summary>
+    Tsunderplane = 50,
+
+    /// <summary>
+    /// Lonely Vulkin
+    /// </summary>
+    Vulkin = 51,
+
+    /// <summary>
     /// Waterfall encounter with two moldsmals
     /// </summary>
     WaterfallDoubleMoldsmal = 53,
@@ -752,8 +810,47 @@ enum Battlegroup
     /// <summary>
     /// Moldbygg, Woshua encounter
     /// </summary>
-    MoldbyggWoshua = 55
+    MoldbyggWoshua = 55,
 
+    /// <summary>
+    /// Lonely Madjick
+    /// </summary>
+    SingleMadjick = 59,
+
+    /// <summary>
+    /// Lonely Knight Knight
+    /// </summary>
+    SingleKnightKnight = 60,
+
+    /// <summary>
+    /// (Core) Lonely Astigmatism
+    /// </summary>
+    SingleAstigmatism = 62,
+
+    /// <summary>
+    /// (Core) Whimsalot, Final Froggit encounter
+    /// </summary>
+    WhimsalotFinalFroggit = 64,
+
+    /// <summary>
+    /// (Core) Whimsalot, Astigmatism encounter
+    /// </summary>
+    WhimsalotAstigmatism = 65,
+    
+    /// <summary>
+    /// (Core) Final Froggit, Astigmatism encounter
+    /// </summary>
+    FinalFroggitAstigmatism = 66,
+
+    /// <summary>
+    /// (Core) Final Froggit, Whimsalot, Astigmatism encounter
+    /// </summary>
+    CoreTriple = 67,
+
+    /// <summary>
+    /// Knight Knight, Madjick encounter
+    /// </summary>
+    KnightKnightMadjick = 68
 }
 
 /// <summary>
@@ -949,6 +1046,11 @@ public static class CodeEntryClass
     public static string doorC = "gml_Object_obj_doorC_Other_19";
 
     /// <summary>
+    /// Code for touching `doorB`
+    /// </summary>
+    public static string DoorB = "gml_Object_obj_doorB_Other_19";
+
+    /// <summary>
     /// Step code for Greater Dog's battle
     /// </summary>
     public static string GreaterDog = "gml_Object_obj_greatdog_Step_0";
@@ -957,6 +1059,8 @@ public static class CodeEntryClass
     /// Creater coed fro Greater Dog's battle
     /// </summary>
     public static string GreaterDogCreate = "gml_Object_obj_greatdog_Create_0";
+
+    public static string Chara = "gml_Object_obj_truechara_Draw_0";
 }
 
 /*
@@ -1192,6 +1296,7 @@ static class GMLCodeClass
         // NOTE: this is slightly out of order with the murderlv script, because of snowdrake
         // flag 57 for the snowdrake is placed first before the dogs, changing the order for everything
         // in snowdin
+        // NOTE 2: At the lab there is one extra murder level inserted here from the flags in mettaton lab in geno
         var flagMaps = new []
         {
             new Dictionary<int, int> { { 202,  20 } },
@@ -1206,6 +1311,19 @@ static class GMLCodeClass
             new Dictionary<int, int> { { 252, 1 } },
             new Dictionary<int, int> { { 204, 18 } },
             new Dictionary<int, int> { { 251, 1 }, { 350, 1 } },
+            new Dictionary<int, int>
+            {
+                { 367, 1 },
+                { 368, 1 },
+                { 369, 99 },
+                { 371, 1 },
+                { 374, 1 },
+                { 375, 1 },
+                { 399, 1 },
+                { 400, 1 },
+                { 417, 1 },
+                { 418, 1 }
+            },
             new Dictionary<int, int> { { 402, 1 } },
             new Dictionary<int, int> { { 397, 1 } },
             new Dictionary<int, int> { { 205, 40 } },
@@ -1796,6 +1914,10 @@ class Door : UndertaleEvent
         {
             return CodeEntryClass.doorAmusic;
         }
+        if (Name == "B")
+        {
+            return CodeEntryClass.DoorB;
+        }
         return "";
     }
 
@@ -1910,6 +2032,24 @@ class GreaterDogTurnEnd : UndertaleEvent
     {
         return Turn.ToString();
     }
+}
+
+/// <summary>
+/// Event that fires when the player picks any of the choices at the end of a Genocide run
+/// </summary>
+class RunEnd : UniqueEvent
+{
+    public RunEnd (XmlReader reader) : base(reader) {}
+
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "snd_play(snd_select)";
+
+    public override string CodeEntry ()
+    {
+        return CodeEntryClass.Chara;
+    }
+
 }
 
 /******

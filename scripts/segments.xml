@@ -739,17 +739,186 @@
         <end><Door name="A" room="WaterfallMonsterKidBridge" /></end>
     </segment>
 
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
+        <name>hotland-start</name>
+        <start><Door name="A" room="WaterfallMonsterKidBridge" /></start>
+        <end><RoomTransition room="HotlandPostLab" backwards="false" /></end>
+        <plot>122</plot>
+        <room>WaterfallMonsterKidBridge</room>
+        <x>570</x>
+        <y>100</y>
+        <xp>2500</xp>
+    </segment>
 
-    <!-- <segment uninterruptable="" fast-encounters="" increment-murder="" type="" tutorial="">
-        <name></name>
-        <start></start>
-        <end></end>
-        <other></other>
-        <plot></plot>
-        <room></room>
-        <x></x>
-        <y></y>
-        <xp></xp>
-        <next-encounter></next-encounter>
-    </segment> -->
+    <segment uninterruptable="false" fast-encounters="true" increment-murder="1" type="continuous" tutorial="true">
+        <name>vulkin</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>160</plot>
+        <room>HotlandLongConveyor</room>
+        <x>150</x>
+        <y>1510</y>
+        <next-encounter>Vulkin</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
+        <name>post-vulkin</name>
+        <start><RoomTransition room="HotlandPostLab" backwards="false" /></start>
+        <end><RoomTransition room="HotlandLongConveyor" backwards="false" /></end>
+        <room>HotlandPostLab</room>
+        <x>410</x>
+        <y>10</y>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="true">
+        <name>tsunderplane</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>HotlandNearPan</room>
+        <x>160</x>
+        <y>270</y>
+        <next-encounter>Tsunderplane</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="true">
+        <name>post-tsunderplane</name>
+        <start><RoomTransition room="HotlandLongConveyor" backwards="false" /></start>
+        <end><RoomTransition room="CorePreMettaton" backwards="true" /></end>
+        <room>HotlandLongConveyor</room>
+        <x>160</x>
+        <y>20</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="2" type="continuous" tutorial="false">
+        <name>sgl-astig</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>185</plot>
+        <room>CorePreMettaton</room>
+        <x>10</x>
+        <y>100</y>
+        <next-encounter>SingleAstigmatism</next-encounter>
+        <weapon>BurntPan</weapon>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-right-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="CoreBridge" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-frog-whim</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>CoreBridge</room>
+        <x>580</x>
+        <y>100</y>
+        <next-encounter>WhimsalotFinalFroggit</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>frog-astig</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>FinalFroggitAstigmatism</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>whim-astig</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>WhimsalotAstigmatism</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
+        <name>knight-madjick</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>KnightKnightMadjick</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>core-triple</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>CoreTriple</next-encounter>
+        <room>CoreBridge</room>
+        <x>100</x>
+        <y>90</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-left-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="CoreBridge" backwards="true" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
+        <name>left-side-travel</name>
+        <start><RoomTransition room="CoreBridge" backwards="true" /></start>
+        <end><RoomTransition room="CoreCenter" backwards="true" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>sgl-knight</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>CoreLeftGrindRoom</room>
+        <x>70</x>
+        <y>100</y>
+        <next-encounter>SingleKnightKnight</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-left-side-transition-1</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="B" room="CoreLeftGrindRoom" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-left-side-transition-2</name>
+        <start><Door name="B" room="CoreLeftGrindRoom" /></start>
+        <end><RoomTransition room="CorePreWarrior" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>sgl-madjick</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>CorePreWarrior</room>
+        <x>277</x>
+        <y>100</y>
+        <next-encounter>SingleMadjick</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-left-side-transition-3</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="B" room="CoreLeftGrindRoom" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
+        <name>core-warrior-path</name>
+        <start><Door name="B" room="CoreLeftGrindRoom" /></start>
+        <end><RoomTransition room="CoreCenter" backwards="false" /></end>
+        <room>CoreLeftGrindRoom</room>
+        <x>20</x>
+        <y>100</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>grind-end-transition</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="A" room="CoreBridge" /></end>
+        <room>CoreBridge</room>
+        <x>515</x>
+        <y>95</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
+        <name>run-end</name>
+        <start><Door name="A" room="CoreBridge" /></start>
+        <end><RunEnd /></end>
+    </segment>
 </segments>
