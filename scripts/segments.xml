@@ -6,6 +6,7 @@
         <plot>0</plot>
         <room>GameMenu</room>
         <message>Hey!!</message>
+        <explanation>This, is a nice explanation!</explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">

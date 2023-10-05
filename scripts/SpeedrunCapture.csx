@@ -116,7 +116,9 @@ class Segment
     /// <summary>
     /// Message to display while the segment is being played
     /// </summary>
-    public string Message = null;
+    public string Message = "";
+
+    public string Explanation = "";
 
     /// <summary>
     /// Should be set to `true` if an explanation is needed for what should be done, and `false` if it is the same
@@ -290,6 +292,10 @@ class Segment
                 case "message":
                     reader.Read();
                     Message = reader.Value;
+                    break;
+                case "explanation":
+                    reader.Read();
+                    Explanation = reader.Value;
                     break;
                 case "next-encounter":
                     reader.Read();
@@ -1307,9 +1313,9 @@ static class GMLCodeClass
     /// GML code that starts a new recording session
     /// </summary>
     public static string StartSession = @"
-    if (!is_session_running)
+    if (!obj_time.is_session_running)
     {{
-        is_session_running = 1;
+        obj_time.is_session_running = 1;
         obj_time.session_name = string(current_year) + string(current_month) + string(current_day) + string(current_hour) + string(current_minute) + string(current_second);
         var file = file_text_open_write('recordings/recording_' + string(obj_time.session_name));
         file_text_close(file);
@@ -1328,6 +1334,7 @@ static class GMLCodeClass
         obj_time.is_timer_running = 1;
         obj_time.time_start = get_timer();
         obj_time.segment_name = {GMLString(segmentName)};
+        obj_time.current_msg = obj_time.segment_message;
         ";
     }
 
@@ -1347,6 +1354,7 @@ static class GMLCodeClass
         obj_time.step_count = global.encounter;
         obj_time.optimal_steps = {steps}
         obj_time.segment_name = '{downtimeName}';
+        obj_time.current_msg = obj_time.segment_message;
         ";
     }
 
@@ -2484,7 +2492,8 @@ void main ()
         if (segment == {i})
         {{
             segment_name = {GMLCodeClass.GMLString(segment.Name)};
-            current_msg = {GMLCodeClass.GMLString(segment.Message)};
+            segment_tutorial = {GMLCodeClass.GMLString(segment.Explanation)};
+            segment_message = {GMLCodeClass.GMLString(segment.Message)};
             fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)};
             segment_room = {segment.Room.RoomId};
             segment_x = {segment.X};
@@ -2561,6 +2570,10 @@ void main ()
             is_downtime_mode = 0;
             {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
         }}
+        if ((!is_session_running && segment_changed) || pressed_t)
+        {{
+            current_msg = segment_tutorial;
+        }}
     }}
     ");
 
@@ -2620,8 +2633,8 @@ void main ()
 
         // wrap code so that it wont run in unintended orders (run end without start and etc)
         var runningVariable = "";
-        if (segment.Type == SegmentType.Continuous) runningVariable = "is_timer_running";
-        else if (segment.Type == SegmentType.Downtime) runningVariable = "is_downtime_mode";
+        if (segment.Type == SegmentType.Continuous) runningVariable = "obj_time.is_timer_running";
+        else if (segment.Type == SegmentType.Downtime) runningVariable = "obj_time.is_downtime_mode";
 
         segment.Start.Code = @$"
         if (!{runningVariable})
