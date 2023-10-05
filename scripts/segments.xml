@@ -1,5 +1,5 @@
 <segments>
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-start</name>
         <start><PickName /></start>
         <end><Blcon /></end>
@@ -8,7 +8,7 @@
         <message>Hey!!</message>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-hallway</name>
         <start><EnterBattle /></start>
         <end><RoomTransition room="RuinsHallway" backwards="false" /></end>
@@ -18,7 +18,7 @@
         <y>115</y>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>ruins-leaf-pile</name>
         <start><RoomTransition room="RuinsHallway" backwards="false" /></start>
         <end><Door name="C" room="RuinsLeafPile" /></end>
@@ -29,7 +29,7 @@
         <message>TEST!!!!</message>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>froggit-lv2</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -41,13 +41,13 @@
         <next-encounter>SingleFroggit</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>leaf-pile-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafPile" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>not-frogskip</name>
         <start><FroggitTurnStart /></start>
         <end><FroggitTurnEnd /></end>
@@ -62,20 +62,20 @@
         <next-encounter>SingleFroggit</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>lv-up</name>
         <start><YouWon /></start>
         <end><LeaveBattle /></end>
         <xp>30</xp>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ruins-first-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafFall" backwards="true" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
         <name>whim</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -85,13 +85,13 @@
         <next-encounter>Whimsun</next-encounter>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>leaf-fall-downtime</name>
         <start><RoomTransition room="RuinsLeafPile" backwards="false" /></start>
         <end><Door name="A" room="RuinsLeafFall" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>frogskip</name>
         <start><FroggitTurnStart /></start>
         <end><FroggitTurnEnd /></end>
@@ -101,19 +101,19 @@
         <next-encounter>SingleFroggit</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>you-won</name>
         <start><YouWon /></start>
         <end><LeaveBattle /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>leaf-fall-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafFall" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="false">
         <name>ruins-one-rock</name>
         <start><RoomTransition room="RuinsLeafFall" backwards="false" /></start>
         <end><Door name="A" room="RuinsOneRock" backwards="false" /></end>
@@ -121,7 +121,7 @@
         <y>102</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>froggit-lv3</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -132,13 +132,13 @@
         <next-encounter>SingleFroggit</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ruins-maze</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafMaze" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>three-rock-downtime</name>
         <start><RoomTransition room="RuinsLeafMaze" backwards="false" /></start>
         <end><Door name="A" room="RuinsThreeRock" backwards="false" /></end>
@@ -147,7 +147,7 @@
         <y>220</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>sgl-mold</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -157,13 +157,13 @@
         <next-encounter>SingleMoldsmal</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>three-rock-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsCheese" backwards="true"/></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>dbl-mold</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -173,13 +173,13 @@
         <next-encounter>DoubleMoldsmal</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ruins-second-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsCheese" backwards="true" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>tpl-mold</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -189,56 +189,56 @@
         <next-encounter>TripleMoldsmal</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>dbl-frog</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>DoubleFroggit</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>frog-whim</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>FroggitWhimsun</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>dbl-mold-19</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>DoubleMoldsmal</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>tpl-mold-19</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>TripleMoldsmal</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>dbl-frog-19</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>DoubleFroggit</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>frog-whim-19</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>FroggitWhimsun</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>tpl-mold-18</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>TripleMoldsmal</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="true">
         <name>ruins-napsta</name>
         <start><LeaveBattle /></start>
         <end><Blcon /></end>
@@ -247,7 +247,7 @@
         <y>120</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-switches</name>
         <start><EnterBattle /></start>
         <end><Blcon /></end>
@@ -257,7 +257,7 @@
         <y>75</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>perspective-a</name>
         <start><EnterBattle /></start>
         <end><Blcon /></end>
@@ -267,7 +267,7 @@
         <y>150</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>perspective-b</name>
         <start><EnterBattle /></start>
         <end><Blcon /></end>
@@ -277,7 +277,7 @@
         <y>160</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>perspective-c</name>
         <start><EnterBattle /></start>
         <end><Blcon /></end>
@@ -286,7 +286,7 @@
         <y>370</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>perspective-d</name>
         <start><EnterBattle /></start>
         <end><Blcon /></end>
@@ -296,7 +296,7 @@
         <y>320</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-end</name>
         <start><EnterBattle /></start>
         <end><Door name="Amusic" room="RuinsTorielFight" /></end>
@@ -306,7 +306,7 @@
         <y>120</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
         <name>ruins-to-snowdin</name>
         <start><Door name="Amusic" room="RuinsTorielFight" /></start>
         <end><RoomTransition room="SnowdinConvenientLamp" backwards="false" /></end>
@@ -317,7 +317,7 @@
         <xp>200</xp>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>snowdin-box-road</name>
         <start><RoomTransition room="SnowdinConvenientLamp" backwards="false" /></start>
         <end><Door name="C" room="SnowdinBoxRoad" /></end>
@@ -327,29 +327,30 @@
         <y>160</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>sgl-snowdrake</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <room>SnowdinBoxRoad</room>
         <x>300</x>
         <y>142</y>
+        <next-encounter>SingleSnowdrake</next-encounter>
         <weapon>ToughGlove</weapon>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
         <name>box-road-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinBoxRoad" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
         <name>snowdin-human-rock</name>
         <start><RoomTransition room="SnowdinBoxRoad" backwards="false" /></start>
         <end><Door name="A" room="SnowdinHumanRock" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>sgl-icecap</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -357,15 +358,16 @@
         <room>SnowdinHumanRock</room>
         <x>525</x>
         <y>150</y>
+        <next-encounter>SingleIceCap</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>snowdin-doggo</name>
         <start><Door name="A" room="SnowdinHumanRock" /></start>
         <end><RoomTransition room="SnowdinDoggo" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" increment-murder="true" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="1" type="downtime" tutorial="true">
         <name>ice-slide-downtime</name>
         <start><RoomTransition room="SnowdinDoggo" backwards="false" /></start>
         <end><Door name="C" room="SnowdinDirectionsSign" /> </end>
@@ -375,7 +377,7 @@
         <y>160</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>lesser-dog</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -384,13 +386,13 @@
         <y>100</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>before-dogi</name>
         <start><Door name="C" room="SnowdinDirectionsSign" /></start>
         <end><RoomTransition room="SnowdinSpaghetti" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="downtime" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="downtime" tutorial="false">
         <name>snowdin-dogi</name>
         <start><RoomTransition room="SnowdinSpaghetti" backwards="false" /></start>
         <end><Blcon /></end>
@@ -401,7 +403,7 @@
         <step-count>160</step-count>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>snowdin-dbl</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -412,14 +414,14 @@
         <next-encounter>SnowdinDouble</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>before-greater-dog</name>
         <start><LeaveBattle /></start>
         <end><EnterBattle battlegroup="GreaterDog" /></end>
         <xp>300</xp>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
         <name>greater-dog-1</name>
         <start><EnterBattle battlegroup="GreaterDog" /></start>
         <end><GreaterDogTurnStart turn="1" /></end>
@@ -429,7 +431,7 @@
         <y>140</y>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>dogskip</name>
         <start>
             <GreaterDogTurnStart turn="1">
@@ -439,13 +441,13 @@
         <end><GreaterDogTurnEnd turn="1" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>greater-dog-2</name>
         <start><GreaterDogTurnEnd turn="1" /></start>
         <end><GreaterDogTurnStart turn="2" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>not-dogskip</name>
         <start>
             <GreaterDogTurnStart turn="2">
@@ -455,13 +457,13 @@
         <end><GreaterDogTurnEnd turn="2" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>greater-dog-end</name>
         <start><GreaterDogTurnEnd turn="2" /></start>
         <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
         <name>snowdin-tpl</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -472,14 +474,14 @@
         <next-encounter>SnowdinTriple</next-encounter>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
         <name>snowdin-right-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
         <xp>500</xp>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>snowdin-dbl-jerry</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -489,13 +491,13 @@
         <next-encounter>SnowdinDouble</next-encounter>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
         <name>snowdin-left-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinPoffZone" backwards="false" /></end>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>snowdin-tpl-jerry</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -505,11 +507,238 @@
         <next-encounter>SnowdinTriple</next-encounter>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
         <name>snowdin-end</name>
         <start><LeaveBattle /></start>
         <end><Door name="Amusic" room="SnowdinFog" /></end>
     </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
+        <name>waterfall-start</name>
+        <start><Door name="Amusic" room="SnowdinFog" /></start>
+        <end><RoomTransition room="WaterfallFirstBridgeSeeds" backwards="false" /></end>
+        <plot>101</plot>
+        <room>SnowdinFog</room>
+        <x>850</x>
+        <y>120</y>
+        <xp>800</xp>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
+        <name>near-quiche</name>
+        <start><RoomTransition room="WaterfallFirstBridgeSeeds" backwards="false" /></start>
+        <end><RoomTransition room="WaterfallSecondBridgeSeeds" backwards="false" /></end>
+        <plot>107</plot>
+        <room>WaterfallFirstBridgeSeeds</room>
+        <x>470</x>
+        <y>120</y>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="true">
+        <name>sgl-aaron-glove</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>WaterfallSecondBridgeSeeds</room>
+        <x>150</x>
+        <y>90</y>
+        <next-encounter>SingleAaron</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>sgl-woshua-glove</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>SingleWoshua</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
+        <name>post-telescope</name>
+        <start><RoomTransition room="WaterfallSecondBridgeSeeds" backwards="false" /></start>
+        <end><RoomTransition room="WaterfallSansTelescope" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>dbl-mold-glove</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>110</plot>
+        <room>WaterfallGlowingWater</room>
+        <x>110</x>
+        <y>430</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>ballet-shoes-get</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="WaterfallBalletShoes" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
+        <name>glowing-water</name>
+        <start><RoomTransition room="WaterfallBalletShoes" backwards="false" /></start>
+        <end><RoomTransition room="WaterfallGlowingWater" backwards="false" /></end>
+        <room>WaterfallBalletShoes</room>
+        <x>255</x>
+        <y>110</y>
+        <weapon>BalletShoes</weapon>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>sgl-woshua-shoes</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>SingleWoshua</next-encounter>
+        <weapon>BalletShoes</weapon>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>sgl-aaron-shoes</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>SingleAaron</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>woshua-aaron-surprise</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>WoshuaAaron</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
+        <name>dbl-mold-shoes</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>WaterfallDoubleMoldsmal</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="true">
+        <name>before-shyren</name>
+        <start><RoomTransition room="WaterfallGlowingWater" backwards="false" /></start>
+        <end><RoomTransition room="WaterfallOutsideGerson" backwards="false" /></end>
+        <room>WaterfallGlowingWater</room>
+        <x>1000</x>
+        <y>10</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="2" type="continuous" tutorial="true">
+        <name>temmie</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>117</plot>
+        <room>WaterfallOutsideGerson</room>
+        <x>270</x>
+        <y>110</y>
+        <next-encounter>Temmie</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
+        <name>impostor-mold</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>WaterfallImpostorMoldsmal</next-encounter>
+        <step-count>300</step-count>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>waterfall-grind-start-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="WaterfallBeforeMazes" backwards="false" /></end>
+        <room>WaterfallBeforeMazes</room>
+        <x>900</x>
+        <y>110</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>woshua-aaron-aware</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>WaterfallBeforeMazes</room>
+        <x>980</x>
+        <y>120</y>
+        <next-encounter>WoshuaAaron</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>waterfall-grind-transition-to-left</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="WaterfallMushroomMaze" backwards="true" /></end>
+        <xp>1200</xp>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>woshua-mold</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>WaterfallMushroomMaze</room>
+        <x>20</x>
+        <y>100</y>
+        <next-encounter>MoldbyggWoshua</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
+        <name>waterfall-grind-transition-to-right</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="WaterfallBeforeMazes" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
+        <name>mushroom-maze</name>
+        <start><RoomTransition room="WaterfallBeforeMazes" backwards="false" /></start>
+        <end><Door name="C" room="WaterfallMushroomMaze" /></end>
+        <room>WaterfallBeforeMazes</room>
+        <x>980</x>
+        <y>120</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>mushroom-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></end>
+        <room>WaterfallMushroomMaze</room>
+        <x>542</x>
+        <y>229</y>
+        <!-- Temmie only to speed things -->
+        <next-encounter>Temmie</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
+        <name>crystal-maze</name>
+        <start><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></start>
+        <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>crystal-transition</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
+        <room>WaterfallCrystalMaze</room>
+        <x>557</x>
+        <y>288</y>
+        <!-- Temmie only to speed things -->
+        <next-encounter>Temmie</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>crystal-going-back</name>
+        <start><Door name="Amusic" room="WaterfallCrystalMaze" /></start>
+        <end><RoomTransition room="WaterfallFlowerflowRoom" backwards="true" /></end>
+        <next-encounter>Temmie</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>crystal-exit-after-backtrack</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
+        <next-encounter>Temmie</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
+        <name>waterfall-end</name>
+        <start><Door name="Amusic" room="WaterfallCrystalMaze" /></start>
+        <end><Door name="A" room="WaterfallMonsterKidBridge" /></end>
+    </segment>
+
 
     <!-- <segment uninterruptable="" fast-encounters="" increment-murder="" type="" tutorial="">
         <name></name>

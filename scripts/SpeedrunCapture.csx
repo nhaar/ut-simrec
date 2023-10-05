@@ -209,8 +209,10 @@ class Segment
         // read attributes
         Uninterruptable = XmlBool.ParseXmlBool(reader, "uninterruptable");
         FastEncounters = XmlBool.ParseXmlBool(reader, "fast-encounters");
-        MurderLevel = Previous.MurderLevel + (XmlBool.ParseXmlBool(reader, "increment-murder") ? 1 : 0);
         Tutorial = XmlBool.ParseXmlBool(reader, "tutorial");
+
+        var incrementMurder = reader.GetAttribute("increment-murder");
+        MurderLevel = incrementMurder == null ? Previous.MurderLevel : Previous.MurderLevel + Int32.Parse(incrementMurder);
 
         string type = reader.GetAttribute("type");
         if (type == "continuous") Type = SegmentType.Continuous;
@@ -282,10 +284,17 @@ class Segment
                 case "next-encounter":
                     reader.Read();
                     object battlegroup;
-                    Enum.TryParse(typeof(Battlegroup), reader.Value, out battlegroup);
-                    Other.Add(new BeforeBattle(
-                        GMLCodeClass.RigEncounter((Battlegroup)battlegroup)
-                    ));
+                    try
+                    {                        
+                        Enum.TryParse(typeof(Battlegroup), reader.Value, out battlegroup);
+                        Other.Add(new BeforeBattle(
+                            GMLCodeClass.RigEncounter((Battlegroup)battlegroup)
+                        ));
+                    }
+                    catch (System.Exception)
+                    {     
+                        throw new Exception ($"Error reading battlegroup \"{reader.Value}\"");
+                    }
                     break;
                 case "weapon":
                     reader.Read();
@@ -334,6 +343,11 @@ class UndertaleRoom
     public UndertaleRoom Next = null;
 
     /// <summary>
+    /// Should be set to `true` if the room is not a room that needs to be accessed in a normal playthrough
+    /// </summary>
+    public bool IsSideRoom = false;
+
+    /// <summary>
     /// Id for the room
     /// </summary>
     public int RoomId;
@@ -371,9 +385,18 @@ class UndertaleRoom
     /// </summary>
     /// <param name="id"></param>
     /// <param name="prev"></param>
-    public UndertaleRoom (int id, UndertaleRoom prev)
+    /// <param name="isSide">`true` if this is a side room, `false` otherwise</param>
+    public UndertaleRoom (int id, UndertaleRoom neighbor, bool isSide = false)
     {
-        Init(id, prev);
+        if (isSide)
+        {
+            RoomId = id;
+            Next = neighbor;
+        }
+        else
+        {
+            Init(id, neighbor);
+        }
     }
 }
 
@@ -559,6 +582,71 @@ static class RoomClass
     /// Room where Papyrus is fought
     /// </summary>
     public static UndertaleRoom SnowdinFog = new UndertaleRoom(81, SnowdinTown);
+
+    /// <summary>
+    /// Room with the first bridge seed puzzle
+    /// </summary>
+    public static UndertaleRoom WaterfallFirstBridgeSeeds = new UndertaleRoom(87);
+
+    /// <summary>
+    /// Long room with the second bridge seed puzzle
+    /// </summary>
+    public static UndertaleRoom WaterfallSecondBridgeSeeds = new UndertaleRoom(88, WaterfallFirstBridgeSeeds);
+
+    /// <summary>
+    /// Room with the telescope and the wishing room sign
+    /// </summary>
+    public static UndertaleRoom WaterfallWishingRoom = new UndertaleRoom(90, WaterfallSecondBridgeSeeds);
+
+    /// <summary>
+    /// Room where Sans shows up with a telescope
+    /// </summary>
+    public static UndertaleRoom WaterfallSansTelescope = new UndertaleRoom(95);
+
+    /// <summary>
+    /// Big room before Onion Sans
+    /// </summary>
+    public static UndertaleRoom WaterfallGlowingWater = new UndertaleRoom(97, WaterfallSansTelescope);
+
+    /// <summary>
+    /// Room where the Ballet Shoes are found
+    /// </summary>
+    public static UndertaleRoom WaterfallBalletShoes = new UndertaleRoom(98, WaterfallGlowingWater, true);
+
+    /// <summary>
+    /// Room where Onion Sans resides
+    /// </summary>
+    public static UndertaleRoom WaterfallOnionSan = new UndertaleRoom(100, WaterfallGlowingWater);
+
+    /// <summary>
+    /// Room where Gerson's shop is accessible
+    /// </summary>
+    public static UndertaleRoom WaterfallOutsideGerson = new UndertaleRoom(124);
+
+    /// <summary>
+    /// Room between Gerson's shop and the mushroom maze
+    /// </summary>
+    public static UndertaleRoom WaterfallBeforeMazes = new UndertaleRoom(126, WaterfallOutsideGerson);
+
+    /// <summary>
+    /// Room that connects to Temmie village, and contains a mushroom maze
+    /// </summary>
+    public static UndertaleRoom WaterfallMushroomMaze = new UndertaleRoom(127, WaterfallBeforeMazes);
+
+    /// <summary>
+    /// Room with the crystal maze, which gets darker progressively
+    /// </summary>
+    public static UndertaleRoom WaterfallCrystalMaze = new UndertaleRoom(129, WaterfallMushroomMaze);
+
+    /// <summary>
+    /// Room with the echo flower taunting "behind you" and Undyne appears
+    /// </summary>
+    public static UndertaleRoom WaterfallFlowerflowRoom = new UndertaleRoom(130, WaterfallCrystalMaze);
+
+    /// <summary>
+    /// Room where Undyne the Undying is fought
+    /// </summary>
+    public static UndertaleRoom WaterfallMonsterKidBridge = new UndertaleRoom(132);
 }
 
 /// <summary>
@@ -612,6 +700,16 @@ enum Battlegroup
     GreaterDog = 26,
 
     /// <summary>
+    /// Lonely Snowdrake/Chilldrake
+    /// </summary>
+    SingleSnowdrake = 30,
+
+    /// <summary>
+    /// Lonely Ice Cap
+    /// </summary>
+    SingleIceCap = 32,
+
+    /// <summary>
     /// Ice Cap, Jerry and Snowdrake
     /// </summary>
     SnowdinDouble = 35,
@@ -619,9 +717,48 @@ enum Battlegroup
     /// <summary>
     /// Ice Cap, Jerry
     /// </summary>
-    SnowdinTriple = 36
+    SnowdinTriple = 36,
+
+    /// <summary>
+    /// Lonely Aaron
+    /// </summary>
+    SingleAaron = 40,
+
+    /// <summary>
+    /// Temmie battle
+    /// </summary>
+    Temmie = 41,
+
+    /// <summary>
+    /// Lonely Woshua
+    /// </summary>
+    SingleWoshua = 43,
+
+    /// <summary>
+    /// Battle with the two moldsmals where one is secretly a Moldbygg
+    /// </summary>
+    WaterfallImpostorMoldsmal = 42,
+
+    /// <summary>
+    /// Waterfall encounter with two moldsmals
+    /// </summary>
+    WaterfallDoubleMoldsmal = 53,
+
+    /// <summary>
+    /// Woshua, Aaron encounter
+    /// </summary>
+    WoshuaAaron = 54,
+
+    /// <summary>
+    /// Moldbygg, Woshua encounter
+    /// </summary>
+    MoldbyggWoshua = 55
+
 }
 
+/// <summary>
+/// Represent a weapon in-game
+/// </summary>
 enum UndertaleWeapon
 {
     Stick = 3,
@@ -1453,7 +1590,17 @@ class RoomTransition : UndertaleEvent
         Start = startRoom.RoomId;
         var backwards = XmlBool.ParseXmlBool(reader, "backwards");
         if (backwards) End = startRoom.Previous.RoomId;
-        else End = startRoom.Next.RoomId;
+        else
+        {
+            try
+            {
+                End = startRoom.Next.RoomId;
+            }
+            catch (System.Exception)
+            {
+                throw new Exception ($"Room with ID \"{startRoom.RoomId}\" does not have a \"next\" neighbor");
+            }
+        }
     }
 
     public override string EventArgs ()
@@ -1998,6 +2145,7 @@ void main ()
                 if (reader.Name == "segment")
                 {
                     Segment segment = new Segment(reader, previous);
+                    Console.WriteLine($"Successfully read segment \"{segment.Name}\"");
                     previous = segment;
                     segments.Add(segment);
                 }
@@ -2026,7 +2174,8 @@ void main ()
             segment_plot = {segment.Plot};
             next_step_count = {segment.NextStepCount};
             segment_murder_lv = {segment.MurderLevel};
-            global.weapon = {(int)segment.Weapon};
+            // POSSIBLE SOUCE OF CONFLICT: assuming all weapons will be on first inventory slot
+            script_execute(scr_weaponeq, 0, {(int)segment.Weapon});
         }}
         ");
     }
