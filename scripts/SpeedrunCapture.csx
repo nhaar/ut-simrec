@@ -130,6 +130,11 @@ class Segment
     public bool FastEncounters = false;
 
     /// <summary>
+    /// If not 0, the number of steps required for the next encounter
+    /// </summary>
+    public int NextStepCount = 0;
+
+    /// <summary>
     /// String representing the number of the plot value at the start (just before) the segment begins
     /// </summary>
     public string Plot = null;
@@ -214,7 +219,7 @@ class Segment
         while (!finishedSegment && reader.Read())
         {
             // skip end ones to avoid the switch bugging out and look out for segment end
-            if (reader.NodeType == XmlNodeType.EndElement)
+            while (reader.NodeType == XmlNodeType.EndElement && !finishedSegment)
             {
                 if (reader.Name == "segment") finishedSegment = true;
                 else reader.Read();
@@ -264,6 +269,10 @@ class Segment
                     reader.Read();
                     XP = Int32.Parse(reader.Value);
                     break;
+                case "step-count":
+                    reader.Read();
+                    NextStepCount = Int32.Parse(reader.Value);
+                    break;
                 case "message":
                     reader.Read();
                     Message = reader.Value;
@@ -282,13 +291,13 @@ class Segment
         // updating boundary event code
         if (Type == SegmentType.Continuous)
         {
-            Start.Code = GMLCodeClass.StartSegment(Name);
-            End.Code = GMLCodeClass.StopTime;
+            Start.Code += '\n' + GMLCodeClass.StartSegment(Name);
+            End.Code += '\n' + GMLCodeClass.StopTime;
         }
         else if (Type == SegmentType.Downtime)
         {
-            Start.Code = GMLCodeClass.StartDowntime(Name);
-            End.Code = GMLCodeClass.StopDowntime;
+            Start.Code += '\n' + GMLCodeClass.StartDowntime(Name);
+            End.Code += '\n' + GMLCodeClass.StopDowntime;
         }
 
         // taking from previous if none given because that's a special feature of the XML! (also these values are mandatory)
@@ -537,6 +546,10 @@ static class RoomClass
     /// </summary>
     public static UndertaleRoom SnowdinTown = new UndertaleRoom(68, SnowdinDangerBridge);
 
+    /// <summary>
+    /// Room where Papyrus is fought
+    /// </summary>
+    public static UndertaleRoom SnowdinFog = new UndertaleRoom(81, SnowdinTown);
 }
 
 /// <summary>
@@ -583,6 +596,11 @@ enum Battlegroup
     /// Two moldsmals
     /// </summary>
     DoubleMoldsmal = 10,
+
+    /// <summary>
+    /// Greater Dog fight
+    /// </summary>
+    GreaterDog = 26,
 
     /// <summary>
     /// Ice Cap, Jerry and Snowdrake
@@ -776,7 +794,15 @@ public static class CodeEntryClass
     /// </summary>
     public static string doorC = "gml_Object_obj_doorC_Other_19";
 
+    /// <summary>
+    /// Step code for Greater Dog's battle
+    /// </summary>
     public static string GreaterDog = "gml_Object_obj_greatdog_Step_0";
+
+    /// <summary>
+    /// Creater coed fro Greater Dog's battle
+    /// </summary>
+    public static string GreaterDogCreate = "gml_Object_obj_greatdog_Create_0";
 }
 
 /*
@@ -1009,14 +1035,17 @@ static class GMLCodeClass
         ";
 
         // maps for each index (murder level) the flags and their values needed
+        // NOTE: this is slightly out of order with the murderlv script, because of snowdrake
+        // flag 57 for the snowdrake is placed first before the dogs, changing the order for everything
+        // in snowdin
         var flagMaps = new []
         {
             new Dictionary<int, int> { { 202,  20 } },
             new Dictionary<int, int> { { 45,  4 } },
+            new Dictionary<int, int> { { 57, 2 } },
             new Dictionary<int, int> { { 52, 1 } },
             new Dictionary<int, int> { { 53, 1 } },
             new Dictionary<int, int> { { 54, 1 } },
-            new Dictionary<int, int> { { 57, 2 } },
             new Dictionary<int, int> { { 203, 16 } },
             new Dictionary<int, int> { { 67, 1 } },
             new Dictionary<int, int> { { 81, 1 } },
@@ -1061,7 +1090,35 @@ static class GMLCodeClass
 
         return code;
     }
+
+    /// <summary>
+    /// Generate GML code that updates a variable's value to the desired step count for the next encounter
+    /// </summary>
+    /// <param name="variable">Variable name</param>
+    /// <returns></returns>
+    public static string SetSteps (string variable)
+    {
+        return @$"
+        if (obj_time.fast_encounters)
+        {{
+            {variable} = 60;
+        }}
+        else
+        {{
+            if (obj_time.next_step_count)
+            {{
+                {variable} = obj_time.next_step_count;
+            }}
+            else
+            {{
+                {variable} = 10000;
+            }}
+        }}
+        ";
+    }
 }
+
+
 
 /// <summary>
 /// Function that if called will add debug functions to the game
@@ -1080,11 +1137,10 @@ void useDebug ()
         "segment_name",
         "is_downtime_mode",
         "is_downtime_running",
-        "fast_encounters",
-        "segment_y",
-        "segment_plot",
-        "segment_room",
-        "segment_changed" 
+        "segment_changed" ,
+        "global.plot",
+        "room",
+        "segment_murder_lv"
     };
 
     // start with line break just to not interefere with anything
@@ -1612,17 +1668,45 @@ class ScrSteps : UniqueEvent
 /// <summary>
 /// Event that fires when Greater Dog's turn starts
 /// </summary>
-class GreaterDogTurnStart : UniqueEvent
+class GreaterDogTurnStart : UndertaleEvent
 {
+    /// <summary>
+    /// The turn number (1-indexed) the event should fire
+    /// </summary>
+    public int Turn;
+
     public GreaterDogTurnStart (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.Place;
     
     public override string Replacement => "(global.firingrate * 1.7)";
 
+    public override string Placement ()
+    {
+        return @$"
+        current_turn++;
+        {Code}
+        ";
+    }
+
+    public override string GMLCondition ()
+    {
+        return $"(current_turn == {Turn})";
+    }
+
+    protected override void ParseAttributes(XmlReader reader)
+    {
+        Turn = Int32.Parse(reader.GetAttribute("turn"));
+    }
+
     public override string CodeEntry ()
     {
         return CodeEntryClass.GreaterDog;
+    }
+
+    public override string EventArgs ()
+    {
+        return Turn.ToString();
     }
 }
 
@@ -1630,17 +1714,37 @@ class GreaterDogTurnStart : UniqueEvent
 /// <summary>
 /// Event that fires when Greater Dog's turn ends
 /// </summary>
-class GreaterDogTurnEnd : UniqueEvent
+class GreaterDogTurnEnd : UndertaleEvent
 {
+    /// <summary>
+    /// The turn number (1-indexed) the event should fire
+    /// </summary>
+    public int Turn;
+    
     public GreaterDogTurnEnd (XmlReader reader) : base(reader) {}
 
     public override PlaceMethod Method => PlaceMethod.PlaceInIf;
 
     public override string Replacement => "attacked = 0";
 
+    public override string GMLCondition ()
+    {
+        return $"(current_turn == {Turn})";
+    }
+
+    protected override void ParseAttributes (XmlReader reader)
+    {
+        Turn = Int32.Parse(reader.GetAttribute("turn"));
+    }
+
     public override string CodeEntry()
     {
         return CodeEntryClass.GreaterDog;
+    }
+
+    public override string EventArgs ()
+    {
+        return Turn.ToString();
     }
 }
 
@@ -1687,9 +1791,10 @@ void main ()
     current_msg = '';
 
     // this flag will controll how encounters are given
-    // if `0`, then encounters will be disabled
+    // if `0`, then encounters will be disabled or set according to ""next_step_count""
     // else if `1` then encounters will be given quickly
     fast_encounters = 0;
+    next_step_count = 0;
 
     // downtime segment variables
     // mode is for when downtime is being watched
@@ -1721,13 +1826,8 @@ void main ()
         global.flag[argument3] = 0;
         // max hp for the user convenience due to unusual amount of encounters and frog skips
         global.hp = global.maxhp;
-
-        steps = 60;
     }}
-    else
-    {{
-        steps = 10000;
-    }}
+    {GMLCodeClass.SetSteps("steps")}
     ");
 
     // track segment changes
@@ -1783,13 +1883,18 @@ void main ()
 
     // add keybinds for changing segments and warping
     append(CodeEntryClass.step, $@"
+    var segment_increment = 1;
+    if (keyboard_check(vk_shift))
+    {{
+        segment_increment = 5;
+    }}
     if (keyboard_check_pressed(vk_pageup))
     {{
-        segment++;
+        segment += segment_increment;
     }}
     else if (keyboard_check_pressed(vk_pagedown))
     {{
-        segment--;
+        segment -= segment_increment;
     }}
 
     if (keyboard_check_pressed(ord('T')))
@@ -1856,10 +1961,17 @@ void main ()
     }}
     ");
 
+    // Add turn counter for the start and end events
+    append(CodeEntryClass.GreaterDogCreate, @$"
+    current_turn = 0;
+    ");
+
     // reading all segments from the XML file
     var segments = new List<Segment>();
 
-    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml")))
+    XmlReaderSettings settings = new XmlReaderSettings();
+    settings.IgnoreWhitespace = true;
+    using (XmlReader reader = XmlReader.Create(Path.Combine(ScriptPath, "..\\segments.xml"), settings))
     {
         // use a blank one for the first previous, it won't be used for anything
         var previous = new Segment();
@@ -1895,6 +2007,7 @@ void main ()
             segment_y = {segment.Y};
             segment_xp = {segment.XP};
             segment_plot = {segment.Plot};
+            next_step_count = {segment.NextStepCount};
             segment_murder_lv = {segment.MurderLevel};
         }}
         ");
@@ -1939,14 +2052,7 @@ void main ()
         {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
 
         var encounter_steps;
-        if (fast_encounters)
-        {{
-            encounter_steps = 60;
-        }}
-        else
-        {{
-            encounter_steps = 10000;
-        }}
+        {GMLCodeClass.SetSteps("encounter_steps")}
         {encountererUpdate.GetCode()}
     }}
     ");

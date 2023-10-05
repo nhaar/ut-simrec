@@ -306,16 +306,218 @@
         <y>120</y>
     </segment>
 
-<!-- 
-    <segment uninterruptable="">
-        <name>perspective-b</name>
-        <start>< /></start>
-        <end>< /></end>
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="true" type="continuous" tutorial="false">
+        <name>ruins-to-snowdin</name>
+        <start><Door name="Amusic" room="RuinsTorielFight" /></start>
+        <end><RoomTransition room="SnowdinConvenientLamp" backwards="false" /></end>
+        <plot>25</plot>
+        <room>RuinsTorielFight</room>
+        <x>150</x>
+        <y>80</y>
+        <xp>200</xp>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="downtime" tutorial="true">
+        <name>snowdin-box-road</name>
+        <start><RoomTransition room="SnowdinConvenientLamp" backwards="false" /></start>
+        <end><Door name="C" room="SnowdinBoxRoad" /></end>
+        <plot>37</plot>
+        <room>SnowdinConvenientLamp</room>
+        <x>2660</x>
+        <y>160</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>sgl-snowdrake</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>SnowdinBoxRoad</room>
+        <x>300</x>
+        <y>142</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
+        <name>box-road-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="SnowdinBoxRoad" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="false" type="continuous" tutorial="true">
+        <name>snowdin-human-rock</name>
+        <start><RoomTransition room="SnowdinBoxRoad" backwards="false" /></start>
+        <end><Door name="A" room="SnowdinHumanRock" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>sgl-icecap</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>40</plot>
+        <room>SnowdinHumanRock</room>
+        <x>525</x>
+        <y>150</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>snowdin-doggo</name>
+        <start><Door name="A" room="SnowdinHumanRock" /></start>
+        <end><RoomTransition room="SnowdinDoggo" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" increment-murder="true" type="downtime" tutorial="true">
+        <name>ice-slide-downtime</name>
+        <start><RoomTransition room="SnowdinDoggo" backwards="false" /></start>
+        <end><Door name="C" room="SnowdinDirectionsSign" /> </end>
+        <plot>42</plot>
+        <room>SnowdinDoggo</room>
+        <x>410</x>
+        <y>160</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>lesser-dog</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>SnowdinDirectionsSign</room>
+        <x>550</x>
+        <y>100</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>before-dogi</name>
+        <start><Door name="C" room="SnowdinDirectionsSign" /></start>
+        <end><RoomTransition room="SnowdinSpaghetti" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="downtime" tutorial="false">
+        <name>snowdin-dogi</name>
+        <start><RoomTransition room="SnowdinSpaghetti" backwards="false" /></start>
+        <end><Blcon /></end>
+        <plot>47</plot>
+        <room>SnowdinSpaghetti</room>
+        <x>270</x>
+        <y>120</y>
+        <step-count>160</step-count>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>snowdin-dbl</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>49</plot>
+        <room>SnowdinDogi</room>
+        <x>320</x>
+        <y>405</y>
+        <next-encounter>SnowdinDouble</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>before-greater-dog</name>
+        <start><LeaveBattle /></start>
+        <end><EnterBattle battlegroup="GreaterDog" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="true" type="continuous" tutorial="false">
+        <name>greater-dog-1</name>
+        <start><EnterBattle battlegroup="GreaterDog" /></start>
+        <end><GreaterDogTurnStart turn="1" /></end>
+        <plot>58</plot>
+        <room>SnowdinPoffZone</room>
+        <x>350</x>
+        <y>140</y>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>dogskip</name>
+        <start>
+            <GreaterDogTurnStart turn="1">
+                mycommand = 0;
+            </GreaterDogTurnStart>
+        </start>
+        <end><GreaterDogTurnEnd turn="1" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>greater-dog-2</name>
+        <start><GreaterDogTurnEnd turn="1" /></start>
+        <end><GreaterDogTurnStart turn="2" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>not-dogskip</name>
+        <start>
+            <GreaterDogTurnStart turn="2">
+                mycommand = 100;
+            </GreaterDogTurnStart>
+        </start>
+        <end><GreaterDogTurnEnd turn="2" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="false" type="continuous" tutorial="false">
+        <name>greater-dog-end</name>
+        <start><GreaterDogTurnEnd turn="2" /></start>
+        <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
+        <name>snowdin-tpl</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>67</plot>
+        <room>SnowdinDangerBridge</room>
+        <x>1000</x>
+        <y>120</y>
+        <next-encounter>SnowdinTriple</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>snowdin-right-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>snowdin-dbl-jerry</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>SnowdinPoffZone</room>
+        <x>510</x>
+        <y>130</y>
+        <next-encounter>SnowdinDouble</next-encounter>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="true" increment-murder="false" type="continuous" tutorial="false">
+        <name>snowdin-left-transition</name>
+        <start><LeaveBattle /></start>
+        <end><RoomTransition room="SnowdinPoffZone" backwards="false" /></end>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="false" type="continuous" tutorial="true">
+        <name>snowdin-tpl-jerry</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <room>SnowdinTown</room>
+        <x>20</x>
+        <y>120</y>
+        <next-encounter>SnowdinTriple</next-encounter>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="true" type="continuous" tutorial="false">
+        <name>snowdin-end</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="Amusic" room="SnowdinFog" /></end>
+    </segment>
+
+    <!-- <segment uninterruptable="" fast-encounters="" increment-murder="" type="" tutorial="">
+        <name></name>
+        <start></start>
+        <end></end>
+        <other></other>
         <plot></plot>
         <room></room>
         <x></x>
         <y></y>
-        <message></message>
+        <xp></xp>
         <next-encounter></next-encounter>
     </segment> -->
 </segments>
