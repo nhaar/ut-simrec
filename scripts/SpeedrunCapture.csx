@@ -909,7 +909,7 @@ class UndertaleInventory
     /// <summary>
     /// Maximum number of items one can hold
     /// </summary>
-    private static int Capacity = 8;
+    public static int Capacity = 8;
 
     /// <summary>
     /// All items stored in the inventory
@@ -968,12 +968,12 @@ class UndertaleInventory
     {
 
         var code = @$"
-        global.weapon = {(int)EquippedWeapon}
+        obj_time.segment_inventory[{Capacity}] = {(int)EquippedWeapon}
         ";
 
         for (int i = 0; i < Capacity; i++)
         {
-            code += @$"global.item[{i}] = {(int)Inventory[i]};";
+            code += @$"obj_time.segment_inventory[{i}] = {(int)Inventory[i]};";
         }
 
         return code;
@@ -2283,6 +2283,8 @@ void main ()
     previous_segment = -1;
     segment_changed = 0;
     segment_name = '';
+    // using last index for the weapon
+    segment_inventory[{UndertaleInventory.Capacity}] = 0;
 
     // continuous segment variables
     is_timer_running = 0;
@@ -2410,15 +2412,6 @@ void main ()
         }}
 
         segment = clamp(segment, 0, segment_total);
-
-        if ( keyboard_check_pressed(ord('T')))
-        {{
-            global.plot = segment_plot;
-            global.interact = 0;
-            is_timer_running = 0;
-            is_downtime_mode = 0;
-            {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
-        }}
     }}
     ");
 
@@ -2538,15 +2531,36 @@ void main ()
     if (segment_changed)
     {{
         {initBlock.GetCode()}
+    }}
 
-        global.xp = segment_xp;
-        script_execute(scr_levelup);
-        {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
+    var pressed_r = keyboard_check_pressed(ord('R'));
+    var pressed_t = keyboard_check_pressed(ord('T')) && (global.debug || !is_session_running);
+    if (pressed_r || segment_changed || pressed_t)
+    {{
+        if (pressed_r || segment_changed)
+        {{
+            global.xp = segment_xp;
+            script_execute(scr_levelup);
+            {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
 
-        var encounter_steps;
-        {GMLCodeClass.SetSteps("encounter_steps")}
-        {encountererUpdate.GetCode()}
-        {GMLCodeClass.UpdateAT()}
+            var encounter_steps;
+            {GMLCodeClass.SetSteps("encounter_steps")}
+            {encountererUpdate.GetCode()}
+            for (var i = 0; i < {UndertaleInventory.Capacity}; i++)
+            {{
+                global.item[i] = segment_inventory[i];
+            }}
+            global.weapon = segment_inventory[{UndertaleInventory.Capacity}];
+            {GMLCodeClass.UpdateAT()}
+        }}
+        if (pressed_r || pressed_t)
+        {{
+            global.plot = segment_plot;
+            global.interact = 0;
+            is_timer_running = 0;
+            is_downtime_mode = 0;
+            {GMLCodeClass.TPTo("segment_room", "segment_x", "segment_y")}
+        }}
     }}
     ");
 
