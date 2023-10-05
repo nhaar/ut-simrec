@@ -1625,6 +1625,38 @@ static class GMLCodeClass
             global.wstrength += 10
         ";
     }
+
+    /// <summary>
+    /// Generate GML code that draws yellow text with outline in a x, y posiition
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public static string DrawTextOutline (int x, int y, string text)
+    {
+        string textLine (int x, int y)
+        {
+            return $"draw_text({x}, {y}, {text});";
+        }
+
+        var code = $"draw_set_color(c_black);";
+
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                var outline = 2;
+                code += textLine(x + outline * (int)Math.Pow(-1, i), y + outline * (int)Math.Pow(-1, j));
+            }
+        }
+
+        return @$"
+        {code}
+        draw_set_color(c_yellow);
+        {textLine(x, y)};
+        ";
+    }
 }
 
 /// <summary>
@@ -2355,7 +2387,7 @@ void main ()
     time_end = 0;
 
     // this flag will control if explanations should be given
-    read_tutorial = 0;
+    read_tutorial = 1;
 
     // store message to display
     current_msg = '';
@@ -2512,12 +2544,11 @@ void main ()
     ");
 
     // message drawer
-    append(CodeEntryClass.draw, @"
+    append(CodeEntryClass.draw, @$"
     draw_set_font(fnt_main)
-    draw_set_color(c_yellow);
-    draw_text(20, 0, 'segment: ' + string(segment) + '/' + string(segment_total));
-    draw_text(20, 20, 'name: ' + string(segment_name));
-    draw_text(20, 40, current_msg);
+    {GMLCodeClass.DrawTextOutline(20, 0, "'segment: ' + string(segment) + '/' + string(segment_total)")}
+    {GMLCodeClass.DrawTextOutline(20, 20, "'name: ' + string(segment_name)")}
+    {GMLCodeClass.DrawTextOutline(20, 40, "current_msg")}
     ");
 
     // rigging frogskip for all froggit encounters to speed up practice
@@ -2547,6 +2578,7 @@ void main ()
         if (segment == {i})
         {{
             segment_name = {GMLCodeClass.GMLString(segment.Name)};
+            segment_is_tutorial = {GMLCodeClass.GMLBool(segment.Tutorial)};
             segment_tutorial = {GMLCodeClass.GMLString(segment.Explanation)};
             segment_message = {GMLCodeClass.GMLString(segment.Message)};
             fast_encounters = {GMLCodeClass.GMLBool(segment.FastEncounters)};
@@ -2597,12 +2629,22 @@ void main ()
         {initBlock.GetCode()}
     }}
 
+    if (keyboard_check_pressed(ord('H')))
+    {{
+        read_tutorial = (read_tutorial + 1) % 2;
+    }}
+
     var pressed_r = keyboard_check_pressed(ord('R'));
     var pressed_t = keyboard_check_pressed(ord('T')) && (global.debug || !is_session_running);
     if (pressed_r || segment_changed || pressed_t)
     {{
         if (pressed_r || segment_changed)
         {{
+            if (segment_is_tutorial)
+            {{
+                current_msg = segment_tutorial;
+            }}
+
             global.xp = segment_xp;
             script_execute(scr_levelup);
             {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
