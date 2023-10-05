@@ -5,7 +5,7 @@
         <end><Blcon /></end>
         <plot>0</plot>
         <room>GameMenu</room>
-        <message></message>
+        <message>PROCEED</message>
         <explanation>
             Welcome to the Undertale time recorder.
 
@@ -32,6 +32,7 @@
         <room>RuinsSpikeMaze</room>
         <x>400</x>
         <y>115</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
@@ -43,10 +44,13 @@
         <room>RuinsHallway</room>
         <x>2400</x>
         <y>100</y>
-        <message></message>
+        <message>WALK</message>
+        <explanation>
+            Walk to the end of the next room without grinding an encounter
+        </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>froggit-lv2</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -56,12 +60,18 @@
         <y>330</y>
         <xp>29</xp>
         <next-encounter>SingleFroggit</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Start grinding at the end of the room and keep grinding as if you were in the
+            first half of Ruins in Genocide normally
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>leaf-pile-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafPile" backwards="false" /></end>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -77,6 +87,7 @@
         <x>20</x>
         <y>100</y>
         <next-encounter>SingleFroggit</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -84,12 +95,14 @@
         <start><YouWon /></start>
         <end><LeaveBattle /></end>
         <xp>30</xp>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ruins-first-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafFall" backwards="true" /></end>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
@@ -100,12 +113,17 @@
         <x>280</x>
         <y>340</y>
         <next-encounter>Whimsun</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>leaf-fall-downtime</name>
         <start><RoomTransition room="RuinsLeafPile" backwards="false" /></start>
         <end><Door name="A" room="RuinsLeafFall" /></end>
+        <message>WALK</message>
+        <explanation>
+            Now, walk through the next room without grinding an encounter at the end
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -116,29 +134,39 @@
         <x>210</x>
         <y>90</y>
         <next-encounter>SingleFroggit</next-encounter>
+        <message>PROCEED</message>
+        <explanation>
+            Grind at the end of the room, kill the one encounter, and then proceed normally
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>you-won</name>
         <start><YouWon /></start>
         <end><LeaveBattle /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>leaf-fall-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafFall" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
         <name>ruins-one-rock</name>
         <start><RoomTransition room="RuinsLeafFall" backwards="false" /></start>
         <end><Door name="A" room="RuinsOneRock" backwards="false" /></end>
         <x>280</x>
         <y>102</y>
+        <message>WALK</message>
+        <explanation>
+            Walk through the next room without grinding an encounter at the end
+        </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>froggit-lv3</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -147,12 +175,18 @@
         <x>360</x>
         <y>94</y>
         <next-encounter>SingleFroggit</next-encounter>
+        <message>PROCEED</message>
+        <explanation>
+            Grind an encounter as you would normally at the end of this room and continue
+            normally as if you have finished the first half grind.
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ruins-maze</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafMaze" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
@@ -162,9 +196,13 @@
         <room>RuinsLeafMaze</room>
         <x>530</x>
         <y>220</y>
+        <message>WALK</message>
+        <explanation>
+            Walk through the next room without grinding any encounters at the end
+        </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>sgl-mold</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -172,12 +210,18 @@
         <x>480</x>
         <y>110</y>
         <next-encounter>SingleMoldsmal</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Start grinding at the end of the room and keep going as if you were starting to grind the
+            second half and keep grinding until you are stopped
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>three-rock-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsCheese" backwards="true"/></end>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -188,12 +232,14 @@
         <x>20</x>
         <y>120</y>
         <next-encounter>DoubleMoldsmal</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ruins-second-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsCheese" backwards="true" /></end>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -204,6 +250,7 @@
         <x>520</x>
         <y>120</y>
         <next-encounter>TripleMoldsmal</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -211,6 +258,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>DoubleFroggit</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -218,6 +266,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>FroggitWhimsun</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -225,6 +274,11 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>DoubleMoldsmal</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
+        <explanation>
+            Now, go back and keep grinding, but each encounter do as if you had 19 kills,
+            that is, you only need to kill ONE monster in each encounter, and then flee.
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -232,6 +286,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>TripleMoldsmal</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -239,6 +294,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>DoubleFroggit</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -246,6 +302,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>FroggitWhimsun</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -253,15 +310,21 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>TripleMoldsmal</next-encounter>
+        <message>KILL TWO AND THEN PROCEED POST GRIND</message>
+        <explanation>
+            Now, go back, grind for an encounter, kill only TWO monsters, and then exit the grind
+            and start going to the end of Ruins as if you have finished the grind in a run
+        </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
         <name>ruins-napsta</name>
         <start><LeaveBattle /></start>
         <end><Blcon /></end>
         <room>RuinsCheese</room>
         <x>20</x>
         <y>120</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -272,12 +335,14 @@
         <room>RuinsNapstablook</room>
         <x>210</x>
         <y>75</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-switches</name>
         <start><LeaveBattle /></start>
         <end><Blcon /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -288,6 +353,7 @@
         <room>RuinsThreeFrogs</room>
         <x>590</x>
         <y>150</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -298,6 +364,7 @@
         <room>RuinsSwitches</room>
         <x>580</x>
         <y>160</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -307,6 +374,7 @@
         <room>PerspectiveA</room>
         <x>250</x>
         <y>370</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -317,6 +385,7 @@
         <room>PerspectiveB</room>
         <x>30</x>
         <y>320</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -327,6 +396,7 @@
         <room>PerspectiveC</room>
         <x>130</x>
         <y>120</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
@@ -338,6 +408,7 @@
         <x>150</x>
         <y>80</y>
         <xp>200</xp>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
@@ -348,6 +419,10 @@
         <room>SnowdinConvenientLamp</room>
         <x>2660</x>
         <y>160</y>
+        <message>WALK</message>
+        <explanation>
+            Walk through the next room as normal (pick up the glove), but without grinding for Snowdrake at the end
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -362,18 +437,25 @@
             <get>ToughGlove</get>
             <equip>0</equip>
         </items>
+        <message>GRIND AND PROCEED</message>
+        <explanation>
+            Grind for Snowdrake at the end, and after killing, proceed going as if you were in
+            a run normally (YOU WILL NOT ENCOUNTER ICE CAP NEXT ROOM, THAT IS INTENDED)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
         <name>box-road-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinBoxRoad" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
         <name>snowdin-human-rock</name>
         <start><RoomTransition room="SnowdinBoxRoad" backwards="false" /></start>
         <end><Door name="A" room="SnowdinHumanRock" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -385,12 +467,18 @@
         <x>525</x>
         <y>150</y>
         <next-encounter>SingleIceCap</next-encounter>
+        <message>GRIND AND PROCEED</message>
+        <explanation>
+            Grind for Ice Cap, and after killing, proceed and keep going as in a normal run
+            until you are stopped
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>snowdin-doggo</name>
         <start><Door name="A" room="SnowdinHumanRock" /></start>
         <end><RoomTransition room="SnowdinDoggo" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" increment-murder="1" type="downtime" tutorial="true">
@@ -401,6 +489,10 @@
         <room>SnowdinDoggo</room>
         <x>410</x>
         <y>160</y>
+        <message>WALK</message>
+        <explanation>
+            Now, walk to the end of the room as normal in a run (but you will not get an encounter)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -410,12 +502,17 @@
         <room>SnowdinDirectionsSign</room>
         <x>550</x>
         <y>100</y>
+        <message>GRIND AND PROCEED</message>
+        <explanation>
+            Grind for Lesser Dog, and after the encounter proceed going to the right normally
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>before-dogi</name>
         <start><Door name="C" room="SnowdinDirectionsSign" /></start>
         <end><RoomTransition room="SnowdinSpaghetti" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="downtime" tutorial="false">
@@ -427,6 +524,7 @@
         <x>270</x>
         <y>120</y>
         <step-count>160</step-count>
+        <message>PROCEED (DO GRIND)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -438,6 +536,7 @@
         <x>320</x>
         <y>405</y>
         <next-encounter>SnowdinDouble</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -445,6 +544,7 @@
         <start><LeaveBattle /></start>
         <end><EnterBattle battlegroup="GreaterDog" /></end>
         <xp>300</xp>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
@@ -455,6 +555,7 @@
         <room>SnowdinPoffZone</room>
         <x>350</x>
         <y>140</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -465,12 +566,14 @@
             </GreaterDogTurnStart>
         </start>
         <end><GreaterDogTurnEnd turn="1" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>greater-dog-2</name>
         <start><GreaterDogTurnEnd turn="1" /></start>
         <end><GreaterDogTurnStart turn="2" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -481,12 +584,14 @@
             </GreaterDogTurnStart>
         </start>
         <end><GreaterDogTurnEnd turn="2" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>greater-dog-end</name>
         <start><GreaterDogTurnEnd turn="2" /></start>
         <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
@@ -498,6 +603,7 @@
         <x>1000</x>
         <y>120</y>
         <next-encounter>SnowdinTriple</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
@@ -505,6 +611,7 @@
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinTown" backwards="true" /></end>
         <xp>500</xp>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -515,12 +622,18 @@
         <x>510</x>
         <y>130</y>
         <next-encounter>SnowdinDouble</next-encounter>
+        <message>GRIND (KILL JERRY, LEFTSIDE) </message>
+        <explanation>
+            Grind on the leftside of the next room. Kill Jerry as well. After the encounter,
+            do a transition as if you were going to continue grinding there
+        </explanation>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
         <name>snowdin-left-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="SnowdinPoffZone" backwards="false" /></end>
+        <message>GRIND LEFTSIDE</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -531,12 +644,18 @@
         <x>20</x>
         <y>120</y>
         <next-encounter>SnowdinTriple</next-encounter>
+        <message>GRIND AND PROCEED</message>
+        <explanation>
+            Now go back, grind for the last encounter, kill Jerry, and after finished,
+            proceed normally, (you will not get any encounters until you are stopped)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
         <name>snowdin-end</name>
         <start><LeaveBattle /></start>
         <end><Door name="Amusic" room="SnowdinFog" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
@@ -548,6 +667,7 @@
         <x>850</x>
         <y>120</y>
         <xp>800</xp>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
@@ -558,6 +678,7 @@
         <room>WaterfallFirstBridgeSeeds</room>
         <x>470</x>
         <y>120</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="true">
@@ -568,6 +689,10 @@
         <x>150</x>
         <y>90</y>
         <next-encounter>SingleAaron</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Grind and fight Aaron
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -575,12 +700,20 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>SingleWoshua</next-encounter>
+        <message>PROCEED</message>
+        <explanation>
+            Grind and fight Woshua
+        </explanation>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
         <name>post-telescope</name>
         <start><RoomTransition room="WaterfallSecondBridgeSeeds" backwards="false" /></start>
         <end><RoomTransition room="WaterfallSansTelescope" backwards="false" /></end>
+        <message>PROCEED</message>
+        <explanation>
+            Walk through the next room (you will not get any encounter), and keep going as normally
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -591,15 +724,21 @@
         <room>WaterfallGlowingWater</room>
         <x>110</x>
         <y>430</y>
+        <message>GRIND AND PROCEED</message>
+        <explanation>
+            Grind an encounter near the leftside of the room and after it keep going as if in a normal run
+            (you will not get an encounter in the big room)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>ballet-shoes-get</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="WaterfallBalletShoes" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
         <name>glowing-water</name>
         <start><RoomTransition room="WaterfallBalletShoes" backwards="false" /></start>
         <end><RoomTransition room="WaterfallGlowingWater" backwards="false" /></end>
@@ -610,6 +749,7 @@
             <get>BalletShoes</get>
             <equip>1</equip>
         </items>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -617,6 +757,11 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>SingleWoshua</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Now, keep grinding, you will fight all the encounters in this area with the Ballet Shoes.
+            (Leaving the room between encounters here is unnecessary)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -624,6 +769,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>SingleAaron</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -631,6 +777,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>WoshuaAaron</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
@@ -638,6 +785,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>WaterfallDoubleMoldsmal</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="true">
@@ -647,9 +795,13 @@
         <room>WaterfallGlowingWater</room>
         <x>1000</x>
         <y>10</y>
+        <message>PROCEED</message>
+        <explanation>
+            Now proceed through the end of the room and then keep going normally until you are stopped
+        </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="2" type="continuous" tutorial="true">
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="2" type="continuous" tutorial="false">
         <name>temmie</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -662,6 +814,7 @@
             <drop>0</drop>
             <drop>0</drop>
         </items>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -670,6 +823,7 @@
         <end><LeaveBattle /></end>
         <next-encounter>WaterfallImpostorMoldsmal</next-encounter>
         <step-count>300</step-count>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -679,6 +833,7 @@
         <room>WaterfallBeforeMazes</room>
         <x>900</x>
         <y>110</y>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -689,6 +844,7 @@
         <x>980</x>
         <y>120</y>
         <next-encounter>WoshuaAaron</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -696,6 +852,7 @@
         <start><LeaveBattle /></start>
         <end><RoomTransition room="WaterfallMushroomMaze" backwards="true" /></end>
         <xp>1200</xp>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -706,12 +863,14 @@
         <x>20</x>
         <y>100</y>
         <next-encounter>MoldbyggWoshua</next-encounter>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
         <name>waterfall-grind-transition-to-right</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="WaterfallBeforeMazes" backwards="false" /></end>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
@@ -722,6 +881,10 @@
         <room>WaterfallBeforeMazes</room>
         <x>980</x>
         <y>120</y>
+        <message>WALK</message>
+        <explanation>
+            Now go through the next room as fast as possible (you will not get an encounter)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -733,6 +896,10 @@
         <y>229</y>
         <!-- Temmie only to speed things -->
         <next-encounter>Temmie</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Now grind an encounter at the end of the room and proceed
+        </explanation>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
@@ -740,6 +907,10 @@
         <optimal-steps>638</optimal-steps>
         <start><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></start>
         <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
+        <message>WALK</message>
+        <explanation>
+            Now walk to the end of the next room (you will not get an encounter)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -751,6 +922,11 @@
         <y>288</y>
         <!-- Temmie only to speed things -->
         <next-encounter>Temmie</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Now grind an encounter at the end of the room, and after it come back to grind for another one,
+            and only then proceed with the run normally
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -758,6 +934,7 @@
         <start><Door name="Amusic" room="WaterfallCrystalMaze" /></start>
         <end><RoomTransition room="WaterfallFlowerflowRoom" backwards="true" /></end>
         <next-encounter>Temmie</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -765,12 +942,14 @@
         <start><LeaveBattle /></start>
         <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
         <next-encounter>Temmie</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
         <name>waterfall-end</name>
         <start><Door name="Amusic" room="WaterfallCrystalMaze" /></start>
         <end><Door name="A" room="WaterfallMonsterKidBridge" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
@@ -782,6 +961,7 @@
         <x>570</x>
         <y>100</y>
         <xp>2500</xp>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" increment-murder="1" type="continuous" tutorial="true">
@@ -796,6 +976,10 @@
         <items>
             <get>BurntPan</get>
         </items>
+        <message>GRIND</message>
+        <explanation>
+            Now grind for the Vulkin encounter
+        </explanation>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
@@ -805,6 +989,10 @@
         <room>HotlandPostLab</room>
         <x>410</x>
         <y>10</y>
+        <message>PROCEED</message>
+        <explanation>
+            Now go through the next room as normal (you will not get an encounter)
+        </explanation>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="true">
@@ -815,6 +1003,10 @@
         <x>160</x>
         <y>270</y>
         <next-encounter>Tsunderplane</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Grind for the Tsunderplane encounter
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="true">
@@ -824,6 +1016,10 @@
         <room>HotlandLongConveyor</room>
         <x>160</x>
         <y>20</y>
+        <message>PROCEED</message>
+        <explanation>
+            Go through the next room and keep going normally
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="2" type="continuous" tutorial="false">
@@ -838,12 +1034,14 @@
         <items>
             <equip>0</equip>
         </items>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>core-right-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="CoreBridge" backwards="false" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -854,6 +1052,7 @@
         <x>580</x>
         <y>100</y>
         <next-encounter>WhimsalotFinalFroggit</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -861,6 +1060,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>FinalFroggitAstigmatism</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -868,6 +1068,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>WhimsalotAstigmatism</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">
@@ -875,6 +1076,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>KnightKnightMadjick</next-encounter>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -885,18 +1087,26 @@
         <room>CoreBridge</room>
         <x>100</x>
         <y>90</y>
+        <message>GRIND</message>
+        <explanation>
+            Now grind an encounter at the leftside of the room. After that, start going to the
+            left and grind for TWO encounters, then go to the warrior path and come back normally.
+            NOTE: Do not equip the Ballet Shoes until after the Core grind.
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>core-left-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="CoreBridge" backwards="true" /></end>
+        <message>GRIND AND GO LEFT</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>left-side-travel</name>
         <start><RoomTransition room="CoreBridge" backwards="true" /></start>
         <end><RoomTransition room="CoreCenter" backwards="true" /></end>
+        <message>GRIND TWO ENCOUNTERS IN THE LEFT</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -907,18 +1117,21 @@
         <x>70</x>
         <y>100</y>
         <next-encounter>SingleKnightKnight</next-encounter>
+        <message>GRIND ONE MORE ENCOUNTER</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>core-left-side-transition-1</name>
         <start><LeaveBattle /></start>
         <end><Door name="B" room="CoreLeftGrindRoom" /></end>
+        <message>GRIND ONE MORE ENCOUNTER</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>core-left-side-transition-2</name>
         <start><Door name="B" room="CoreLeftGrindRoom" /></start>
         <end><RoomTransition room="CorePreWarrior" backwards="false" /></end>
+        <message>GRIND ONE MORE ENCOUNTER</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -929,12 +1142,14 @@
         <x>277</x>
         <y>100</y>
         <next-encounter>SingleMadjick</next-encounter>
+        <message>GRIND AND GO TO THE WARRIOR PATH</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>core-left-side-transition-3</name>
         <start><LeaveBattle /></start>
         <end><Door name="B" room="CoreLeftGrindRoom" /></end>
+        <message>GO TO WARRIOR PATH</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
@@ -944,6 +1159,7 @@
         <room>CoreLeftGrindRoom</room>
         <x>20</x>
         <y>100</y>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
@@ -953,11 +1169,17 @@
         <room>CoreBridge</room>
         <x>515</x>
         <y>95</y>
+        <message>GRIND AND PROCEED</message>
+        <explanation>
+            Now grind an encounter at the right side of the room and after that proceed
+            to the end of the run as normal
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
         <name>run-end</name>
         <start><Door name="A" room="CoreBridge" /></start>
         <end><RunEnd /></end>
+        <message>PROCEED</message>
     </segment>
 </segments>

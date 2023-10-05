@@ -2342,7 +2342,7 @@ void main ()
 
     // keeps track of segments
     segment = 0;
-    segment_total = {segments.Count};
+    segment_total = {segments.Count - 1};
     previous_segment = -1;
     segment_changed = 0;
     segment_name = '';
