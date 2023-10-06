@@ -8,6 +8,7 @@ Times::Times (std::unordered_map<std::string, int> map) {
     int you_won_msg = 0;
     int frogskip_turn = 0;
     int not_frogskip_turn = 0;
+    snowdin_general = 0;
     waterfall_general = 0;
     for (const auto& pair : map) {
         const std::string& key = pair.first;
