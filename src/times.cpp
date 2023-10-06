@@ -10,6 +10,8 @@ Times::Times (std::unordered_map<std::string, int> map) {
     int not_frogskip_turn = 0;
     snowdin_general = 0;
     waterfall_general = 0;
+    crystal_backtrack = 0;
+    mushroom_backtrack = 0;
     for (const auto& pair : map) {
         const std::string& key = pair.first;
         int time = map[key];
@@ -163,6 +165,14 @@ Times::Times (std::unordered_map<std::string, int> map) {
             crystal_steps[0] = time;
         } else if (key == "crystal-maze-endsteps") {
             crystal_steps[1] = time;
+        } else if (key == "crystal-going-back") {
+            crystal_backtrack += time;
+        } else if (key == "crystal-exit-after-backtrack") {
+            crystal_backtrack += time;
+        } else if (key == "mushroom-maze-going-back") {
+            mushroom_backtrack += time;
+        } else if (key == "mushroom-maze-exit-after-backtrack") {
+            mushroom_backtrack += time;
         }
     } 
     // add "relative" times

@@ -99,6 +99,8 @@ public:
 
     int crystal_steps [2];
 
+    int mushroom_backtrack;
+
     Times ();
 
     Times (std::unordered_map<std::string, int> map);
