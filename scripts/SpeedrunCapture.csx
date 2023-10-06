@@ -1408,7 +1408,7 @@ static class GMLCodeClass
     }
 
     /// <summary>
-    /// Begin a downtime segment
+    /// Generate GML code that begins a downtime segment
     /// </summary>
     /// <param name="downtimeName">Name of the segment</param>
     /// <param name="steps">Number of optimals steps for the downtime to end, or left out if it is not important</param>
@@ -1444,6 +1444,7 @@ static class GMLCodeClass
     }
 
     /// <summary>
+    /// Generate GML code that converts a time time in miliseconds into the nearest 30 fps frame
     /// </summary>
     /// <param name="time"></param>
     /// <returns></returns>
