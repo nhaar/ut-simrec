@@ -913,7 +913,7 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="true">
-        <start>mushroom-maze-endsteps</start>
+        <name>mushroom-maze-endsteps</name>
         <start><LeaveBattle /></start>
         <end><Door name="C" room="WaterfallMushroomMaze" /></end>
         <!-- Temmie only to speed things -->
