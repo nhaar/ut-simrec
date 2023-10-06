@@ -424,7 +424,7 @@
         <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime-step" tutorial="true">
         <name>snowdin-box-road</name>
         <start><RoomTransition room="SnowdinConvenientLamp" backwards="false" /></start>
         <end><Door name="C" room="SnowdinBoxRoad" /></end>
@@ -457,16 +457,16 @@
         </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="continuous" tutorial="false">
-        <name>box-road-transition</name>
+    <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="step" tutorial="false">
+        <name>box-road-endsteps</name>
         <start><LeaveBattle /></start>
-        <end><RoomTransition room="SnowdinBoxRoad" backwards="false" /></end>
+        <end><Door name="C" room="SnowdinBoxRoad" /></end>
         <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
         <name>snowdin-human-rock</name>
-        <start><RoomTransition room="SnowdinBoxRoad" backwards="false" /></start>
+        <start><Door name="C" room="SnowdinBoxRoad" /></start>
         <end><Door name="A" room="SnowdinHumanRock" /></end>
         <message>PROCEED</message>
     </segment>
