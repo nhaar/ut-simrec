@@ -99,11 +99,11 @@ class SegmentType
             StartCode = GMLCodeClass.StartSegment(segmentName);
             EndCode = GMLCodeClass.StopTime;
         }
-        else if (xmlName == "downtime")
+        else if (xmlName == "downtime" || xmlName == "downtime-step")
         {
             RunningVariable = "obj_time.is_downtime_mode";
             StartCode = GMLCodeClass.StartDowntime(segmentName);
-            EndCode = GMLCodeClass.StopDowntime;
+            EndCode = GMLCodeClass.StopDowntime(xmlName == "downtime-step");
         }
         else if (xmlName == "step")
         {
@@ -1469,8 +1469,18 @@ static class GMLCodeClass
 
     /// <summary>
     /// Stop an ongoing downtime segment
+    /// <param name="saveSteps">Should be set to `true` if the total step count should be saved and `false` otherwise</param>
     /// </summary>
-    public static string StopDowntime = @$"
+    public static string StopDowntime (bool saveSteps)
+    {
+        var stepCode = saveSteps
+            ? @$"
+            obj_time.segment_name += '_steps';
+            {GMLCodeClass.AppendNewTime("global.encounter")}
+            "
+            : "";
+
+        return @$"
     // in case the downtime ends during a downtime, must not lose the time being counted
     if (obj_time.is_downtime_running)
     {{
@@ -1479,9 +1489,9 @@ static class GMLCodeClass
     obj_time.is_downtime_mode = 0;
     obj_time.segment++;
     {GMLCodeClass.AppendNewTime(ConvertToFrames("obj_time.downtime"))}
-    obj_time.segment_name += '_steps';
-    {GMLCodeClass.AppendNewTime("global.encounter")}
+        {stepCode}
     ";
+    }
 
     /// <summary>
     /// Generate GML code that stops a step count segment
