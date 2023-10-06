@@ -83,9 +83,7 @@ std::unordered_map<std::string, int> RecordingReader::read_file (std::string fil
         } else {
             if (c == ';') {
                 is_key = true;
-                // `value` is in microseconds
-                // then round to nearest 30fps frame
-                int time = static_cast<int>(std::round(std::stod(value) / 1e6 * 30));
+                int time = std::stoi(value);
                 map[key] = time;
                 key = "";
                 value = "";

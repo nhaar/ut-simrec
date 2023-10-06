@@ -1413,12 +1413,22 @@ static class GMLCodeClass
     }
 
     /// <summary>
+    /// Converts a time time in miliseconds into the nearest 30 fps frame
+    /// </summary>
+    /// <param name="time"></param>
+    /// <returns></returns>
+    public static string ConvertToFrames (string time)
+    {
+        return $"round(({time}) / 1000000 * 30)";
+    }
+
+    /// <summary>
     /// GML code that stops the segment timer
     /// </summary>
     public static string StopTime = @$"
     obj_time.is_timer_running = 0;
     obj_time.segment++;
-    {AppendNewTime("get_timer() - obj_time.time_start")}
+    {AppendNewTime(ConvertToFrames("get_timer() - obj_time.time_start"))}
     ";
 
     /// <summary>
@@ -1432,7 +1442,7 @@ static class GMLCodeClass
     }}
     obj_time.is_downtime_mode = 0;
     obj_time.segment++;
-    {GMLCodeClass.AppendNewTime("obj_time.downtime")}
+    {GMLCodeClass.AppendNewTime(ConvertToFrames("obj_time.downtime"))}
     ";
 
     /// <summary>
