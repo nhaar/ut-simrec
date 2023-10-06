@@ -8,6 +8,7 @@ Times::Times (std::unordered_map<std::string, int> map) {
     int you_won_msg = 0;
     int frogskip_turn = 0;
     int not_frogskip_turn = 0;
+    waterfall_general = 0;
     for (const auto& pair : map) {
         const std::string& key = pair.first;
         int time = map[key];
@@ -118,8 +119,51 @@ Times::Times (std::unordered_map<std::string, int> map) {
             snowdin_right_transition = time;
         } else if (key == "snowdin-left-transition") {
             snowdin_left_transition = time;
+        } else if (
+            key == "waterfall_start" ||
+            key == "near-quiche" ||
+            key == "sgl-aaron-glove" ||
+            key == "sgl-woshua-glove" ||
+            key == "post-telescope" ||
+            key == "dbl-mold-glove" ||
+            key == "ballet-shoes-get" ||
+            key == "glowing-water" ||
+            key == "before-shyren" ||
+            key == "impostor-mold" ||
+            key == "waterfall-grind-start-transition" ||
+            key == "woshua-aaron-aware" ||
+            key == "waterfall-grind-transition-to-left" ||
+            key == "waterfall-grind-transition-to-right" ||
+            key == "mushroom-maze" ||
+            key == "mushroom-transition" ||
+            key == "crystal-maze" ||
+            key == "waterfall_end"
+        ) {
+            waterfall_general += time;
+        } else if (key == "temmie") {
+            waterfall_general += time;
+            temmie = time;
+        } else if (key == "woshua-mold") {
+            waterfall_general += time;
+            woshua_mold = time;
+        } else if (key == "dbl-mold-shoes") {
+            double_mold_shoes = time;
+        } else if (key == "woshua-aaron-surprise") {
+            aaron_woshua_surprise = time;
+        } else if (key == "sgl-aaron-shoes") {
+            single_aaron_shoes = time;
+        } else if (key == "sgl-woshua-shoes") {
+            single_woshua_shoes = time;
+        } else if (key == "mushroom-maze-steps") {
+            mushroom_steps[0] = time;
+        } else if (key == "mushroom-maze-endsteps") {
+            mushroom_steps[1] = time;
+        } else if (key == "crystal-maze-steps") {
+            crystal_steps[0] = time;
+        } else if (key == "crystal-maze-endsteps") {
+            crystal_steps[1] = time;
         }
-    }
+    } 
     // add "relative" times
     ruins_general += lv_up_msg - you_won_msg;
     frog_skip_save = not_frogskip_turn - frogskip_turn;

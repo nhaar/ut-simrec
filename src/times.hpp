@@ -79,6 +79,26 @@ public:
 
     int dogi_steps [2];
 
+    int waterfall_general;
+
+    int single_woshua_shoes;
+
+    int single_aaron_shoes;
+
+    int double_mold_shoes;
+
+    int aaron_woshua_surprise;
+
+    int woshua_mold;
+
+    int temmie;
+
+    int crystal_backtrack;
+
+    int mushroom_steps [2];
+
+    int crystal_steps [2];
+
     Times ();
 
     Times (std::unordered_map<std::string, int> map);
