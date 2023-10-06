@@ -59,6 +59,8 @@ public:
     // nobody-came
     int nobody_came;
 
+    int leaf_pile_steps [2];
+
     Times ();
 
     Times (std::unordered_map<std::string, int> map);

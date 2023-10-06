@@ -35,7 +35,7 @@
         <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime-step" tutorial="true">
         <name>ruins-leaf-pile</name>
         <start><RoomTransition room="RuinsHallway" backwards="false" /></start>
         <end><Door name="C" room="RuinsLeafPile" /></end>
@@ -66,11 +66,18 @@
         </explanation>
     </segment>
 
+    <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="false">
+        <name>ruins-leaf-pile-endsteps</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="C" room="RuinsLeafPile" /></end>
+        <xp>29</xp>
+        <message>GRIND</message>
+    </segment>
+
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>leaf-pile-transition</name>
-        <start><LeaveBattle /></start>
+        <start><Door name="C" room="RuinsLeafPile" /></start>
         <end><RoomTransition room="RuinsLeafPile" backwards="false" /></end>
-        <xp>29</xp>
         <message>GRIND</message>
     </segment>
 

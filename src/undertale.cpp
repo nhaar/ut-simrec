@@ -79,6 +79,3 @@ int Undertale::encounter_time_average_total (int number_of_times) {
     // 2.5 is the avg of roundrandom(5)
     return static_cast<int>(std::round(2.5 * number_of_times));
 }
-
-// minimal number of steps needed to walk through the ruins leaf pile room
-int Undertale::leaf_pile_steps = 97;

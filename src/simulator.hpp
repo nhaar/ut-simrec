@@ -10,6 +10,8 @@ public:
     Times& times;
 
     virtual int simulate() = 0;
+
+    int fix_step_total (int calculated_steps, int* downtime_steps);
     
     Simulator (Times& times_value);
 

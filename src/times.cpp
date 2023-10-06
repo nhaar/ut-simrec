@@ -72,6 +72,10 @@ Times::Times (std::unordered_map<std::string, int> map) {
             ruins_second_half_transition = time;
         } else if (key == "nobody-came") {
             nobody_came = time;
+        } else if (key == "ruins-leaf-pile-steps") {
+            leaf_pile_steps[0] = time;
+        } else if (key == "ruins-leaf-pile-endsteps") {
+            leaf_pile_steps[1] = time;
         }
     }
     // add "relative" times
