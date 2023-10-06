@@ -1399,7 +1399,7 @@ static class GMLCodeClass
     public static string StartSegment (string segmentName)
     {
         return @$"
-        {GMLCodeClass.StartSession}
+        {StartSession}
         obj_time.is_timer_running = 1;
         obj_time.time_start = get_timer();
         obj_time.segment_name = {GMLString(segmentName)};
@@ -1416,7 +1416,7 @@ static class GMLCodeClass
     public static string StartDowntime (string downtimeName, int steps = 10000)
     {
         return @$"
-        {GMLCodeClass.StartSession}
+        {StartSession}
         obj_time.is_downtime_mode = 1;
         obj_time.downtime = 0;
         obj_time.downtime_start = 0;
