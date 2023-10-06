@@ -1481,16 +1481,16 @@ static class GMLCodeClass
             : "";
 
         return @$"
-    // in case the downtime ends during a downtime, must not lose the time being counted
-    if (obj_time.is_downtime_running)
-    {{
-        obj_time.downtime += get_timer() + obj_time.downtime_start
-    }}
-    obj_time.is_downtime_mode = 0;
-    obj_time.segment++;
-    {GMLCodeClass.AppendNewTime(ConvertToFrames("obj_time.downtime"))}
+        // in case the downtime ends during a downtime, must not lose the time being counted
+        if (obj_time.is_downtime_running)
+        {{
+            obj_time.downtime += get_timer() + obj_time.downtime_start
+        }}
+        obj_time.is_downtime_mode = 0;
+        obj_time.segment++;
+        {GMLCodeClass.AppendNewTime(ConvertToFrames("obj_time.downtime"))}
         {stepCode}
-    ";
+        ";
     }
 
     /// <summary>
