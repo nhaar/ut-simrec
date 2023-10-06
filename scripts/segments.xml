@@ -899,7 +899,7 @@
         <message>GRIND</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime-step" tutorial="true">
         <name>mushroom-maze</name>
         <start><RoomTransition room="WaterfallBeforeMazes" backwards="false" /></start>
         <end><Door name="C" room="WaterfallMushroomMaze" /></end>
@@ -912,22 +912,31 @@
         </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
-        <name>mushroom-transition</name>
+    <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="true">
+        <start>mushroom-maze-endsteps</start>
         <start><LeaveBattle /></start>
+        <end><Door name="C" room="WaterfallMushroomMaze" /></end>
+        <!-- Temmie only to speed things -->
+        <next-encounter>Temmie</next-encounter>
+        <message>PROCEED</message>
+        <explanation>
+            Now grind an encounter at the end of the room and proceed
+        </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>mushroom-transition</name>
+        <start><Door name="C" room="WaterfallMushroomMaze" /></start>
         <end><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></end>
         <room>WaterfallMushroomMaze</room>
         <x>542</x>
         <y>229</y>
         <!-- Temmie only to speed things -->
         <next-encounter>Temmie</next-encounter>
-        <message>GRIND</message>
-        <explanation>
-            Now grind an encounter at the end of the room and proceed
-        </explanation>
+        <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="downtime" tutorial="true">
+    <segment uninterruptable="false" fast-encounters="false" type="downtime-step" tutorial="true">
         <name>crystal-maze</name>
         <start><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></start>
         <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
@@ -937,8 +946,8 @@
         </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
-        <name>crystal-transition</name>
+    <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="true">
+        <name>crystal-maze-endsteps</name>
         <start><LeaveBattle /></start>
         <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
         <room>WaterfallCrystalMaze</room>
