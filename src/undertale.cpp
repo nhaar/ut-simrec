@@ -119,3 +119,15 @@ int Undertale::waterfall_grind_encounter () {
 int Undertale::waterfall_grind_steps (int kills) {
     return src_steps(60, 20, 18, kills);
 }
+
+// steps for the rooms in core
+int Undertale::core_encounter () {
+    double roll = Random::random_number();
+    if (roll < 0.133333333) return Encounters::FinalFroggitAstigmatism;
+    if (roll < 0.333333333) return Encounters::WhimsalotFinalFroggit;
+    if (roll < 0.533333333) return Encounters::WhimsalotAstigmatism;
+    if (roll < 0.733333333) return Encounters::KnightKnightMadjick;
+    if (roll < 0.866666666) return Encounters::CoreTriple;
+    if (roll < 0.933333333) return Encounters::SingleKnightKnight;
+    return Encounters::SingleMadjick;
+}

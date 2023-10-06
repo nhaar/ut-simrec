@@ -15,7 +15,15 @@ enum Encounters {
     SingleWoshua,
     SingleAaron,
     Temmie,
-    WoshuaMoldbygg
+    WoshuaMoldbygg,
+    SingleAstigmatism,
+    WhimsalotFinalFroggit,
+    WhimsalotAstigmatism,
+    FinalFroggitAstigmatism,
+    KnightKnightMadjick,
+    SingleKnightKnight,
+    SingleMadjick,
+    CoreTriple
 };
 
 #endif

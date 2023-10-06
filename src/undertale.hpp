@@ -33,6 +33,8 @@ public:
     static int waterfall_grind_encounter ();
 
     static int waterfall_grind_steps (int kills);
+
+    static int core_encounter ();
 };
 
 #endif
