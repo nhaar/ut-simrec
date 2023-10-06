@@ -7,7 +7,7 @@ int Ruins::simulate() {
     // initializing vars
     
     // initial time includes execution that is always the same
-    int time = times.ruins_general;
+    int time = times.ruins_general + times.nobody_came;
     int kills = 0;
 
     // add all static blcons (6x nobody came, 1x first froggit, 13x first half)
