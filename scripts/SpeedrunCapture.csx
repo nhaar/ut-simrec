@@ -1475,7 +1475,7 @@ static class GMLCodeClass
     {
         var stepCode = saveSteps
             ? @$"
-            obj_time.segment_name += '_steps';
+            obj_time.segment_name += '-steps';
             {GMLCodeClass.AppendNewTime("global.encounter")}
             "
             : "";
