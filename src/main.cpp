@@ -9,6 +9,7 @@
 #include "simulator.hpp"
 #include "ruins.hpp"
 #include "snowdin.hpp"
+#include "waterfall.hpp"
 
 using namespace std;
 
@@ -79,6 +80,8 @@ int main (int arc, char *argv[]) {
         simulator = new Ruins(times);
     } else if (run == "snowdin") {
         simulator = new Snowdin(times);
+    } else if (run == "waterfall") {
+        simulator = new Waterfall(times);
     }
     else throw new exception();
 
