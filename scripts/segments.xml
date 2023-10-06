@@ -918,10 +918,26 @@
         <end><Door name="C" room="WaterfallMushroomMaze" /></end>
         <!-- Temmie only to speed things -->
         <next-encounter>Temmie</next-encounter>
-        <message>PROCEED</message>
+        <message>GRIND</message>
         <explanation>
-            Now grind an encounter at the end of the room and proceed
+            Now grind TWO encounters at the end of the room. That is, grind one, then leave and come back
+            to grind another
         </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>mushroom-maze-going-back</name>
+        <start><Door name="C" room="WaterfallMushroomMaze" /></start>
+        <end><RoomTransition room="WaterfallCrystalMaze" backwards="true" /></end>
+        <next-encounter>Temmie</next-encounter>
+        <message>GRIND</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>mushroom-maze-exit-after-backtrack</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="C" room="WaterfallMushroomMaze" /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
