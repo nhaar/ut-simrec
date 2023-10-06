@@ -1145,17 +1145,10 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
-        <name>core-left-transition</name>
-        <start><LeaveBattle /></start>
-        <end><RoomTransition room="CoreBridge" backwards="true" /></end>
-        <message>GRIND AND GO LEFT</message>
-    </segment>
-
-    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>left-side-travel</name>
-        <start><RoomTransition room="CoreBridge" backwards="true" /></start>
+        <start><LeaveBattle /></start>
         <end><RoomTransition room="CoreCenter" backwards="true" /></end>
-        <message>GRIND TWO ENCOUNTERS IN THE LEFT</message>
+        <message>GRIND AND GO LEFT</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
