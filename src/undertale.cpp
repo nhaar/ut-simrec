@@ -1,6 +1,6 @@
+#include <cmath>
 #include "undertale.hpp"
 #include "random.hpp"
-#include <cmath>
 #include "encounters.hpp"
 
 // including this method since technically Undertale's rounding at halfway rounds to nearest even number
