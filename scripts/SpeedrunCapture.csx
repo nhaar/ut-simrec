@@ -1476,7 +1476,8 @@ static class GMLCodeClass
         var stepCode = saveSteps
             ? @$"
             obj_time.segment_name += '-steps';
-            {GMLCodeClass.AppendNewTime("global.encounter")}
+            // refer to `StopStepCount` as to why I am using `step_count` over `global.encounter`
+            {GMLCodeClass.AppendNewTime("step_count")}
             "
             : "";
 
@@ -1499,7 +1500,13 @@ static class GMLCodeClass
     public static string StopStepCount = @$"
     obj_time.is_step_counting = 0;
     obj_time.segment++;
-    {AppendNewTime("global.encounter - obj_time.start_count")}
+
+    // so the usage of `step_count` as opposed to `global.encounter` here is very specific and so far seems to work out well
+    // the reason for it being that with this, the final step count is actually going be one lower than it should be
+    // EXCEPT if it ends at a door transition, it will be equal. This is interesting because in the C++ simulator we
+    // are assuming it to be a door transition and adding one extra step. So counting the previous one still lets
+    // this work out properly
+    {AppendNewTime("obj_time.step_count - obj_time.start_count")}
     ";
 
     /// <summary>
