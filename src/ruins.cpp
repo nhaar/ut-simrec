@@ -1,5 +1,6 @@
 #include "ruins.hpp"
 #include "undertale.hpp"
+#include "encounters.hpp"
 
 Ruins::Ruins (Times& times_value) : Simulator(times_value) {}
 
@@ -36,7 +37,7 @@ int Ruins::simulate() {
 
         int encounter = Undertale::ruins1();
         // for the froggit encounter
-        if (encounter == 0) {
+        if (encounter == Encounters::SingleFroggit) {
             exp += 3;
             // do arithmetic on the lv for a slight optimization based on how the array is built
             time += times.single_froggit[lv - 2];
@@ -69,10 +70,13 @@ int Ruins::simulate() {
         int at_18 = kills >= 18 ? 1 : 0; 
         int at_19 = kills >= 19 ? 1 : 0;
 
-        bool is_encounter_0 = encounter == 0;
-        if (is_encounter_0 || encounter > 2) { // 2 monster encounters
-            if (is_encounter_0 || encounter == 3) { // for frog encounters
-                if (is_encounter_0) { // for frog whim
+        if (
+            encounter == Encounters::SingleFroggit ||
+            encounter == Encounters::DoubleMoldsmal ||
+            encounter == Encounters::DoubleFroggit
+        ) { // 2 monster encounters
+            if (encounter == Encounters::SingleFroggit || encounter == Encounters::DoubleFroggit) { // for frog encounters
+                if (encounter == Encounters::SingleFroggit) { // for frog whim
                     time += times.froggit_whimsun[at_19];
                 } else { // for 2x frog
                     time += times.double_froggit[at_19];
@@ -85,7 +89,7 @@ int Ruins::simulate() {
                 time += times.double_moldsmal[at_19];
             }
             kills += 2;
-        } else if (encounter == 1) { // single mold
+        } else if (encounter == Encounters::SingleMoldsmal) { // single mold
             time += times.single_moldsmal;
             kills++;
         } else { // triple mold

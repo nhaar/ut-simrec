@@ -1,5 +1,6 @@
 #include "snowdin.hpp"
 #include "undertale.hpp"
+#include "encounters.hpp"
 
 Snowdin::Snowdin (Times& times_value) : Simulator(times_value) {}
 
@@ -54,7 +55,7 @@ int Snowdin::simulate () {
 
         int encounter = Undertale::snowdin();
 
-        if (encounter == 0) {
+        if (encounter == Encounters::SnowdinDouble) {
             if (kills >= 14) {
                 time += times.snowdin_encounters_jerry[0];
                 kills += 2;
@@ -62,7 +63,7 @@ int Snowdin::simulate () {
                 time += times.snowdin_encounters[0];
                 kills++;
             }
-        } else if (encounter == 1) {
+        } else if (encounter == Encounters::SnowdinTriple) {
             if (kills >= 13) {
                 time += times.snowdin_encounters_jerry[1];
                 kills += 3;

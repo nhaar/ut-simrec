@@ -1,6 +1,7 @@
 #include "undertale.hpp"
 #include "random.hpp"
 #include <cmath>
+#include "encounters.hpp"
 
 // including this method since technically Undertale's rounding at halfway rounds to nearest even number
 // will leave it here for easy of changing that but the difference is technically negligible considering
@@ -24,27 +25,21 @@ int Undertale::src_steps (int min_steps, int steps_delta, int max_kills, int kil
 }
 
 // encounterer for first half
-// 0 = froggit
-// 1 = whimsun
 int Undertale::ruins1 () {
     double roll = Random::random_number();
-    if (roll < 0.5) return 0;
-    return 1;
+
+    if (roll < 0.5) return Encounters::SingleFroggit;
+    return Encounters::Whimsun;
 }
 
 // encounterer for ruins second half (called ruins3 because in-game it is the third encounterer)
-// 0 = frog whimsun
-// 1 = 1x mold
-// 2 = 3x mold
-// 3 = 2x froggit
-// 4 = 2x mold
 int Undertale::ruins3 () {
     double roll = Random::random_number();
-    if (roll < 0.25) return 0;
-    if (roll < 0.5) return 1;
-    if (roll < 0.75) return 2;
-    if (roll < 0.9) return 3;
-    return 4;
+    if (roll < 0.25) return Encounters::FroggitWhimsun;
+    if (roll < 0.5) return Encounters::SingleMoldsmal;
+    if (roll < 0.75) return Encounters::TripleMoldsmal;
+    if (roll < 0.9) return Encounters::DoubleFroggit;
+    return Encounters::DoubleMoldsmal;
 }
 
 // random odds for a frog skip
@@ -81,12 +76,10 @@ int Undertale::encounter_time_average_total (int number_of_times) {
 }
 
 // snowdin grind encounter results
-// 0 - ice cap, jerry
-// 1 - ice cap, jerry, snowdrake
 int Undertale::snowdin () {
     double roll = Random::random_number();
-    if (roll > 0.5) return 1;
-    else return 0;
+    if (roll > 0.5) return Encounters::SnowdinDouble;
+    else return Encounters::SnowdinTriple;
 }
 
 // getting a dogskip or not
