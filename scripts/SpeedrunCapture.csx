@@ -1286,10 +1286,13 @@ public static class CodeEntryClass
     public static string GreaterDog = "gml_Object_obj_greatdog_Step_0";
 
     /// <summary>
-    /// Creater coed fro Greater Dog's battle
+    /// Creater code for Greater Dog's battle
     /// </summary>
     public static string GreaterDogCreate = "gml_Object_obj_greatdog_Create_0";
 
+    /// <summary>
+    /// The draw event for Chara at the end of the run
+    /// </summary>
     public static string Chara = "gml_Object_obj_truechara_Draw_0";
 
     /// <summary>
