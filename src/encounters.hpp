@@ -10,7 +10,12 @@ enum Encounters {
     DoubleMoldsmal,
     TripleMoldsmal,
     SnowdinDouble,
-    SnowdinTriple
+    SnowdinTriple,
+    WoshuaAaron,
+    SingleWoshua,
+    SingleAaron,
+    Temmie,
+    WoshuaMoldbygg
 };
 
 #endif

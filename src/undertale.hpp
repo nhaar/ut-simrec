@@ -27,6 +27,12 @@ public:
     static int snowdin ();
 
     static int dogskip ();
+
+    static int glowing_water_encounter ();
+
+    static int waterfall_grind_encounter ();
+
+    static int waterfall_grind_steps (int kills);
 };
 
 #endif

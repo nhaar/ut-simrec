@@ -90,3 +90,32 @@ int Undertale::dogskip () {
     if (roll < 0.5) return 0;
     else return 1;
 }
+
+// encounters for the first random encounter in Waterfall
+int Undertale::glowing_water_encounter () {
+    double roll = Random::random_number();
+    if (roll < 0.2666666666) {
+        return Encounters::SingleWoshua;
+    }
+    if (roll < 0.53333333333) {
+        return Encounters::DoubleMoldsmal;
+    } 
+    if (roll < 0.7333333333) {
+        return Encounters::SingleAaron;
+    }
+    return Encounters::WoshuaAaron;
+
+}
+
+// random encounters at the end of Waterfall
+int Undertale::waterfall_grind_encounter () {
+    double roll = Random::random_number();
+    if (roll < 0.33333333) return Encounters::WoshuaAaron;
+    if (roll < 0.73333333) return Encounters::WoshuaMoldbygg;
+    return Encounters::Temmie;
+}
+
+// steps for the rooms in the waterfall grind
+int Undertale::waterfall_grind_steps (int kills) {
+    return src_steps(60, 20, 18, kills);
+}
