@@ -62,7 +62,7 @@ enum SegmentType
     Continuous,
 
     /// <summary>
-    /// If a segment is timed only when the step count is not going up (or its above the optimal stepcount)
+    /// If a segment is timed only when the step count is not going up
     /// </summary>
     Downtime,
 
@@ -180,11 +180,6 @@ class Segment
     /// All items the player holds at the start of the segment
     /// </summary>
     public UndertaleInventory Inventory = new UndertaleInventory();
-
-    /// <summary>
-    /// Optional and only for type "downtime", the amount of optimal steps to complete the downtime's room
-    /// </summary>
-    public int OptimalSteps = 10000;
 
     /// <summary>
     /// Format the messages as they are read in XML to a readable format
@@ -404,10 +399,6 @@ class Segment
                         }
                     }
                     break;
-                case "optimal-steps":
-                    reader.Read();
-                    OptimalSteps = Int32.Parse(reader.Value);
-                    break;
             }
         }
 
@@ -421,7 +412,7 @@ class Segment
         }
         else if (Type == SegmentType.Downtime)
         {
-            startCode = GMLCodeClass.StartDowntime(Name, OptimalSteps);
+            startCode = GMLCodeClass.StartDowntime(Name);
             endCode = GMLCodeClass.StopDowntime;
         }
         else if (Type == SegmentType.StepCount)
@@ -1411,9 +1402,8 @@ static class GMLCodeClass
     /// Generate GML code that begins a downtime segment
     /// </summary>
     /// <param name="downtimeName">Name of the segment</param>
-    /// <param name="steps">Number of optimals steps for the downtime to end, or left out if it is not important</param>
     /// <returns></returns>
-    public static string StartDowntime (string downtimeName, int steps = 10000)
+    public static string StartDowntime (string downtimeName)
     {
         return @$"
         {StartSession}
@@ -1421,7 +1411,6 @@ static class GMLCodeClass
         obj_time.downtime = 0;
         obj_time.downtime_start = 0;
         obj_time.step_count = global.encounter;
-        obj_time.optimal_steps = {steps}
         obj_time.segment_name = '{downtimeName}';
         obj_time.current_msg = obj_time.segment_message;
         ";
@@ -2568,7 +2557,7 @@ void main ()
 
     // downtime timer controller
     append(CodeEntryClass.step, @"
-    // downtime begins whenever not progressing step count OR stepcount has gone over the optimal number
+    // downtime begins whenever not progressing step count
     // since downtime uses global.encounter, which is reset by encounters, it is not designed to work while encounters are on
     if (is_downtime_mode)
     {
@@ -2586,9 +2575,8 @@ void main ()
         {
             // being equals means global.encounter did not increment, thus downtime has begun
             // but it also means that it stopped incrementing last frame, thus use previous_time
-            // also, the frame it goes above optimal steps is when downtime begins (since we're using is previous_time it also
             // means we use step_count instead of global.encounter)
-            if (global.encounter == step_count || step_count > optimal_steps)
+            if (global.encounter == step_count)
             {
                 downtime_start = previous_time;
                 is_downtime_running = 1;
