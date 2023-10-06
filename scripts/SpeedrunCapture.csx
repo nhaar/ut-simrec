@@ -1477,7 +1477,7 @@ static class GMLCodeClass
             ? @$"
             obj_time.segment_name += '-steps';
             // refer to `StopStepCount` as to why I am using `step_count` over `global.encounter`
-            {GMLCodeClass.AppendNewTime("step_count")}
+            {GMLCodeClass.AppendNewTime("obj_time.step_count")}
             "
             : "";
 
