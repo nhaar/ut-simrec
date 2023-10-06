@@ -1197,9 +1197,19 @@
     <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
         <name>core-warrior-path</name>
         <start><Door name="B" room="CoreLeftGrindRoom" /></start>
-        <end><Door name="A" room="CoreBridge" /></end>
+        <end><RoomTransition room="CoreCenter" backwards="false" /></end>
         <room>CoreLeftGrindRoom</room>
         <x>20</x>
+        <y>100</y>
+        <message>PROCEED</message>
+    </segment>
+
+    <segment>
+        <name>core-bridge</name>
+        <start><RoomTransition room="CoreCenter" backwards="false" /></start>
+        <end><Door name="A" room="CoreBridge" /></end>
+        <room>CoreCenter</room>
+        <x>260</x>
         <y>100</y>
         <message>PROCEED</message>
     </segment>
