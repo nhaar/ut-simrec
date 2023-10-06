@@ -52,24 +52,67 @@ static class XmlBool
 }
 
 /// <summary>
-/// The types a segment can take
+/// The type for a segment
 /// </summary>
-enum SegmentType
+class SegmentType
 {
     /// <summary>
-    /// If a segment is timed from start to finish non-stop
+    /// Variable in Undertale that says the segment is running
     /// </summary>
-    Continuous,
+    public string RunningVariable;
 
     /// <summary>
-    /// If a segment is timed only when the step count is not going up
+    /// Undertale code that will start the segment
     /// </summary>
-    Downtime,
+    public string StartCode;
 
     /// <summary>
-    /// A segment that times step counts instead of time
+    /// Undertale code that will end the segment
     /// </summary>
-    StepCount
+    public string EndCode;
+
+    /// <summary>
+    /// Thrown if the segment type from the XML is invalid
+    /// </summary>
+    private class SegmentTypeException : Exception
+    {
+        public SegmentTypeException(string type) : base($"\"{type}\" is not a valid segment type") {}
+    }
+
+    /// <summary>
+    /// Default constructor
+    /// </summary>
+    public SegmentType () {}
+
+    /// <summary>
+    /// Build type from the "type" attribute from the XML segments
+    /// </summary>
+    /// <param name="xmlName">Value of the type attribute</param>
+    /// <param name="segmentName">Name of the segment</param>
+    /// <exception cref="SegmentTypeException"></exception>
+    public SegmentType (string xmlName, string segmentName)
+    {
+        Console.WriteLine(xmlName);
+        if (xmlName == "continuous")
+        {
+            RunningVariable = "obj_time.is_timer_running";
+            StartCode = GMLCodeClass.StartSegment(segmentName);
+            EndCode = GMLCodeClass.StopTime;
+        }
+        else if (xmlName == "downtime")
+        {
+            RunningVariable = "obj_time.is_downtime_mode";
+            StartCode = GMLCodeClass.StartDowntime(segmentName);
+            EndCode = GMLCodeClass.StopDowntime;
+        }
+        else if (xmlName == "step")
+        {
+            RunningVariable = "obj_time.is_step_counting";
+            StartCode = GMLCodeClass.StartStepCount(segmentName);
+            EndCode = GMLCodeClass.StopStepCount;
+        }
+        else throw new SegmentTypeException(xmlName);
+    }   
 }
 
 /// <summary>
@@ -236,14 +279,6 @@ class Segment
     }
 
     /// <summary>
-    /// Thrown if the segment type from the XML is invalid
-    /// </summary>
-    private class SegmentTypeException : Exception
-    {
-        public SegmentTypeException(string type) : base($"\"{type}\" is not a valid segment type") {}
-    }
-
-    /// <summary>
     /// Get an undertale event from its XML node representation
     /// </summary>
     /// <param name="reader">Reader with the node for the event</param>
@@ -265,7 +300,6 @@ class Segment
     /// </summary>
     /// <param name="reader">Reader with the node for the segment</param>
     /// <param name="previous">Segment previous to this one</param>
-    /// <exception cref="SegmentTypeException"></exception>
     public Segment (XmlReader reader, Segment previous)
     {
         Previous = previous;
@@ -278,11 +312,8 @@ class Segment
         var incrementMurder = reader.GetAttribute("increment-murder");
         MurderLevel = incrementMurder == null ? Previous.MurderLevel : Previous.MurderLevel + Int32.Parse(incrementMurder);
 
-        string type = reader.GetAttribute("type");
-        if (type == "continuous") Type = SegmentType.Continuous;
-        else if (type == "downtime") Type = SegmentType.Downtime;
-        else if (type == "step") Type = SegmentType.StepCount;
-        else throw new SegmentTypeException("");
+        // save type for later use
+        var type = reader.GetAttribute("type");
 
         Inventory.CopyFrom(Previous.Inventory);
 
@@ -402,26 +433,11 @@ class Segment
             }
         }
 
+        Type = new SegmentType(type, Name);
+
         // updating boundary event code
-        var startCode = "";
-        var endCode = "";
-        if (Type == SegmentType.Continuous)
-        {
-            startCode = GMLCodeClass.StartSegment(Name);
-            endCode = GMLCodeClass.StopTime;
-        }
-        else if (Type == SegmentType.Downtime)
-        {
-            startCode = GMLCodeClass.StartDowntime(Name);
-            endCode = GMLCodeClass.StopDowntime;
-        }
-        else if (Type == SegmentType.StepCount)
-        {
-            startCode = GMLCodeClass.StartStepCount(Name);
-            endCode = GMLCodeClass.StopStepCount;
-        }
-        Start.Code += '\n' + startCode;
-        End.Code += '\n' + endCode;
+        Start.Code += '\n' + Type.StartCode;
+        End.Code += '\n' + Type.EndCode;
 
         // taking from previous if none given because that's a special feature of the XML! (also these values are mandatory)
         if (Plot == null) Plot = Previous.Plot;
@@ -2773,10 +2789,7 @@ void main ()
 
 
         // wrap code so that it wont run in unintended orders (run end without start and etc)
-        var runningVariable = "";
-        if (segment.Type == SegmentType.Continuous) runningVariable = "obj_time.is_timer_running";
-        else if (segment.Type == SegmentType.Downtime) runningVariable = "obj_time.is_downtime_mode";
-        else if (segment.Type == SegmentType.StepCount) runningVariable = "obj_time.is_step_counting";
+        var runningVariable = segment.Type.RunningVariable;
 
         segment.Start.Code = @$"
         if (!{runningVariable})
