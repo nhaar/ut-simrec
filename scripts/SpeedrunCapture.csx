@@ -1473,6 +1473,8 @@ static class GMLCodeClass
     obj_time.is_downtime_mode = 0;
     obj_time.segment++;
     {GMLCodeClass.AppendNewTime(ConvertToFrames("obj_time.downtime"))}
+    obj_time.segment_name += '_steps';
+    {GMLCodeClass.AppendNewTime("global.encounter")}
     ";
 
     /// <summary>
