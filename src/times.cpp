@@ -76,6 +76,48 @@ Times::Times (std::unordered_map<std::string, int> map) {
             leaf_pile_steps[0] = time;
         } else if (key == "ruins-leaf-pile-endsteps") {
             leaf_pile_steps[1] = time;
+        } else if (
+            key == "ruins-to-snowdin" ||
+            key == "snowdin-box-road" ||
+            key == "sgl-snowdrake" ||
+            key == "snowdin-human-rock" ||
+            key == "sgl-icecap" ||
+            key == "snowdin-doggo" ||
+            key == "ice-slide-downtime" ||
+            key == "lesser-dog" ||
+            key == "before-dogi" ||
+            key == "snowdin-dogi" ||
+            key == "before-greater-dog" ||
+            key == "greater-dog-1" ||
+            key == "greater-dog-2" ||
+            key == "greater-dog-end" ||
+            key == "snowdin-end"
+        ) {
+            snowdin_general += time;
+        } else if (key == "snowdin-box-road-steps") {
+            box_road_steps[0] = time;
+        } else if (key == "box-road-endsteps") {
+            box_road_steps[1] = time;
+        } else if (key == "snowdin-dogi-steps") {
+            dogi_steps[0] = time;
+        } else if (key == "snowdin-dogi-endsteps") {
+            dogi_steps[1] = time;
+        } else if (key == "dogskip") {
+            dogskip_turn = time;
+        } else if (key == "not-dogskip") {
+            not_dogskip_turn = time;
+        } else if (key == "snowdin-dbl") {
+            snowdin_encounters[0] = time;
+        } else if (key == "snowdin-tpl") {
+            snowdin_encounters[1] = time;
+        } else if (key == "snowdin-dbl-jerry") {
+            snowdin_encounters_jerry[0] = time;
+        } else if (key == "snowdin-tpl-jerry") {
+            snowdin_encounters_jerry[1] = time;
+        } else if (key == "snowdin-right-transition") {
+            snowdin_right_transition = time;
+        } else if (key == "snowdin-left-transition") {
+            snowdin_left_transition = time;
         }
     }
     // add "relative" times

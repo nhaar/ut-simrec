@@ -61,6 +61,24 @@ public:
 
     int leaf_pile_steps [2];
 
+    int snowdin_general;
+
+    int snowdin_encounters [2];
+
+    int snowdin_encounters_jerry [2];
+
+    int snowdin_right_transition;
+
+    int snowdin_left_transition;
+
+    int dogskip_turn;
+
+    int not_dogskip_turn;
+
+    int box_road_steps [2];
+
+    int dogi_steps [2];
+
     Times ();
 
     Times (std::unordered_map<std::string, int> map);
