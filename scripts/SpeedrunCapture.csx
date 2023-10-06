@@ -2739,6 +2739,8 @@ void main ()
     var pressed_t = keyboard_check_pressed(ord('T')) && (global.debug || !is_session_running);
     if (pressed_r || segment_changed || pressed_t)
     {{
+        // also useful when the next segment updates plot and we must go back
+        global.plot = segment_plot;
         if (pressed_r || segment_changed)
         {{
             if (segment_is_tutorial)
@@ -2762,7 +2764,6 @@ void main ()
         }}
         if (pressed_r || pressed_t)
         {{
-            global.plot = segment_plot;
             global.interact = 0;
             is_timer_running = 0;
             is_downtime_mode = 0;
