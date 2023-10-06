@@ -15,12 +15,13 @@ Times::Times (std::unordered_map<std::string, int> map) {
             key == "ruins-start" ||
             key == "ruins-hallway" ||
             key == "ruins-leafpile" ||
-            key == "ruins-leafpile-transition" ||
-            key == "ruins-leaf-fall" ||
+            key == "leaf-pile-transition" ||
+            key == "leaf-fall-downtime" ||
             key == "leaf-fall-transition" ||
             key == "ruins-one-rock" ||
+            key == "one-rock-transition" ||
             key == "ruins-maze" ||
-            key == "ruins-three-rock" ||
+            key == "three-rock-downtime" ||
             key == "three-rock-transition" ||
             key == "ruins-napsta" ||
             key == "ruins-switches" ||
@@ -69,6 +70,8 @@ Times::Times (std::unordered_map<std::string, int> map) {
             double_froggit[1] = time;
         } else if (key == "ruins-second-transition") {
             ruins_second_half_transition = time;
+        } else if (key == "nobody-came") {
+            nobody_came = time;
         }
     }
     // add "relative" times

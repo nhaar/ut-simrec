@@ -20,13 +20,14 @@ public:
     // ruins-start +
     // ruins-hallway +
     // ruins-leafpile +
-    // ruins-leafpile-transition +
+    // leaf-pile-transition +
     // 10 * ruins-first-transition +
-    // ruins-leaf-fall +
+    // leaf-fall-downtime +
     // leaf-fall-transition +
     // ruins-one-rock +
+    // one-rock-transition +
     // ruins-maze +
-    // ruins-three-rock +
+    // three-rock-downtime +
     // ruins-naspta +
     // ruins-switches +
     // ruins-perspective-a +
@@ -37,7 +38,7 @@ public:
     // you-won - lv-up
     int ruins_general;
 
-    // not_frogskip - frogskip
+    // not-frogskip - frogskip
     int frog_skip_save;
 
     // { froggit-lv2, froggit-lv3 }
@@ -54,6 +55,9 @@ public:
 
     // { dbl-frog, dbl-frog-19 }
     int double_froggit [2];
+
+    // nobody-came
+    int nobody_came;
 
     Times ();
 
