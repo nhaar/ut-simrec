@@ -186,8 +186,15 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
-        <name>ruins-maze</name>
+        <name>one-rock-transition</name>
         <start><LeaveBattle /></start>
+        <end><RoomTransition room="RuinsOneRock" backwards="false" /></end>
+        <message>PROCEED</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
+        <name>ruins-maze</name>
+        <start><RoomTransition room="RuinsOneRock" backwards="false" /></start>
         <end><RoomTransition room="RuinsLeafMaze" backwards="false" /></end>
         <message>PROCEED</message>
     </segment>
