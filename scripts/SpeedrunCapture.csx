@@ -64,7 +64,12 @@ enum SegmentType
     /// <summary>
     /// If a segment is timed only when the step count is not going up (or its above the optimal stepcount)
     /// </summary>
-    Downtime
+    Downtime,
+
+    /// <summary>
+    /// A segment that times step counts instead of time
+    /// </summary>
+    StepCount
 }
 
 /// <summary>
@@ -281,6 +286,7 @@ class Segment
         string type = reader.GetAttribute("type");
         if (type == "continuous") Type = SegmentType.Continuous;
         else if (type == "downtime") Type = SegmentType.Downtime;
+        else if (type == "step") Type = SegmentType.StepCount;
         else throw new SegmentTypeException("");
 
         Inventory.CopyFrom(Previous.Inventory);
@@ -406,16 +412,25 @@ class Segment
         }
 
         // updating boundary event code
+        var startCode = "";
+        var endCode = "";
         if (Type == SegmentType.Continuous)
         {
-            Start.Code += '\n' + GMLCodeClass.StartSegment(Name);
-            End.Code += '\n' + GMLCodeClass.StopTime;
+            startCode = GMLCodeClass.StartSegment(Name);
+            endCode = GMLCodeClass.StopTime;
         }
         else if (Type == SegmentType.Downtime)
         {
-            Start.Code += '\n' + GMLCodeClass.StartDowntime(Name, OptimalSteps);
-            End.Code += '\n' + GMLCodeClass.StopDowntime;
+            startCode = GMLCodeClass.StartDowntime(Name, OptimalSteps);
+            endCode = GMLCodeClass.StopDowntime;
         }
+        else if (Type == SegmentType.StepCount)
+        {
+            startCode = GMLCodeClass.StartStepCount(Name);
+            endCode = GMLCodeClass.StopStepCount;
+        }
+        Start.Code += '\n' + startCode;
+        End.Code += '\n' + endCode;
 
         // taking from previous if none given because that's a special feature of the XML! (also these values are mandatory)
         if (Plot == null) Plot = Previous.Plot;
@@ -1413,7 +1428,22 @@ static class GMLCodeClass
     }
 
     /// <summary>
-    /// Converts a time time in miliseconds into the nearest 30 fps frame
+    /// Generate GML code that starts a step count segment
+    /// </summary>
+    /// <param name="segmentName">Name of the segment</param>
+    /// <returns></returns>
+    public static string StartStepCount (string segmentName)
+    {
+        return @$"
+        {StartSession}
+        obj_time.is_step_counting = 1;
+        obj_time.start_count = global.encounter;
+        obj_time.segment_name = {GMLString(segmentName)};
+        obj_time.current_msg = obj_time.segment_message;
+        ";
+    }
+
+    /// <summary>
     /// </summary>
     /// <param name="time"></param>
     /// <returns></returns>
@@ -1443,6 +1473,15 @@ static class GMLCodeClass
     obj_time.is_downtime_mode = 0;
     obj_time.segment++;
     {GMLCodeClass.AppendNewTime(ConvertToFrames("obj_time.downtime"))}
+    ";
+
+    /// <summary>
+    /// Generate GML code that stops a step count segment
+    /// </summary>
+    public static string StopStepCount = @$"
+    obj_time.is_step_counting = 0;
+    obj_time.segment++;
+    {AppendNewTime("global.encounter - obj_time.start_count")}
     ";
 
     /// <summary>
@@ -2418,6 +2457,10 @@ void main ()
     step_count = 0;
     previous_time = 0;
 
+    // step count variables
+    is_step_counting = 0;
+    start_count = 0;
+
     // room tracker
     previous_room = 0;
     current_room = 0;
@@ -2742,6 +2785,7 @@ void main ()
         var runningVariable = "";
         if (segment.Type == SegmentType.Continuous) runningVariable = "obj_time.is_timer_running";
         else if (segment.Type == SegmentType.Downtime) runningVariable = "obj_time.is_downtime_mode";
+        else if (segment.Type == SegmentType.StepCount) runningVariable = "obj_time.is_step_counting";
 
         segment.Start.Code = @$"
         if (!{runningVariable})
