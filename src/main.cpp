@@ -8,6 +8,7 @@
 #include "probability_distribution.hpp"
 #include "simulator.hpp"
 #include "ruins.hpp"
+#include "snowdin.hpp"
 
 using namespace std;
 
@@ -24,6 +25,7 @@ int main (int arc, char *argv[]) {
     int chance_max = -1;
     bool use_best = false;
     int simulations = 1'000'000;
+    string run;
 
     int cur_arg = 1;
     while (cur_arg < arc) {
@@ -56,6 +58,10 @@ int main (int arc, char *argv[]) {
             case 'b':
                 use_best = true;
                 break;
+            case 'r':
+                cur_arg++;
+                run = argv[cur_arg];
+                break;
         }
         cur_arg++;
     }
@@ -67,8 +73,18 @@ int main (int arc, char *argv[]) {
     Times times;
     if (use_best) times = reader.get_best();
     else times = reader.get_average();
-    Ruins simulator(times);
-    ProbabilityDistribution dist = simulator.get_dist(simulations);
+
+    Simulator* simulator = nullptr;
+    if (run == "ruins") {
+        simulator = new Ruins(times);
+    } else if (run == "snowdin") {
+        simulator = new Snowdin(times);
+    }
+    else throw new exception();
+
+    ProbabilityDistribution dist = simulator->get_dist(simulations);
+    delete simulator;
+    
     if (calculate_chance) {
         double chance;
         if (chance_min == -1 && chance_max == -1) chance = 1;
