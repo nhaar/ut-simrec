@@ -79,3 +79,21 @@ int Undertale::encounter_time_average_total (int number_of_times) {
     // 2.5 is the avg of roundrandom(5)
     return static_cast<int>(std::round(2.5 * number_of_times));
 }
+
+// snowdin grind encounter results
+// 0 - ice cap, jerry
+// 1 - ice cap, jerry, snowdrake
+int Undertale::snowdin () {
+    double roll = Random::random_number();
+    if (roll > 0.5) return 1;
+    else return 0;
+}
+
+// getting a dogskip or not
+// 0 - no dogskip
+// 1 - dogskip
+int Undertale::dogskip () {
+    double roll = Random::random_number();
+    if (roll < 0.5) return 0;
+    else return 1;
+}

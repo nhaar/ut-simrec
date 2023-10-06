@@ -23,6 +23,10 @@ public:
     static int encounter_time_random(int number_of_times);
 
     static int encounter_time_average_total (int number_of_times);
+
+    static int snowdin ();
+
+    static int dogskip ();
 };
 
 #endif
