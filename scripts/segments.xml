@@ -44,6 +44,7 @@
         <room>RuinsHallway</room>
         <x>2400</x>
         <y>100</y>
+        <xp>10</xp>
         <message>WALK</message>
         <explanation>
             Walk to the end of the next room without grinding an encounter
@@ -58,7 +59,6 @@
         <room>RuinsLeafPile</room>
         <x>200</x>
         <y>330</y>
-        <xp>29</xp>
         <next-encounter>SingleFroggit</next-encounter>
         <message>GRIND</message>
         <explanation>
@@ -71,6 +71,7 @@
         <name>leaf-pile-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafPile" backwards="false" /></end>
+        <xp>29</xp>
         <message>GRIND</message>
     </segment>
 
@@ -94,7 +95,6 @@
         <name>lv-up</name>
         <start><YouWon /></start>
         <end><LeaveBattle /></end>
-        <xp>30</xp>
         <message>GRIND</message>
     </segment>
 
@@ -102,6 +102,7 @@
         <name>ruins-first-transition</name>
         <start><LeaveBattle /></start>
         <end><RoomTransition room="RuinsLeafFall" backwards="true" /></end>
+        <xp>30</xp>
         <message>GRIND</message>
     </segment>
 
