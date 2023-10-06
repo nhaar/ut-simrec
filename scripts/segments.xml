@@ -528,19 +528,21 @@
         <message>PROCEED</message>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" type="downtime" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="downtime-step" tutorial="true">
         <name>snowdin-dogi</name>
         <start><RoomTransition room="SnowdinSpaghetti" backwards="false" /></start>
-        <end><Blcon /></end>
+        <end><EnterDogi /></end>
         <plot>47</plot>
         <room>SnowdinSpaghetti</room>
         <x>270</x>
         <y>120</y>
-        <step-count>160</step-count>
-        <message>PROCEED (DO GRIND)</message>
+        <message>PROCEED</message>
+        <explanation>
+            Next, walk as optimally as possible to the Dogi fight (do not grind an encounter)
+        </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>snowdin-dbl</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -550,11 +552,22 @@
         <y>405</y>
         <next-encounter>SnowdinDouble</next-encounter>
         <message>PROCEED</message>
+        <explanation>
+            Now, grind an encounter at the end of the bridge before fighting Dogi
+            and then after it continue normally
+        </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="false">
+        <name>snowdin-dogi-endsteps</name>
+        <start><LeaveBattle /></start>
+        <end><EnterDogi /></end>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>before-greater-dog</name>
-        <start><LeaveBattle /></start>
+        <start><EnterDogi /></start>
         <end><EnterBattle battlegroup="GreaterDog" /></end>
         <xp>300</xp>
         <message>PROCEED</message>

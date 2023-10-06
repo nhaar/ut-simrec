@@ -1291,6 +1291,12 @@ public static class CodeEntryClass
     public static string GreaterDogCreate = "gml_Object_obj_greatdog_Create_0";
 
     public static string Chara = "gml_Object_obj_truechara_Draw_0";
+
+    /// <summary>
+    /// Event that fires when you hit the trigger that forces you to go right
+    /// into the dogi fight
+    /// </summary>
+    public static string EnterDogi = "gml_Object_obj_forcedright_Collision_1570";
 }
 
 /*
@@ -2390,6 +2396,24 @@ class RunEnd : UniqueEvent
         return CodeEntryClass.Chara;
     }
 
+}
+
+/// <summary>
+/// Event that fires when the player steps into the trigger that forced them to go right
+/// to the Dogi fight
+/// </summary>
+class EnterDogi : UniqueEvent
+{
+    public EnterDogi (XmlReader reader) : base(reader) {}
+
+    public override PlaceMethod Method => PlaceMethod.Place;
+
+    public override string Replacement => "vol1 = vol";
+
+    public override string CodeEntry ()
+    {
+        return CodeEntryClass.EnterDogi;
+    }
 }
 
 /******
