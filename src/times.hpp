@@ -101,6 +101,32 @@ public:
 
     int mushroom_backtrack;
 
+    int endgame_general;
+
+    int single_astig;
+
+    int whimsalot_astig;
+
+    int final_froggit_whimsalot;
+
+    int final_froggit_astig;
+
+    int knight_madjick;
+
+    int single_knight;
+
+    int single_madjick;
+
+    int core_triple;
+
+    int core_left_transition;
+
+    int core_bridge;
+
+    int core_grind_end;
+
+    int core_right_transition;
+
     Times ();
 
     Times (std::unordered_map<std::string, int> map);

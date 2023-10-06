@@ -12,6 +12,8 @@ Times::Times (std::unordered_map<std::string, int> map) {
     waterfall_general = 0;
     crystal_backtrack = 0;
     mushroom_backtrack = 0;
+    endgame_general = 0;
+    core_left_transition = 0;
     for (const auto& pair : map) {
         const std::string& key = pair.first;
         int time = map[key];
@@ -173,6 +175,42 @@ Times::Times (std::unordered_map<std::string, int> map) {
             mushroom_backtrack += time;
         } else if (key == "mushroom-maze-exit-after-backtrack") {
             mushroom_backtrack += time;
+        } else if (
+            key == "hotland-start" ||
+            key == "vulkin" ||
+            key == "post-vulkin" ||
+            key == "tsunderplane" ||
+            key == "post-tsunderplane" ||
+            key == "left side travel" ||
+            key == "core-left-side-transition-1" ||
+            key == "core-warrior-path" ||
+            key == "run-end"
+        ) {
+            endgame_general += time;
+        } else if (key == "sgl-astig") {
+            single_astig = time;
+        } else if (key == "core-frog-whim") {
+            final_froggit_whimsalot = time;
+        } else if (key == "frog-astig") {
+            final_froggit_astig = time;
+        } else if (key == "whim-astig") {
+            whimsalot_astig = time;
+        } else if (key == "knight-madjick") {
+            knight_madjick = time;
+        } else if (key == "core-triple") {
+            core_triple = time;
+        } else if (key == "sgl-knight") {
+            single_knight = time;
+        } else if (key == "sgl-madjick") {
+            single_madjick = time;
+        } else if (key == "core-left-side-transition-2" || key == "core-left-side-transition-3") {
+            core_left_transition += time;
+        } else if (key == "core-bridge") {
+            core_bridge = time;
+        } else if (key == "grind-end-transition") {
+            core_grind_end = time;
+        } else if (key == "core-right-transition") {
+            core_right_transition = time;
         }
     } 
     // add "relative" times
