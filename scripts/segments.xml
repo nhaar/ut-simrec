@@ -124,8 +124,6 @@
         <start><RoomTransition room="RuinsLeafPile" backwards="false" /></start>
         <end><Door name="A" room="RuinsLeafFall" /></end>
         <message>WALK</message>
-        <x>238</x>
-        <y>300</y>
         <explanation>
             Walk through the next room without grinding an encounter at the end
         </explanation>
