@@ -23,6 +23,32 @@
 			],
 			"group": "build",
 			"detail": "compiler: C:\\mingw64\\bin\\g++.exe"
+		},
+		{
+			"type": "cppbuild",
+			"label": "Very fast",
+			"command": "C:\\mingw64\\bin\\g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",
+				"-std=c++20",
+				"-Ofast",
+				"-fopenmp",
+				"-D_GLIBCXX_PARALLEL",
+				"${workspaceFolder}/src/*.cpp",
+				"${workspaceFolder}/src/thirdparty/*.cpp",
+				"-o",
+				"${workspaceFolder}\\main.exe",
+				"-luuid"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: C:\\mingw64\\bin\\g++.exe"
 		}
 	]
 }
