@@ -1,3 +1,9 @@
+<!-- 
+    SEGMENT NAMING CONVENTION:
+    * endsteps for a downtime are always the same name but with "-endsteps"
+    * keep names readable but being short is a preferred trait, as these are not exactly meant for human understanding in the end
+ -->
+
 <segments>
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-start</name>
