@@ -682,6 +682,7 @@
         <start><Door name="Amusic" room="SnowdinFog" /></start>
         <end><RoomTransition room="WaterfallFirstBridgeSeeds" backwards="false" /></end>
         <plot>101</plot>
+        <phone />
         <room>SnowdinFog</room>
         <x>850</x>
         <y>120</y>
