@@ -52,7 +52,7 @@ int Endgame::simulate () {
         ) {
             kills += 2;
             if (encounter == Encounters::FinalFroggitAstigmatism) {
-                time += flee_one ? times.segments["frog-astsig-flee"] : times.segments["frog-astig"];
+                time += flee_one ? times.segments["frog-astig-flee"] : times.segments["frog-astig"];
             } else if (encounter == Encounters::WhimsalotAstigmatism) {
                 time += flee_one ? times.segments["whim-astig-flee"] : times.segments["whim-astig"];
             } else if (encounter == Encounters::WhimsalotFinalFroggit) {
