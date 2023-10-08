@@ -1201,7 +1201,7 @@
         <message>GO TO WARRIOR PATH</message>
     </segment>
 
-    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>core-warrior-path</name>
         <start><Door name="B" room="CoreLeftGrindRoom" /></start>
         <end><RoomTransition room="CoreCenter" backwards="false" /></end>
