@@ -67,7 +67,7 @@ If you have doubts about what a "normal" Genocide run is to the eyes of the mod,
 
 * If 1 kill is left, grind in the bridge, else just equip the Ballet Shoes and proceed
 
-# How to instal and use the simulator program
+# How to install and use the simulator program
 
 ***NO RELEASE AVAILABLE FOR THE PROGRAM YET***
 
