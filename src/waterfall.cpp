@@ -53,10 +53,11 @@ int Waterfall::simulate () {
 
         if (encounter == Encounters::WoshuaAaron || encounter == Encounters::WoshuaMoldbygg) {
             kills += 2;
+            bool flee = kills == 17;
             if (encounter == Encounters::WoshuaAaron) {
-                time += times.segments["woshua-aaron-surprise"];
+                time += flee ? times.segments["woshua-aaron-17"] : times.segments["woshua-aaron-surprise"];
             } else {
-                time += times.segments["woshua-mold"];
+                time += flee ? times.segments["woshua-mold-17"] : times.segments["woshua-mold"];
             }
         } else {
             time += times.segments["temmie"];
