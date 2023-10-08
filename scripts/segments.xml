@@ -913,6 +913,7 @@
         <x>542</x>
         <y>202</y>
         <next-encounter>WoshuaAaron</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
         <explanation>
             Grind TWO encounters at the end of the room, that is, grind one, then leave and come back
             to grind another, AND, only kill ONE enemy in each encounter (flee from the other)
@@ -923,14 +924,14 @@
         <name>mushroom-maze-endsteps</name>
         <start><LeaveBattle /></start>
         <end><Door name="C" room="WaterfallMushroomMaze" /></end>
-        <message>GRIND</message>
+        <message>GRIND (KILL ONLY ONE)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>mushroom-maze-going-back</name>
         <start><Door name="C" room="WaterfallMushroomMaze" /></start>
         <end><RoomTransition room="WaterfallCrystalMaze" backwards="true" /></end>
-        <message>GRIND</message>
+        <message>GRIND (KILL ONLY ONE)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -938,7 +939,7 @@
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
         <next-encounter>MoldbyggWoshua</next-encounter>
-        <message>GRIND</message>
+        <message>GRIND (KILL ONLY ONE)</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
