@@ -9,8 +9,6 @@ int Ruins::simulate() {
     
     // static time
     int time = times.segments["ruins"];
-
-    // add all static blcons (6x nobody came, 1x first froggit, 13x first half, 2x second half)
     time += Undertale::encounter_time_random(times.static_blcons["ruins"]);
 
     int kills = 0;
