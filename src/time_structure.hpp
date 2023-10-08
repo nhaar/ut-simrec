@@ -371,6 +371,9 @@ const char* time_structure = R"(
             <static>core-right-transition</static>
         </loop>
         <static>left-side-travel</static>
+        <variant>steps</variant>
+        <variant>blcon</variant>
+        <variant>core-left-grind</variant>
         <static>core-left-side-transition-1</static>
         <loop times="?">
             <static>core-left-side-transition-2</static>
