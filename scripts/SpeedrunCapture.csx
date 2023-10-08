@@ -1547,7 +1547,6 @@ static class GMLCodeClass
         return @$"
         obj_time.tp_flag = 1;
         // lock player
-        global.interact = 1;
         obj_time.lock_player = 1;
         room = {room};
         obj_time.tp_x = {x};
@@ -2591,6 +2590,15 @@ void main ()
     {{
         lock_player = 0;
         global.interact = 0;
+    }}
+
+    // prevent player from moving AT ALL
+    if (lock_player)
+    {{
+        up = 0;
+        down = 0;
+        right = 0;
+        left = 0;
     }}
     ");
 
