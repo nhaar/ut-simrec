@@ -59,7 +59,7 @@ int Ruins::simulate() {
             second_half_count++;
         } else {
             time += times.segments["ruins-second-transition"];
-            time += Undertale::encounter_time_random();;
+            time += Undertale::encounter_time_random();
         }
 
         time += Undertale::scr_steps(60, 60, 20, kills);;
