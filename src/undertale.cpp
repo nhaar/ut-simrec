@@ -15,7 +15,7 @@ int Undertale::roundrandom (int max) {
     return round(Random::random_number() * max);
 }
 // replica of the undertale code, with no optimization in mind
-int Undertale::src_steps (int min_steps, int steps_delta, int max_kills, int kills) {
+int Undertale::scr_steps (int min_steps, int steps_delta, int max_kills, int kills) {
     double populationfactor = (double) max_kills / (double) (max_kills - kills);
     if (populationfactor > 8) {
         populationfactor = 8;
@@ -26,7 +26,7 @@ int Undertale::src_steps (int min_steps, int steps_delta, int max_kills, int kil
 
 // step counter for the rooms in the first half of ruins
 int Undertale::ruins_first_half_steps (int kills) {
-    return src_steps(80, 40, 20, kills);
+    return scr_steps(80, 40, 20, kills);
 }
 
 // encounterer for first half
@@ -122,7 +122,7 @@ int Undertale::waterfall_grind_encounter () {
 
 // steps for the rooms in the waterfall grind
 int Undertale::waterfall_grind_steps (int kills) {
-    return src_steps(60, 20, 18, kills);
+    return scr_steps(60, 20, 18, kills);
 }
 
 // steps for the rooms in core

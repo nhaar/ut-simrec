@@ -11,7 +11,7 @@ int Waterfall::simulate () {
     // already counting the first 2 scripted
     int kills = 2;
     // scripted double mold
-    time += Undertale::src_steps(360, 30, 18, kills);
+    time += Undertale::scr_steps(360, 30, 18, kills);
     kills = 4;
     
     // the random glowing water encounter

@@ -8,7 +8,7 @@ private:
 
     static int roundrandom (int max);
 public:
-    static int src_steps (int min_steps, int steps_delta, int max_kills, int kills);
+    static int scr_steps (int min_steps, int steps_delta, int max_kills, int kills);
 
     static int ruins_first_half_steps (int kills);
 

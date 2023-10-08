@@ -10,7 +10,7 @@ int Snowdin::simulate () {
     int kills = 0;
 
     // single snowdrake steps
-    time += fix_step_total(Undertale::src_steps(120, 30, 16, kills), "snowdin-box-road");
+    time += fix_step_total(Undertale::scr_steps(120, 30, 16, kills), "snowdin-box-road");
 
     kills = 3;
     while (kills < 16) {
@@ -21,9 +21,9 @@ int Snowdin::simulate () {
         
         if (kills == 3) {
             // dogi bridge (steps + encounter)
-            time += fix_step_total(Undertale::src_steps(220, 30, 16, kills), "snowdin-dogi");
+            time += fix_step_total(Undertale::scr_steps(220, 30, 16, kills), "snowdin-dogi");
         } else {
-            time += Undertale::src_steps(120, 30, 16, kills);
+            time += Undertale::scr_steps(120, 30, 16, kills);
             time += Undertale::encounter_time_random();
 
             if (kills < 10 || (kills >= 13 && !fight_jerry)) {

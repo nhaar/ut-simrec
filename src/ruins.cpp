@@ -64,7 +64,7 @@ int Ruins::simulate() {
             time += Undertale::encounter_time_random();;
         }
 
-        time += Undertale::src_steps(60, 60, 20, kills);;
+        time += Undertale::scr_steps(60, 60, 20, kills);;
 
         int encounter = Undertale::ruins3();
 
