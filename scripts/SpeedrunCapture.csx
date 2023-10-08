@@ -2767,6 +2767,7 @@ void main ()
 
             global.xp = segment_xp;
             script_execute(scr_levelup);
+            global.hp = global.maxhp;
             {GMLCodeClass.SetMurderLevel("segment_murder_lv")}
 
             var encounter_steps;
