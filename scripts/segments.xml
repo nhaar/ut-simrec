@@ -1204,7 +1204,7 @@
         <message>PROCEED</message>
     </segment>
 
-    <segment>
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>core-bridge</name>
         <start><RoomTransition room="CoreCenter" backwards="false" /></start>
         <end><Door name="A" room="CoreBridge" /></end>
