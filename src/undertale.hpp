@@ -42,6 +42,8 @@ public:
 
     static int waterfall_grind_steps (int kills);
 
+    static int waterfall_grind_same_room (int kills);
+
     static int core_encounter ();
 
     static int core_steps (int kills);

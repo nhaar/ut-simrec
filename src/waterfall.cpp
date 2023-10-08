@@ -34,10 +34,9 @@ int Waterfall::simulate () {
     }
     // shyren and glad dummy
     kills += 2;
-    // first two grind encounters (first being temmie) happen with same number of kills
-    for (int i = 0; i < 2; i++) {
-        time += Undertale::waterfall_grind_steps(kills);
-    }
+    // first two grind encounters (first being temmie) happen with same number of kills, second steps are without room transition
+    time += Undertale::waterfall_grind_steps(kills) +  Undertale::waterfall_grind_same_room(kills);
+
     kills += 3;
     // remaining encounters before going to the mazes
     for (int i = 0; i < 2; i++) {

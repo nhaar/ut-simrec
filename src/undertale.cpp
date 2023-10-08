@@ -137,6 +137,11 @@ int Undertale::waterfall_grind_steps (int kills) {
     return scr_steps(60, 20, 18, kills);
 }
 
+// steps for the same rooms as `waterfall_grind_steps` without a transition
+int Undertale::waterfall_grind_same_room (int kills) {
+    return scr_steps(120, 50, 18, kills);
+}
+
 // steps for the rooms in core
 int Undertale::core_encounter () {
     double roll = Random::random_number();
