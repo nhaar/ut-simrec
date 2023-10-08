@@ -26,9 +26,8 @@ int Snowdin::simulate () {
             time += Undertale::snowdin_general_steps(kills);
             time += Undertale::encounter_time_random();
 
-            if (kills < 10 || (kills >= 13 && !fight_jerry)) {
+            if (kills < 10 || kills == 13 && encounter == Encounters::SnowdinDouble) {
                 time += times.segments["snowdin-right-transition"];
-
             } else if (kills < 13) {
                 time += times.segments["snowdin-left-transition"];
             }
