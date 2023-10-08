@@ -2125,8 +2125,6 @@ class LeaveBattle : UniqueEvent
         return @$"
         if (obj_time.previous_room == room_battle && room != room_battle)
         {{
-            // prevent player from getting locked if they TP out of battle
-            room_persistent = false;
             {Code}
         }}
         ";
@@ -2579,6 +2577,8 @@ void main ()
         tp_flag = 0;
         if (instance_exists(obj_mainchara))
         {{
+            // prevent player from getting locked if they TP out of battle
+            room_persistent = false;
             obj_mainchara.x = tp_x;
             obj_mainchara.y = tp_y;
             // previous x and y must be updated too due to how obj_mainchara's collision events work
