@@ -55,7 +55,7 @@ int Endgame::simulate () {
                 time += flee_one ? times.segments["frog-astig-flee"] : times.segments["frog-astig"];
             } else if (encounter == Encounters::WhimsalotAstigmatism) {
                 time += flee_one ? times.segments["whim-astig-flee"] : times.segments["whim-astig"];
-            } else if (encounter == Encounters::WhimsalotFinalFroggit) {
+            } else {
                 time += flee_one ? times.segments["core-frog-whim-flee"] : times.segments["core-frog-whim"];
             }
         } else if (
