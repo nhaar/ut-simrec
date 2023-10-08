@@ -11,6 +11,7 @@
 #include "snowdin.hpp"
 #include "waterfall.hpp"
 #include "endgame.hpp"
+#include "full_game.hpp"
 
 using namespace std;
 
@@ -85,6 +86,8 @@ int main (int arc, char *argv[]) {
         simulator = new Waterfall(times);
     } else if (run == "endgame") {
         simulator = new Endgame(times);
+    } else if (run == "full") {
+        simulator = new FullGame(times);
     }
     else throw new exception();
 
