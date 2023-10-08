@@ -225,6 +225,11 @@ class Segment
     public UndertaleInventory Inventory = new UndertaleInventory();
 
     /// <summary>
+    /// If set to `true`, the phone for SGS will be setup
+    /// </summary>
+    public bool SetPhone = false;
+
+    /// <summary>
     /// Format the messages as they are read in XML to a readable format
     /// </summary>
     /// <param name="msg"></param>
@@ -429,6 +434,9 @@ class Segment
                             }
                         }
                     }
+                    break;
+                case "phone":
+                    SetPhone = true;
                     break;
             }
         }
@@ -2692,6 +2700,19 @@ void main ()
     var initBlock = new IfElseBlock();
     for (int i = 0; i < segments.Count; i++) {
         var segment = segments[i];
+        // copied from gml_Object_obj_undertaletitle_Draw_0
+        var phoneCode = segment.SetPhone ? @$"
+            global.menuchoice[2] = 1
+            global.phone[0] = 0
+            global.phone[1] = 0
+            global.phone[2] = 0
+            global.phone[3] = 0
+            global.phone[4] = 0
+            global.phone[5] = 0
+            global.phone[6] = 0
+            global.phone[7] = 0
+            global.phone[0] = 206
+        " : "";
         initBlock.AddIfBlock(@$"
         if (segment == {i})
         {{
@@ -2708,6 +2729,7 @@ void main ()
             next_step_count = {segment.NextStepCount};
             segment_murder_lv = {segment.MurderLevel};
             {segment.Inventory.GetInventoryInitializer()}
+            {phoneCode}
         }}
         ");
     }
