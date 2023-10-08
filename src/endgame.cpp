@@ -5,59 +5,66 @@
 Endgame::Endgame (Times& times_value) : Simulator(times_value) {}
 
 int Endgame::simulate () {
-    int time = times.endgame_general;
+    int time = times.segments["endgame"];
+    time += Undertale::encounter_time_random(times.static_blcons["endgame"]);
+    
     int kills = 5;
 
-    // scripted blcons
-    time += Undertale::encounter_time_random(2);
+    // to create a buffer round between being on right and left
     bool went_left = false;
-
     while (kills < 40) {
-        int steps = Undertale::src_steps(70, 50, 40, kills);
-        int encounter = Undertale::core_encounter();
         if (kills < 27) {
-            time += times.core_right_transition;
+            time += times.segments["core-right-transition"];
         } else if (!went_left) {
             went_left = true;
         } else {
+            // warriors path
             if (kills >= 32) kills += 7;
-            if (kills >= 40) break;
-            if (kills == 39) time += times.core_grind_end;
-            else time += times.core_left_transition;
+            // if ending it here, it means we did warrior path and then finished: get the nobody cames and such
+            if (kills >= 40) {
+                time += 3 * times.segments["nobody-came"];
+                time += Undertale::encounter_time_random(3);
+                time += times.segments["core-bridge"];
+                break;
+            }
+            // grind an encounter at 39 in the bridge after coming back
+            if (kills == 39) time += times.segments["grind-end-transition"];
+            // grinding in the left side
+            else time += times.segments["core-left-side-transition-2"] + times.segments["core-left-side-transition-3"];
         }
+        int steps = Undertale::src_steps(70, 50, 40, kills);
+        int encounter = Undertale::core_encounter();
 
-        switch (encounter) {
-            case Encounters::FinalFroggitAstigmatism:
-                time += times.final_froggit_astig;
-                kills += 2;
-                break;
-            case Encounters::SingleAstigmatism:
-                time += times.single_astig;
-                break;
-            case Encounters::WhimsalotAstigmatism:
-                time += times.whimsalot_astig;
-                kills += 2;
-                break;
-            case Encounters::WhimsalotFinalFroggit:
-                time += times.final_froggit_whimsalot;
-                kills += 2;
-                break;
-            case Encounters::KnightKnightMadjick:
-                time += times.knight_madjick;
-                kills += 2;
-                break;
-            case Encounters::SingleKnightKnight:
-                time += times.single_knight;
-                kills++;
-                break;
-            case Encounters::SingleMadjick:
-                time += times.single_madjick;
-                kills++;
-                break;
-            case Encounters::CoreTriple:
-                time += times.core_triple;
-                kills += 3;
-                break;
+        if (
+            encounter == Encounters::FinalFroggitAstigmatism ||
+            encounter == Encounters::WhimsalotAstigmatism ||
+            encounter == Encounters::WhimsalotFinalFroggit ||
+            encounter == Encounters::KnightKnightMadjick
+        ) {
+            kills += 2;
+            if (encounter == Encounters::FinalFroggitAstigmatism) {
+                time += times.segments["frog-astig"];
+            } else if (encounter == Encounters::WhimsalotAstigmatism) {
+                time += times.segments["whim-astig"];
+            } else if (encounter == Encounters::WhimsalotFinalFroggit) {
+                time += times.segments["core-frog-whim"];
+            }
+        } else if (
+            encounter == Encounters::SingleAstigmatism ||
+            encounter == Encounters::SingleKnightKnight ||
+            encounter == Encounters::SingleMadjick
+        ) {
+            kills++;
+            if (encounter == Encounters::SingleAstigmatism) {
+                time += times.segments["sgl-astig"];
+            } else if (encounter == Encounters::SingleKnightKnight) {
+                time += times.segments["sgl-knight"];
+            } else {
+                time += times.segments["sgl-madjick"];
+            }
+        } else {
+            kills += 3;
+            time += times.segments["core-triple"];
         }
 
         time += steps;

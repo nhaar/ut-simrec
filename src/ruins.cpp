@@ -7,13 +7,13 @@ Ruins::Ruins (Times& times_value) : Simulator(times_value) {}
 int Ruins::simulate() {
     // initializing vars
     
-    // initial time includes execution that is always the same
-    int time = times.ruins_general + times.nobody_came;
+    // static time
+    int time = times.segments["ruins"];
+
+    // add all static blcons (6x nobody came, 1x first froggit, 13x first half, 2x second half)
+    time += Undertale::encounter_time_random(times.static_blcons["ruins"]);
+
     int kills = 0;
-
-    // add all static blcons (6x nobody came, 1x first froggit, 13x first half)
-    time += Undertale::encounter_time_random(20);
-
     // lv and exp are like this since the grind begins after killing first frog
     int lv = 2;
     int exp = 10;
@@ -22,9 +22,9 @@ int Ruins::simulate() {
     while (kills < 13) {
         int steps = Undertale::ruins_first_half_steps(kills);
 
-        // for first encounter, you need to at least get to the end of the room, imposing a higher minimum step count
+        // for first encounter, you need to at least get to the end of the room, requiring a step fix
         if (kills == 0) {
-            steps = fix_step_total(steps, times.leaf_pile_steps);
+            steps = fix_step_total(steps, "ruins-leaf-pile");
         }
         time += steps;
 
@@ -40,60 +40,67 @@ int Ruins::simulate() {
         if (encounter == Encounters::SingleFroggit) {
             exp += 3;
             // do arithmetic on the lv for a slight optimization based on how the array is built
-            time += times.single_froggit[lv - 2];
-            time += times.frog_skip_save * Undertale::frogskip();
+            if (lv == 2) {
+                time += times.segments["froggit-lv2"];
+            } else {
+                time += times.segments["froggit-lv3"];
+            }
+            time += times.segments["frogskip-save"] * Undertale::frogskip();
         // for whimsun
         } else {
-            time += times.whimsun;
+            time += times.segments["whim"];
             exp += 2;
         }
         kills++;
     }
 
+    int second_half_count = 0;
     while (kills < 20) {
-        // the reason why this transition is handled like this is for the following reason:
-        // in the first encounter, we have the transition "three-rock-transition", which takes into account that the
-        // player isn't exactly in the last pixel always, depending on how safe they play
-        if (kills > 13) {
-            time += times.ruins_second_half_transition;
+        // first two encounters have STATIC values
+        if (second_half_count < 2) {
+            second_half_count++;
+        } else {
+            time += times.segments["ruins-second-transition"];
+            time += Undertale::encounter_time_random();;
         }
 
-        int steps = Undertale::src_steps(60, 60, 20, kills);
-        time += steps;
-
-        int blcon_time = Undertale::encounter_time_random();
-        time += blcon_time;
+        time += Undertale::src_steps(60, 60, 20, kills);;
 
         int encounter = Undertale::ruins3();
 
-        // define variables as being "1" because of how the time arrays are made, this can be used to sum the index
-        int at_18 = kills >= 18 ? 1 : 0; 
-        int at_19 = kills >= 19 ? 1 : 0;
+        bool at_18 = kills >= 18; 
+        bool at_19 = kills >= 19;
 
         if (
-            encounter == Encounters::SingleFroggit ||
+            encounter == Encounters::FroggitWhimsun ||
             encounter == Encounters::DoubleMoldsmal ||
             encounter == Encounters::DoubleFroggit
         ) { // 2 monster encounters
-            if (encounter == Encounters::SingleFroggit || encounter == Encounters::DoubleFroggit) { // for frog encounters
-                if (encounter == Encounters::SingleFroggit) { // for frog whim
-                    time += times.froggit_whimsun[at_19];
+            if (encounter == Encounters::FroggitWhimsun || encounter == Encounters::DoubleFroggit) { // for frog encounters
+                if (encounter == Encounters::FroggitWhimsun) { // for frog whim
+                    time += at_19 ? times.segments["frog-whim-19"] : times.segments["frog-whim"]; 
                 } else { // for 2x frog
-                    time += times.double_froggit[at_19];
+                    time += at_19 ? times.segments["dbl-frog-19"] : times.segments["dbl-frog"];
                 }
                 // number of frog skips achievable depends on how many are being fought
-                for (int max = 2 - at_19, i = 0; i < max; i++) {
-                    time += times.frog_skip_save * Undertale::frogskip();
+                for (int max = at_19 ? 1 : 2, i = 0; i < max; i++) {
+                    time += times.segments["frogskip-save"] * Undertale::frogskip();
                 }
             } else { // for 2x mold
-                time += times.double_moldsmal[at_19];
+                time += at_19 ? times.segments["dbl-mold-19"] : times.segments["dbl-mold"];
             }
             kills += 2;
         } else if (encounter == Encounters::SingleMoldsmal) { // single mold
-            time += times.single_moldsmal;
+            time += times.segments["sgl-mold"];
             kills++;
         } else { // triple mold
-            time += times.triple_moldsmal[at_18 + at_19];
+            if (at_18) {
+                time += times.segments["tpl-mold-18"];
+            } else if (at_19) {
+                time += times.segments["tpl-mold-19"];
+            } else {
+                time += times.segments["tpl-mold"];
+            }
             kills += 3;
         }
     }

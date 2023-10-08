@@ -5,42 +5,33 @@
 Waterfall::Waterfall (Times& times_value) : Simulator(times_value) {}
 
 int Waterfall::simulate () {
-    int time = times.waterfall_general;
+    int time = times.segments["waterfall"];
+    time += Undertale::encounter_time_random(times.static_blcons["waterfall"]);
     
     // already counting the first 2 scripted
     int kills = 2;
-
-    // guaranteed blcons
-    time += Undertale::encounter_time_random(9);
-
     // scripted double mold
     time += Undertale::src_steps(360, 30, 18, kills);
-    kills += 2;
+    kills = 4;
     
     // the random glowing water encounter
     int encounter = Undertale::glowing_water_encounter();
 
-    // increment here since its guaranteed at least single
-    kills++;
-    switch (encounter) {
-        case Encounters::SingleWoshua:
-            time += times.single_woshua_shoes;
-            break;
-        case Encounters::SingleAaron:
-            time += times.single_aaron_shoes;
-            break;
-        case Encounters::DoubleMoldsmal:
-            kills++;
-            time += times.double_mold_shoes;
-            break;
-        case Encounters::WoshuaAaron:
-            kills++;
-            time += times.aaron_woshua_surprise;
-            break;
-        default:
-            break;
+    if (encounter == Encounters::SingleAaron || encounter == Encounters::SingleWoshua) {
+        kills++;
+        if (encounter == Encounters::SingleAaron) {
+            time += times.segments["sgl-aaron-shoes"];
+        } else {
+            time += times.segments["sgl-woshua-shoes"];
+        }
+    } else {
+        kills += 2;
+        if (encounter == Encounters::WoshuaAaron) {
+            time += times.segments["woshu-aaron-surprise"];
+        } else {
+            time += times.segments["dbl-mold-shoes"];
+        }
     }
-
     // shyren and glad dummy
     kills += 2;
     // first two grind encounters (first being temmie) happen with same number of kills
@@ -60,30 +51,27 @@ int Waterfall::simulate () {
     while (kills < 18) {
         int encounter = Undertale::waterfall_grind_encounter();
 
-        kills++;
-        switch (encounter) {
-            case Encounters::Temmie:
-                time += times.temmie;
-                break;
-            case Encounters::WoshuaAaron:
-                time += times.aaron_woshua_surprise;
-                kills++;
-                break;
-            case Encounters::WoshuaMoldbygg:
-                time += times.woshua_mold;
-                kills++;
-                break;
+        if (encounter == Encounters::WoshuaAaron || encounter == Encounters::WoshuaMoldbygg) {
+            kills += 2;
+            if (encounter == Encounters::WoshuaAaron) {
+                time += times.segments["woshua-aaron-surprise"];
+            } else {
+                time += times.segments["woshua-mold"];
+            }
+        } else {
+            time += times.segments["temmie"];
+            kills++;
         }
 
         int steps = Undertale::waterfall_grind_steps(kills);
         if (kills < 16) {
             first_maze_progress++;
-            if (first_maze_progress == 1) steps = fix_step_total(steps, times.mushroom_steps);
-            else time += times.mushroom_backtrack;
+            if (first_maze_progress == 1) steps = fix_step_total(steps, "mushroom-maze");
+            else time += times.segments["mushroom-maze-going-back"] + times.segments["mushroom-maze-exit-after-backtrack"];
         } else {
             second_maze_progress++;
-            if (second_maze_progress == 1) steps = fix_step_total(steps, times.crystal_steps);
-            else time += times.crystal_backtrack;
+            if (second_maze_progress == 1) steps = fix_step_total(steps, "crystal-maze");
+            else time += times.segments["crystal-going-back"] + times.segments["crystal-exit-after-backtrack"];
         }
 
         // non guaranteed blcons

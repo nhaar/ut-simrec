@@ -1,6 +1,7 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include <string>
 #include "times.hpp"
 #include "probability_distribution.hpp"
 
@@ -11,7 +12,7 @@ public:
 
     virtual int simulate() = 0;
 
-    int fix_step_total (int calculated_steps, int* downtime_steps);
+    int fix_step_total (int calculated_steps, std::string segment_name);
     
     Simulator (Times& times_value);
 
