@@ -43,10 +43,10 @@ int Snowdin::simulate () {
             }
         } else if (encounter == Encounters::SnowdinTriple) {
             if (fight_jerry) {
-                time += times.segments["snowdin-tpl"];
+                time += times.segments["snowdin-tpl-jerry"];
                 kills += 3;
             } else {
-                time += times.segments["snowdin-dbl"];
+                time += times.segments["snowdin-tpl"];
                 kills += 2;
             }
         }
