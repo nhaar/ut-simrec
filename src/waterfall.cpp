@@ -68,8 +68,8 @@ int Waterfall::simulate () {
         int encounter = Undertale::waterfall_grind_encounter();
 
         if (encounter == Encounters::WoshuaAaron || encounter == Encounters::WoshuaMoldbygg) {
-            kills += 2;
             bool flee = kills == 17;
+            kills += 2;
             if (encounter == Encounters::WoshuaAaron) {
                 time += flee ? times.segments["woshua-aaron-17"] : times.segments["woshua-aaron-surprise"];
             } else {
