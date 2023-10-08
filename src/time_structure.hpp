@@ -213,9 +213,19 @@ const char* time_structure = R"(
             <or><static>dbl-mold-shoes</static></or>
         </def>
         <def>
-            <name>waterfall-grind-encounter</name>
+            <name>grind-woshua-mold</name>
             <or><static>woshua-mold</static></or>
+            <or><static>woshua-mold-17</static></or>
+        </def>
+        <def>
+            <name>grind-woshua-aaron</name>
             <or><static>woshua-aaron-surprise</static></or>
+            <or><static>woshua-aaron-17</static></or>
+        </def>
+        <def>
+            <name>waterfall-grind-encounter</name>
+            <or><variant>grind-woshua-aaron</variant></or>
+            <or><variant>grind-woshua-mold</variant></or>
             <or><static>temmie</static></or>
         </def>
         <static>waterfall-start</static>
