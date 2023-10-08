@@ -1234,23 +1234,77 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
-        <name>grind-end-transition</name>
-        <start><LeaveBattle /></start>
-        <end><Door name="A" room="CoreBridge" /></end>
+        <name>core-frog-whim-flee</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
         <room>CoreBridge</room>
         <x>515</x>
         <y>95</y>
-        <message>GRIND AND PROCEED</message>
+        <next-encounter>WhimsalotFinalFroggit</next-encounter>
+        <message>GRIND AT THE END (KILL ONLY ONE)</message>
         <explanation>
-            Now grind an encounter at the right side of the room and after that proceed
-            to the end of the run as normal
+            Grind an encounter at the end of the room and only kill one enemy. Keep grinding at the end of the room
+            and in ALL encounters kill ony ONE and flee
         </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>grind-end-transition</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="A" room="CoreBridge" /></end>
+        <message>GRIND (KILL ONLY ONE)</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>whim-astig-flee</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>WhimsalotAstigmatism</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>frog-astig-flee</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>FinalFroggitAstigmatism</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>knight-madjick-flee</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>KnightKnightMadjick</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>core-triple-kill-one</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>CoreTriple</next-encounter>
+        <message>GRIND (KILL ONLY ONE)</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>core-triple-kill-two</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>CoreTriple</next-encounter>
+        <message>GRIND (KILL ONLY TWO)</message>
+        <explanation>
+            Grind an encounter, which will be a triple, and kill TWO monsters only, fleeing from the last one
+        </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" increment-murder="1" type="continuous" tutorial="true">
         <name>run-end</name>
         <start><Door name="A" room="CoreBridge" /></start>
         <end><RunEnd /></end>
         <message>PROCEED</message>
+        <explanation>
+            Now, after exitting this door continue as if a normal run until the end, but make sure to EQUIP the shoes
+        </explanation>
     </segment>
 </segments>

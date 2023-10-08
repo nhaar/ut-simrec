@@ -35,6 +35,7 @@ int Endgame::simulate () {
         int steps = Undertale::src_steps(70, 50, 40, kills);
         int encounter = Undertale::core_encounter();
 
+        bool flee_one = kills == 39;
         if (
             encounter == Encounters::FinalFroggitAstigmatism ||
             encounter == Encounters::WhimsalotAstigmatism ||
@@ -43,11 +44,11 @@ int Endgame::simulate () {
         ) {
             kills += 2;
             if (encounter == Encounters::FinalFroggitAstigmatism) {
-                time += times.segments["frog-astig"];
+                time += flee_one ? times.segments["frog-astsig-flee"] : times.segments["frog-astig"];
             } else if (encounter == Encounters::WhimsalotAstigmatism) {
-                time += times.segments["whim-astig"];
+                time += flee_one ? times.segments["whim-astig-flee"] : times.segments["whim-astig"];
             } else if (encounter == Encounters::WhimsalotFinalFroggit) {
-                time += times.segments["core-frog-whim"];
+                time += flee_one ? times.segments["core-frog-whim-flee"] : times.segments["core-frog-whim"];
             }
         } else if (
             encounter == Encounters::SingleAstigmatism ||
@@ -63,8 +64,14 @@ int Endgame::simulate () {
                 time += times.segments["sgl-madjick"];
             }
         } else {
+            if (flee_one) {
+                time += times.segments["core-triple-kill-one"];
+            } else if (kills == 31) {
+                time += times.segments["core-triple-kill-two"];
+            } else {
+                time += times.segments["core-triple"];
+            }
             kills += 3;
-            time += times.segments["core-triple"];
         }
 
         time += steps;

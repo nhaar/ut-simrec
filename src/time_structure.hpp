@@ -295,9 +295,36 @@ const char* time_structure = R"(
             <or><static>sgl-madjick</static></or>
         </def>
         <def>
+            <name>core-encounter-39</name>
+            <or><static>sgl-astig</static></or>
+            <or><static>core-frog-whim-flee</static></or>
+            <or><static>frog-astig-flee</static></or>
+            <or><static>whim-astig-flee</static></or>
+            <or><static>knight-madjick-flee</static></or>
+            <or><static>core-triple-kill-one</static></or>
+            <or><static>sgl-knight</static></or>
+            <or><static>sgl-madjick</static></or>
+        </def>
+        <def>
+            <name>core-encounter-31</name>
+            <or><static>sgl-astig</static></or>
+            <or><static>core-frog-whim</static></or>
+            <or><static>frog-astig</static></or>
+            <or><static>whim-astig</static></or>
+            <or><static>knight-madjick</static></or>
+            <or><static>core-triple-kill-two</static></or>
+            <or><static>sgl-knight</static></or>
+            <or><static>sgl-madjick</static></or>
+        </def>
+        <def>
+            <name>core-left-grind</name>
+            <or><variant>core-encounter</variant></or>
+            <or><variant>core-encounter-31</variant></or>
+        </def>
+        <def>
             <name>core-end</name>
             <or>
-                <loop times="3">
+                <loop times="4">
                     <variant>blcon</variant>
                     <static>nobody-came</static>
                 </loop>
@@ -306,7 +333,7 @@ const char* time_structure = R"(
             <or>
                 <variant>steps</variant>
                 <variant>blcon</variant>
-                <variant>core-encounter</variant>
+                <variant>core-encounter-39</variant>
                 <static>grind-end-transition</static>
             </or>
         </def>
@@ -329,7 +356,7 @@ const char* time_structure = R"(
             <static>core-left-side-transition-2</static>
             <variant>steps</variant>
             <variant>blcon</variant>
-            <variant>core-encounter</variant>
+            <variant>core-left-grind</variant>
             <static>core-left-side-transition-3</static>
         </loop>
         <static>core-warrior-path</static>
