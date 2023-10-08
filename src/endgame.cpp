@@ -59,14 +59,11 @@ int Endgame::simulate () {
                 time += flee_one ? times.segments["core-frog-whim-flee"] : times.segments["core-frog-whim"];
             }
         } else if (
-            encounter == Encounters::SingleAstigmatism ||
             encounter == Encounters::SingleKnightKnight ||
             encounter == Encounters::SingleMadjick
         ) {
             kills++;
-            if (encounter == Encounters::SingleAstigmatism) {
-                time += times.segments["sgl-astig"];
-            } else if (encounter == Encounters::SingleKnightKnight) {
+            if (encounter == Encounters::SingleKnightKnight) {
                 time += times.segments["sgl-knight"];
             } else {
                 time += times.segments["sgl-madjick"];
