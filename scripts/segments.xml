@@ -918,27 +918,40 @@
         </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="true">
-        <name>mushroom-maze-endsteps</name>
-        <start><LeaveBattle /></start>
-        <end><Door name="C" room="WaterfallMushroomMaze" /></end>
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>woshua-aaron-17</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <message>GRIND</message>
         <room>WaterfallMushroomMaze</room>
         <x>536</x>
         <y>226</y>
-        <!-- Temmie only to speed things -->
-        <next-encounter>Temmie</next-encounter>
-        <message>GRIND</message>
+        <next-encounter>WoshuaAaron</next-encounter>
         <explanation>
             Now grind TWO encounters at the end of the room. That is, grind one, then leave and come back
-            to grind another
+            to grind another, AND, only kill ONE encounter in each encounter (flee from the other)
         </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="step" tutorial="false">
+        <name>mushroom-maze-endsteps</name>
+        <start><LeaveBattle /></start>
+        <end><Door name="C" room="WaterfallMushroomMaze" /></end>
+        <message>GRIND</message>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
         <name>mushroom-maze-going-back</name>
         <start><Door name="C" room="WaterfallMushroomMaze" /></start>
         <end><RoomTransition room="WaterfallCrystalMaze" backwards="true" /></end>
-        <next-encounter>Temmie</next-encounter>
+        <message>GRIND</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>woshua-mold-17</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <next-encounter>MoldbyggWoshua</next-encounter>
         <message>GRIND</message>
     </segment>
 
