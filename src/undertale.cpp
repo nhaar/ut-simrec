@@ -24,6 +24,11 @@ int Undertale::src_steps (int min_steps, int steps_delta, int max_kills, int kil
     return (int) steps + 1;
 }
 
+// step counter for the rooms in the first half of ruins
+int Undertale::ruins_first_half_steps (int kills) {
+    return src_steps(80, 40, 20, kills);
+}
+
 // encounterer for first half
 int Undertale::ruins1 () {
     double roll = Random::random_number();

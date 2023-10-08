@@ -20,8 +20,8 @@ int Ruins::simulate() {
 
     // loop for the first half
     while (kills < 13) {
-        // first half step counting
-        int steps = Undertale::src_steps(80, 40, 20, kills);
+        int steps = Undertale::ruins_first_half_steps(kills);
+
         // for first encounter, you need to at least get to the end of the room, imposing a higher minimum step count
         if (kills == 0) {
             steps = fix_step_total(steps, times.leaf_pile_steps);
