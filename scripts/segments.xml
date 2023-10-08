@@ -13,20 +13,10 @@
         <room>GameMenu</room>
         <message>PROCEED</message>
         <explanation>
-            Welcome to the Undertale time recorder.
+            Welcome to the Undertale time recorder! If you haven't read the instructions, please do so before continuing
 
-            To start recording, start a new run and keep running until you are stopped.
 
-            INSTRUCTIONS:
-
-            If starting a new run, make sure to 0-reset.
-            You can change the segment to start the run with Page Up and Page Down.
-            Also, hold SHIFT and CTRL to speed up swapping segments.
-            Press T to warp to a segment.
-            Press R to restart a segment.
-            Make sure to read the explanations to each segment!
-
-            Good recording!
+            Start by picking a name
         </explanation>
     </segment>
 
@@ -52,7 +42,7 @@
         <xp>10</xp>
         <message>WALK</message>
         <explanation>
-            Walk to the end of the next room without grinding an encounter
+            Walk through the next room without grinding an encounter
         </explanation>
     </segment>
 
@@ -68,7 +58,7 @@
         <message>GRIND</message>
         <explanation>
             Start grinding at the end of the room and keep grinding as if you were in the
-            first half of Ruins in Genocide normally
+            first half of Ruins in Genocide
         </explanation>
     </segment>
 
@@ -137,7 +127,7 @@
         <x>238</x>
         <y>300</y>
         <explanation>
-            Now, walk through the next room without grinding an encounter at the end
+            Walk through the next room without grinding an encounter at the end
         </explanation>
     </segment>
 
@@ -151,7 +141,7 @@
         <next-encounter>SingleFroggit</next-encounter>
         <message>PROCEED</message>
         <explanation>
-            Grind at the end of the room, kill the one encounter, and then proceed normally
+            Grind at the end of the room, kill the one encounter, and then proceed
         </explanation>
     </segment>
 
@@ -193,7 +183,7 @@
         <message>PROCEED</message>
         <explanation>
             Grind an encounter as you would normally at the end of this room and continue
-            normally as if you have finished the first half grind.
+            as if you have finished the first half grind
         </explanation>
     </segment>
 
@@ -295,8 +285,8 @@
         <next-encounter>DoubleMoldsmal</next-encounter>
         <message>GRIND (KILL ONLY ONE)</message>
         <explanation>
-            Now, go back and keep grinding, but each encounter do as if you had 19 kills,
-            that is, you only need to kill ONE monster in each encounter, and then flee.
+            Go back and keep grinding, but each encounter do as if you had 19 kills,
+            that is, you only need to kill ONE monster in each encounter, and then flee
         </explanation>
     </segment>
 
@@ -331,7 +321,7 @@
         <next-encounter>TripleMoldsmal</next-encounter>
         <message>KILL TWO AND THEN PROCEED POST GRIND</message>
         <explanation>
-            Now, go back, grind for an encounter, kill only TWO monsters, and then exit the grind
+            Go back and grind for an encounter, kill only TWO monsters, and then exit the grind
             and start going to the end of Ruins as if you have finished the grind in a run
         </explanation>
     </segment>
@@ -510,7 +500,7 @@
         <y>160</y>
         <message>WALK</message>
         <explanation>
-            Now, walk to the end of the room as normal in a run (but you will not get an encounter)
+            Walk through the next room as normal in a run (but you will not get an encounter)
         </explanation>
     </segment>
 
@@ -544,7 +534,7 @@
         <y>120</y>
         <message>PROCEED</message>
         <explanation>
-            Next, walk as optimally as possible to the Dogi fight (do not grind an encounter)
+            Walk as optimally as possible to the Dogi fight (do not grind an encounter)
         </explanation>
     </segment>
 
@@ -559,8 +549,8 @@
         <next-encounter>SnowdinDouble</next-encounter>
         <message>PROCEED</message>
         <explanation>
-            Now, grind an encounter at the end of the bridge before fighting Dogi
-            and then after it continue normally
+            Grind an encounter at the end of the bridge before fighting Dogi
+            and then after it continue normally with the run
         </explanation>
     </segment>
 
@@ -656,8 +646,7 @@
         <next-encounter>SnowdinDouble</next-encounter>
         <message>GRIND (KILL JERRY, LEFTSIDE) </message>
         <explanation>
-            Grind on the leftside of the next room. Kill Jerry as well. After the encounter,
-            do a transition as if you were going to continue grinding there
+            Start grinding on the leftside of the next room (swap rooms after encounters), and kill Jerry as well
         </explanation>
     </segment>
 
@@ -678,8 +667,8 @@
         <next-encounter>SnowdinTriple</next-encounter>
         <message>GRIND AND PROCEED</message>
         <explanation>
-            Now go back, grind for the last encounter, kill Jerry, and after finished,
-            proceed normally, (you will not get any encounters until you are stopped)
+            Go back, grind for the last encounter, kill Jerry, and after finished,
+            proceed normally (you will not get any encounters in Waterfall until you are stopped)
         </explanation>
     </segment>
 
@@ -759,7 +748,7 @@
         <message>GRIND AND PROCEED</message>
         <explanation>
             Grind an encounter near the leftside of the room and after it keep going as if in a normal run
-            (you will not get an encounter in the big room)
+            (you will not get an encounter in the big room coming back)
         </explanation>
     </segment>
 
@@ -791,7 +780,7 @@
         <next-encounter>SingleWoshua</next-encounter>
         <message>GRIND</message>
         <explanation>
-            Now, keep grinding, you will fight all the encounters in this area with the Ballet Shoes.
+            Start grinding, you will fight all the encounters in this area with the Ballet Shoes.
             (Leaving the room between encounters here is unnecessary)
         </explanation>
     </segment>
@@ -829,7 +818,7 @@
         <y>10</y>
         <message>PROCEED</message>
         <explanation>
-            Now proceed through the end of the room and then keep going normally until you are stopped
+            Proceed through the end of the room and then keep going normally until you are stopped
         </explanation>
     </segment>
 
@@ -914,7 +903,7 @@
         <y>120</y>
         <message>WALK</message>
         <explanation>
-            Now go through the next room as fast as possible (you will not get an encounter)
+            Go through the next room as fast as possible (you will not get an encounter)
         </explanation>
     </segment>
 
@@ -928,8 +917,8 @@
         <y>226</y>
         <next-encounter>WoshuaAaron</next-encounter>
         <explanation>
-            Now grind TWO encounters at the end of the room. That is, grind one, then leave and come back
-            to grind another, AND, only kill ONE encounter in each encounter (flee from the other)
+            Grind TWO encounters at the end of the room, that is, grind one, then leave and come back
+            to grind another, AND, only kill ONE enemy in each encounter (flee from the other)
         </explanation>
     </segment>
 
@@ -977,7 +966,7 @@
         <end><Door name="Amusic" room="WaterfallCrystalMaze" /></end>
         <message>WALK</message>
         <explanation>
-            Now walk to the end of the next room (you will not get an encounter)
+            Walk to the end of the next room (you will not get an encounter)
         </explanation>
     </segment>
 
@@ -992,7 +981,7 @@
         <next-encounter>Temmie</next-encounter>
         <message>GRIND</message>
         <explanation>
-            Now grind an encounter at the end of the room, and after it come back to grind for another one,
+            Grind an encounter at the end of the room, and after it come back to grind for another one,
             and only then proceed with the run normally
         </explanation>
     </segment>
@@ -1046,7 +1035,7 @@
         </items>
         <message>GRIND</message>
         <explanation>
-            Now grind for the Vulkin encounter
+            Grind for the Vulkin encounter
         </explanation>
     </segment>
 
@@ -1059,7 +1048,7 @@
         <y>10</y>
         <message>PROCEED</message>
         <explanation>
-            Now go through the next room as normal (you will not get an encounter)
+            Go through the next room as normal (you will not get an encounter)
         </explanation>
     </segment>
 
@@ -1157,9 +1146,7 @@
         <y>90</y>
         <message>GRIND</message>
         <explanation>
-            Now grind an encounter at the leftside of the room. After that, start going to the
-            left and grind for TWO encounters, then go to the warrior path and come back normally.
-            NOTE: Do not equip the Ballet Shoes until after the Core grind.
+            Grind an encounter at the leftside of the room, after that, start going to the left
         </explanation>
     </segment>
 
@@ -1170,7 +1157,7 @@
         <message>GRIND AND GO LEFT</message>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
         <name>sgl-knight</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
@@ -1179,6 +1166,9 @@
         <y>100</y>
         <next-encounter>SingleKnightKnight</next-encounter>
         <message>GRIND ONE MORE ENCOUNTER</message>
+        <explanation>
+            Grind for two encounters in here, as optimally as possible with the room transitions
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
@@ -1221,6 +1211,9 @@
         <x>20</x>
         <y>100</y>
         <message>PROCEED</message>
+        <explanation>
+            Now go and complete the Warrior Path, and come back as if you have finished grind (do not equip the Ballet Shoes in it)
+        </explanation>
     </segment>
 
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
@@ -1304,7 +1297,7 @@
         <end><RunEnd /></end>
         <message>PROCEED</message>
         <explanation>
-            Now, after exitting this door continue as if a normal run until the end, but make sure to EQUIP the shoes
+            Exit this door continue as if a normal run until the end, but make sure to EQUIP the shoes
         </explanation>
     </segment>
 </segments>
