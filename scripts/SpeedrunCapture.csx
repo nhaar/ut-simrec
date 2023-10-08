@@ -1300,6 +1300,11 @@ public static class CodeEntryClass
     /// into the dogi fight
     /// </summary>
     public static string EnterDogi = "gml_Object_obj_forcedright_Collision_1570";
+
+    /// <summary>
+    /// Step event for the object that control's Frisk
+    /// </summary>
+    public static string Mainchara = "gml_Object_obj_mainchara_Step_0";
 }
 
 /*
@@ -1541,6 +1546,9 @@ static class GMLCodeClass
     {
         return @$"
         obj_time.tp_flag = 1;
+        // lock player
+        global.interact = 1;
+        obj_time.lock_player = 1;
         room = {room};
         obj_time.tp_x = {x};
         obj_time.tp_y = {y};
@@ -2524,6 +2532,18 @@ void main ()
     lock_player = 0;
     ");
 
+    // watching for when to tint frisk
+    append(CodeEntryClass.Mainchara, @$"
+    if (obj_time.lock_player)
+    {{
+        image_blend = c_purple;
+    }}
+    else
+    {{
+        image_blend = c_white;
+    }}
+    ");
+
     // add convenient settings for the encounters
     place(CodeEntryClass.scrSteps, @"steps = ((argument0 + round(random(argument1))) * populationfactor)", $@"
     if (obj_time.fast_encounters)
@@ -2565,13 +2585,6 @@ void main ()
     if (tp_flag)
     {{
         tp_flag = 0;
-        // to avoid the player moving to places they don't want to
-        // player will be locked until they stop moving after teleporting
-        if ({GMLCodeClass.IsMoving})
-        {{
-            lock_player = 1;
-            global.interact = 1;
-        }}
         if (instance_exists(obj_mainchara))
         {{
             obj_mainchara.x = tp_x;
@@ -2581,7 +2594,7 @@ void main ()
             obj_mainchara.yprevious = tp_y;
         }}
     }}
-    else if (lock_player && !({GMLCodeClass.IsMoving}))
+    else if (lock_player && keyboard_check_pressed(vk_space))
     {{
         lock_player = 0;
         global.interact = 0;
