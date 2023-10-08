@@ -8,7 +8,15 @@ int Endgame::simulate () {
     int time = times.segments["endgame"];
     time += Undertale::encounter_time_random(times.static_blcons["endgame"]);
     
+    // scripted encounter step count
     int kills = 5;
+    time += Undertale::core_steps(kills);
+    
+    kills = 6;
+    while (kills < 14) {
+        time += Undertale::core_steps(kills);
+        kills += 2;
+    }
 
     // to create a buffer round between being on right and left
     bool went_left = false;

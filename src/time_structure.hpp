@@ -344,6 +344,26 @@ const char* time_structure = R"(
         <variant>blcon</variant>
         <static>tsunderplane</static>
         <static>post-tsunderplane</static>
+        <variant>steps</variant>
+        <variant>blcon</variant>
+        <static>sgl-astig</static>
+        <static>core-right-transition</static>
+        <variant>steps</variant>
+        <variant>blcon</variant>
+        <static>core-frog-whim</static>
+        <static>core-right-transition</static>
+        <variant>steps</variant>
+        <variant>blcon</variant>
+        <static>whim-astig</static>
+        <static>core-right-transition</static>
+        <variant>steps</variant>
+        <variant>blcon</variant>
+        <static>frog-astig</static>
+        <static>core-right-transition</static>
+        <variant>steps</variant>
+        <variant>blcon</variant>
+        <static>knight-madjick</static>
+        <static>core-right-transition</static>
         <loop times="?">
             <variant>steps</variant>
             <variant>blcon</variant>
