@@ -27,7 +27,7 @@ int Waterfall::simulate () {
     } else {
         kills += 2;
         if (encounter == Encounters::WoshuaAaron) {
-            time += times.segments["woshu-aaron-surprise"];
+            time += times.segments["woshua-aaron-surprise"];
         } else {
             time += times.segments["dbl-mold-shoes"];
         }
