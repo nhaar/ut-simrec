@@ -909,10 +909,9 @@
         <name>woshua-aaron-17</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
-        <message>GRIND</message>
         <room>WaterfallMushroomMaze</room>
-        <x>536</x>
-        <y>226</y>
+        <x>542</x>
+        <y>202</y>
         <next-encounter>WoshuaAaron</next-encounter>
         <explanation>
             Grind TWO encounters at the end of the room, that is, grind one, then leave and come back
