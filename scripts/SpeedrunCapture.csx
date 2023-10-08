@@ -1556,13 +1556,6 @@ static class GMLCodeClass
     }
 
     /// <summary>
-    /// GML variable that is `1` if any of the arrow keys are currently held or `0` otherwise
-    /// </summary>
-    public static string IsMoving = @"
-    (keyboard_check(vk_left) || keyboard_check(vk_right) || keyboard_check(vk_up) || keyboard_check(vk_down))
-    ";
-
-    /// <summary>
     /// Rig the encounter to a battlegroup
     /// </summary>
     /// <param name="battlegroup"></param>
