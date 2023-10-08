@@ -464,7 +464,7 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" increment-murder="1" type="step" tutorial="false">
-        <name>box-road-endsteps</name>
+        <name>snowdin-box-road-endsteps</name>
         <start><LeaveBattle /></start>
         <end><Door name="C" room="SnowdinBoxRoad" /></end>
         <message>PROCEED</message>
