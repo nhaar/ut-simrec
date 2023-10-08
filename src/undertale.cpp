@@ -87,6 +87,14 @@ int Undertale::snowdin () {
     else return Encounters::SnowdinTriple;
 }
 
+int Undertale::dogi_room_steps (int kills) {
+    return scr_steps(220, 30, 16, kills);
+}
+
+int Undertale::snowdin_general_steps (int kills) {
+    return scr_steps(120, 30, 16, kills);
+}
+
 // getting a dogskip or not
 // 0 - no dogskip
 // 1 - dogskip
@@ -112,6 +120,10 @@ int Undertale::glowing_water_encounter () {
 
 }
 
+int Undertale::glowing_water_steps (int kills) {
+    return scr_steps(360, 30, 18, kills);
+}
+
 // random encounters at the end of Waterfall
 int Undertale::waterfall_grind_encounter () {
     double roll = Random::random_number();
@@ -135,4 +147,8 @@ int Undertale::core_encounter () {
     if (roll < 0.866666666) return Encounters::CoreTriple;
     if (roll < 0.933333333) return Encounters::SingleKnightKnight;
     return Encounters::SingleMadjick;
+}
+
+int Undertale::core_steps (int kills) {
+    return scr_steps(70, 50, 40, kills);
 }

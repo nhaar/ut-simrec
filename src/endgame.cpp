@@ -32,7 +32,7 @@ int Endgame::simulate () {
             // grinding in the left side
             else time += times.segments["core-left-side-transition-2"] + times.segments["core-left-side-transition-3"];
         }
-        int steps = Undertale::scr_steps(70, 50, 40, kills);
+        int steps = Undertale::core_steps(kills);
         int encounter = Undertale::core_encounter();
 
         bool flee_one = kills == 39;
