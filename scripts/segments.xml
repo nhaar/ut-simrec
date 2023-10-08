@@ -916,6 +916,9 @@
         <name>mushroom-maze-endsteps</name>
         <start><LeaveBattle /></start>
         <end><Door name="C" room="WaterfallMushroomMaze" /></end>
+        <room>WaterfallMushroomMaze</room>
+        <x>536</x>
+        <y>226</y>
         <!-- Temmie only to speed things -->
         <next-encounter>Temmie</next-encounter>
         <message>GRIND</message>
@@ -944,9 +947,6 @@
         <name>mushroom-transition</name>
         <start><Door name="C" room="WaterfallMushroomMaze" /></start>
         <end><RoomTransition room="WaterfallMushroomMaze" backwards="false" /></end>
-        <room>WaterfallMushroomMaze</room>
-        <x>542</x>
-        <y>229</y>
         <!-- Temmie only to speed things -->
         <next-encounter>Temmie</next-encounter>
         <message>PROCEED</message>
