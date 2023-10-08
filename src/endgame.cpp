@@ -30,8 +30,8 @@ int Endgame::simulate () {
             if (kills >= 32) kills += 7;
             // if ending it here, it means we did warrior path and then finished: get the nobody cames and such
             if (kills >= 40) {
-                time += 3 * times.segments["nobody-came"];
-                time += Undertale::encounter_time_random(3);
+                time += 4 * times.segments["nobody-came"];
+                time += Undertale::encounter_time_random(4);
                 time += times.segments["core-bridge"];
                 break;
             }
