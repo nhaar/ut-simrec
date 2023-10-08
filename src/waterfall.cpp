@@ -48,6 +48,23 @@ int Waterfall::simulate () {
     int first_maze_progress = 0;
     int second_maze_progress = 0;
     while (kills < 18) {
+        int steps = Undertale::waterfall_grind_steps(kills);
+        if (kills < 16) {
+            first_maze_progress++;
+            if (first_maze_progress == 1) steps = fix_step_total(steps, "mushroom-maze");
+            else {
+                time += times.segments["mushroom-maze-going-back"] + times.segments["mushroom-maze-exit-after-backtrack"];
+                time += Undertale::encounter_time_random();
+            }
+        } else {
+            second_maze_progress++;
+            if (second_maze_progress == 1) steps = fix_step_total(steps, "crystal-maze");
+            else {
+                time += times.segments["crystal-going-back"] + times.segments["crystal-exit-after-backtrack"];
+                time += Undertale::encounter_time_random();
+            }
+        }
+        
         int encounter = Undertale::waterfall_grind_encounter();
 
         if (encounter == Encounters::WoshuaAaron || encounter == Encounters::WoshuaMoldbygg) {
@@ -63,19 +80,6 @@ int Waterfall::simulate () {
             kills++;
         }
 
-        int steps = Undertale::waterfall_grind_steps(kills);
-        if (kills < 16) {
-            first_maze_progress++;
-            if (first_maze_progress == 1) steps = fix_step_total(steps, "mushroom-maze");
-            else time += times.segments["mushroom-maze-going-back"] + times.segments["mushroom-maze-exit-after-backtrack"];
-        } else {
-            second_maze_progress++;
-            if (second_maze_progress == 1) steps = fix_step_total(steps, "crystal-maze");
-            else time += times.segments["crystal-going-back"] + times.segments["crystal-exit-after-backtrack"];
-        }
-
-        // non guaranteed blcons
-        time += Undertale::encounter_time_random();
         time += steps;
     }
     
