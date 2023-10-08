@@ -1,5 +1,6 @@
 #ifndef TIME_STRUCTURE_H
 #define TIME_STRUCTURE_H
+// Note: this is a C++ file disguised as XML file
 
 // XML containing the definitions of the variables used in the simulator and acquired from the recorder
 const char* time_structure = R"(
@@ -251,7 +252,7 @@ const char* time_structure = R"(
         <static>impostor-mold</static>
         <static>waterfall-grind-start-transition</static>
         <variant>steps</variant>
-        <vartiant>blcon</vartiant>
+        <variant>blcon</variant>
         <static>woshua-aaron-aware</static>
         <static>waterfall-grind-transition-to-left</static>
         <variant>steps</variant>

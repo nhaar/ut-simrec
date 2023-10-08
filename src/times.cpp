@@ -1,6 +1,6 @@
 #include <iostream>
 #include "thirdparty/pugixml.hpp"
-#include "time_structure.hpp"
+#include "time_structure.xml"
 #include "times.hpp"
 
 Times::Times () {}
