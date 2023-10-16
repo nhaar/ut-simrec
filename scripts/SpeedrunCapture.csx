@@ -1556,6 +1556,8 @@ static class GMLCodeClass
         obj_time.tp_flag = 1;
         // lock player
         obj_time.lock_player = 1;
+        // prevent player from getting locked if they TP out of battle
+        room_persistent = false;
         room = {room};
         obj_time.tp_x = {x};
         obj_time.tp_y = {y};
@@ -2585,8 +2587,6 @@ void main ()
         tp_flag = 0;
         if (instance_exists(obj_mainchara))
         {{
-            // prevent player from getting locked if they TP out of battle
-            room_persistent = false;
             obj_mainchara.x = tp_x;
             obj_mainchara.y = tp_y;
             // previous x and y must be updated too due to how obj_mainchara's collision events work
