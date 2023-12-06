@@ -39,7 +39,6 @@ int Ruins::simulate() {
         // for the froggit encounter
         if (encounter == Encounters::SingleFroggit) {
             exp += 3;
-            // do arithmetic on the lv for a slight optimization based on how the array is built
             bool two_turns = lv == 1 && Undertale::whiff_lv1_froggit();
             if (lv == 1) {
                 if (two_turns) {
