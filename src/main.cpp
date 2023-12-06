@@ -100,7 +100,7 @@ int main (int arc, char *argv[]) {
         else if (chance_min == -1) chance = dist.get_chance_up_to(chance_max);
         else if (chance_max == -1) chance = dist.get_chance_from(chance_min);
         else chance = dist.get_chance(chance_min, chance_max);
-        cout << "Chance: " << chance << endl;;
+        cout << "Chance: " << chance * 100 << "%" << endl;;
     }
     if (get_avg) {
         cout << "Average: " << dist.get_average() << endl;
