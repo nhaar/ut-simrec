@@ -53,7 +53,7 @@ int Ruins::simulate() {
             }
             time += times.segments["frogskip-save"] * Undertale::frogskip();
             if (two_turns) {
-                time += times.segments["froggit-lv1-whiff-2"] * Undertale::frogskip();
+                time += times.segments["frogskip-save"] * Undertale::frogskip();
             }
         // for whimsun
         } else {
