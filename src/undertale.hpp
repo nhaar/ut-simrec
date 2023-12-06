@@ -12,6 +12,8 @@ public:
 
     static int ruins_first_half_steps (int kills);
 
+    static bool whiff_lv1_froggit ();
+
     static int ruins1 ();
 
     static int ruins3 ();

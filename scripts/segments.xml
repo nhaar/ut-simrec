@@ -8,7 +8,7 @@
     <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-start</name>
         <start><PickName /></start>
-        <end><Blcon /></end>
+        <end><RoomTransition room="RuinsHallway" backwards="false" /></end>
         <plot>0</plot>
         <room>GameMenu</room>
         <message>PROCEED</message>
@@ -19,17 +19,6 @@
         </explanation>
     </segment>
 
-    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
-        <name>ruins-hallway</name>
-        <start><EnterBattle /></start>
-        <end><RoomTransition room="RuinsHallway" backwards="false" /></end>
-        <plot>7</plot>
-        <room>RuinsSpikeMaze</room>
-        <x>400</x>
-        <y>115</y>
-        <message>PROCEED</message>
-    </segment>
-
     <segment uninterruptable="false" fast-encounters="false" type="downtime-step" tutorial="true">
         <name>ruins-leaf-pile</name>
         <start><RoomTransition room="RuinsHallway" backwards="false" /></start>
@@ -38,7 +27,7 @@
         <room>RuinsHallway</room>
         <x>2400</x>
         <y>100</y>
-        <xp>10</xp>
+        <xp>0</xp>
         <message>WALK</message>
         <explanation>
             Walk through the next room without grinding an encounter
@@ -46,9 +35,14 @@
     </segment>
 
     <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
-        <name>froggit-lv2</name>
+        <name>froggit-lv1-whiff</name>
         <start><EnterBattle /></start>
         <end><LeaveBattle /></end>
+        <other>
+            <DamageRoll>
+                global.damage += 0
+            </DamageRoll>
+        </other>
         <plot>9.2</plot>
         <room>RuinsLeafPile</room>
         <x>200</x>
@@ -57,7 +51,7 @@
         <message>GRIND</message>
         <explanation>
             Start grinding at the end of the room and keep grinding as if you were in the
-            first half of Ruins in Genocide
+            first half of Ruins in Genocide (you will be at LV 1)
         </explanation>
     </segment>
 
@@ -65,7 +59,7 @@
         <name>ruins-leaf-pile-endsteps</name>
         <start><LeaveBattle /></start>
         <end><Door name="C" room="RuinsLeafPile" /></end>
-        <xp>29</xp>
+        <xp>0</xp>
         <message>GRIND</message>
     </segment>
 
@@ -73,6 +67,20 @@
         <name>leaf-pile-transition</name>
         <start><Door name="C" room="RuinsLeafPile" /></start>
         <end><RoomTransition room="RuinsLeafPile" backwards="false" /></end>
+        <xp>9</xp>
+        <message>GRIND</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="false">
+        <name>froggit-lv1-no-whiff</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <other>
+            <DamageRoll>
+                global.damage += 2
+            </DamageRoll>
+        </other>
+        <next-encounter>SingleFroggit</next-encounter>
         <message>GRIND</message>
     </segment>
 
@@ -88,6 +96,7 @@
         <room>RuinsLeafFall</room>
         <x>20</x>
         <y>100</y>
+        <xp>29</xp>
         <next-encounter>SingleFroggit</next-encounter>
         <message>GRIND</message>
     </segment>
@@ -105,6 +114,22 @@
         <end><RoomTransition room="RuinsLeafFall" backwards="true" /></end>
         <xp>30</xp>
         <message>GRIND</message>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="true" type="continuous" tutorial="true">
+        <name>froggit-lv2</name>
+        <start><EnterBattle /></start>
+        <end><LeaveBattle /></end>
+        <plot>9.2</plot>
+        <room>RuinsLeafPile</room>
+        <x>200</x>
+        <y>330</y>
+        <next-encounter>SingleFroggit</next-encounter>
+        <message>GRIND</message>
+        <explanation>
+            Start grinding at the end of the room and keep grinding as if you were in the
+            first half of Ruins in Genocide
+        </explanation>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="true" type="continuous" tutorial="false">

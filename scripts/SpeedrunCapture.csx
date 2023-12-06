@@ -1256,6 +1256,8 @@ public static class CodeEntryClass
     /// </summary>
     public static string battlecontrol = "gml_Object_obj_battlecontroller_Step_0";
 
+    public static string targetChoice = "gml_Object_obj_targetchoice_Step_0";
+
     /// <summary>
     /// Step code for Froggit
     /// </summary>
@@ -1813,7 +1815,9 @@ enum PlaceMethod
     /// <summary>
     /// Place inside an if statement with a single statement
     /// </summary>
-    PlaceInIf
+    PlaceInIf,
+
+    Replace
 }
 
 /*
@@ -2179,6 +2183,20 @@ class FroggitAttack : UniqueEvent
     public override string CodeEntry()
     {
         return CodeEntryClass.froggitAlarm;
+    }
+}
+
+class DamageRoll : UniqueEvent
+{
+    public DamageRoll (XmlReader reader) : base(reader) {}
+
+    public override PlaceMethod Method => PlaceMethod.Replace;
+
+    public override string Replacement => "global.damage += random(2)";
+
+    public override string CodeEntry()
+    {
+        return CodeEntryClass.targetChoice;
     }
 }
 
@@ -2925,7 +2943,12 @@ void main ()
             }}
             ");
         }
-        string eventCode = IfElseBlock.GetIfElseBlock(segmentCodeBlocks);
+        IfElseBlock ifElseBlock = new IfElseBlock(segmentCodeBlocks);
+        if (undertaleEvent.Method == PlaceMethod.Replace)
+        {
+            ifElseBlock.SetElseBlock(undertaleEvent.Replacement);
+        }
+        string eventCode = ifElseBlock.GetCode();
         var eventName = undertaleEvent.GetType().Name;
 
         if (!eventCodes.ContainsKey(eventName)) eventCodes[eventName] = new Dictionary<UndertaleEvent, string>();
@@ -2986,6 +3009,9 @@ void main ()
                     break;
                 case PlaceMethod.PlaceInIf:
                     placeInIf(entry, baseEvent.Replacement, baseEvent.Placement());
+                    break;
+                case PlaceMethod.Replace:
+                    replace(entry, baseEvent.Replacement, baseEvent.Placement());
                     break;
             }
         }

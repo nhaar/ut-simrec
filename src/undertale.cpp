@@ -29,6 +29,13 @@ int Undertale::ruins_first_half_steps (int kills) {
     return scr_steps(80, 40, 20, kills);
 }
 
+// chance of a froggit whiffing at LV 1
+bool Undertale::whiff_lv1_froggit () {
+    double roll = Random::random_number();
+    if (roll < 0.253) return true;
+    return false;
+}
+
 // encounterer for first half
 int Undertale::ruins1 () {
     double roll = Random::random_number();

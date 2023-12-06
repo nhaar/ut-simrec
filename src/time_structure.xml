@@ -20,6 +20,15 @@ const char* time_structure = R"(
         <def>
             <name>first-half-encounter</name>
             <or>
+                <static>froggit-lv1-whiff</static>
+                <variant>frogskip-save</variant>
+            </or>
+            <or>
+                <static>froggit-lv1-no-whiff</static>
+                <variant>frogskip-save</variant>
+                <variant>frogskip-save</variant>
+            </or>
+            <or>
                 <static>froggit-lv2</static>
                 <variant>frogskip-save</variant>
             </or>
@@ -71,8 +80,6 @@ const char* time_structure = R"(
         </def>
         
         <static>ruins-start</static>
-        <variant>blcon</variant>
-        <static>ruins-hallway</static>
         <static>ruins-leaf-pile</static>
         <variant>steps*</variant>
         <variant>blcon</variant>

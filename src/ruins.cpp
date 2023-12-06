@@ -12,12 +12,14 @@ int Ruins::simulate() {
     time += Undertale::encounter_time_random(times.static_blcons["ruins"]);
 
     int kills = 0;
-    // lv and exp are like this since the grind begins after killing first frog
-    int lv = 2;
-    int exp = 10;
+
+    int lv = 1;
+    int exp = 0;
+
+    int first_half_kills = 13;
 
     // loop for the first half
-    while (kills < 13) {
+    while (kills < first_half_kills) {
         int steps = Undertale::ruins_first_half_steps(kills);
 
         // for first encounter, you need to at least get to the end of the room, requiring a step fix
@@ -26,10 +28,10 @@ int Ruins::simulate() {
         }
         time += steps;
 
-        // the minimum amount of kills needed to LV up is 7
-        // the maximum amount of kills needed is 10
-        // LV 4 is not possible thus no need to worry
-        if (kills > 4 && kills < 11 && exp >= 30) {
+
+        if (exp >= 10) {
+            lv = 2;
+        } else if (exp >= 30) {
             lv = 3;
         }
 
@@ -38,12 +40,22 @@ int Ruins::simulate() {
         if (encounter == Encounters::SingleFroggit) {
             exp += 3;
             // do arithmetic on the lv for a slight optimization based on how the array is built
-            if (lv == 2) {
+            bool two_turns = lv == 1 && Undertale::whiff_lv1_froggit();
+            if (lv == 1) {
+                if (two_turns) {
+                    time += times.segments["froggit-lv1-whiff"];
+                } else {
+                    time += times.segments["froggit-lv1-no-whiff"];
+                }
+            } else if (lv == 2) {
                 time += times.segments["froggit-lv2"];
             } else {
                 time += times.segments["froggit-lv3"];
             }
             time += times.segments["frogskip-save"] * Undertale::frogskip();
+            if (two_turns) {
+                time += times.segments["froggit-lv1-whiff-2"] * Undertale::frogskip();
+            }
         // for whimsun
         } else {
             time += times.segments["whim"];
