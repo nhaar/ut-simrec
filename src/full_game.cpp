@@ -5,7 +5,7 @@
 #include "endgame.hpp"
 
 FullGame::FullGame (Times& times_value) : Simulator (times_value) {
-    children[0] = new Ruins(times_value);
+    children[0] = new Ruins(times_value, false);
     children[1] = new Snowdin(times_value);
     children[2] = new Waterfall(times_value);
     children[3] = new Endgame(times_value);

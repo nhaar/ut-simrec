@@ -2,7 +2,7 @@
 #include "undertale.hpp"
 #include "encounters.hpp"
 
-Ruins::Ruins (Times& times_value) : Simulator(times_value) {}
+Ruins::Ruins (Times& times_value, bool glitchless) : Simulator(times_value), glitchless(glitchless) {}
 
 int Ruins::simulate() {
     // initializing vars
@@ -10,11 +10,20 @@ int Ruins::simulate() {
     // static time
     int time = times.segments["ruins"];
     time += Undertale::encounter_time_random(times.static_blcons["ruins"]);
-
+    
     int kills = 0;
+    int lv;
+    int exp;
 
-    int lv = 1;
-    int exp = 0;
+    if (glitchless) {
+        time += times.segments["ruins-dummy-glitchless"] + times.segments["ruins-spikes"] + Undertale::encounter_time_random();
+        lv = 2;
+        exp = 10;
+    } else {
+        time += times.segments["ruins-start-tas"];
+        lv = 1;
+        exp = 0;
+    }
 
     int first_half_kills = 13;
 

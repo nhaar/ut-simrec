@@ -7,6 +7,17 @@ const char* time_structure = R"(
 <segments>
     <area name="ruins">
         <def>
+            <name>ruins-tas</name>
+            <or>
+                <static>ruins-with-tas</static>
+            </or>
+            <or>
+                <static>ruins-dummy-glitchless</static>
+                <variant>blcon</variant>
+                <static>ruins-spikes</static>
+            </or>
+        </def>
+        <def>
             <name>frogskip-save</name>
             <or><null /></or>
             <or>
@@ -80,6 +91,8 @@ const char* time_structure = R"(
         </def>
         
         <static>ruins-start</static>
+        <variant>ruins-tas</variant>
+        <static>ruins-hallway</static>
         <static>ruins-leaf-pile</static>
         <variant>steps*</variant>
         <variant>blcon</variant>

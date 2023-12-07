@@ -7,9 +7,11 @@
 class Ruins : public Simulator {
 
 public:
-    Ruins (Times& times_value);
+    Ruins (Times& times_value, bool glitchless);
 
     int simulate() override;
+
+    bool glitchless;
 };
 
 #endif
