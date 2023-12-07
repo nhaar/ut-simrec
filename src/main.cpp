@@ -30,6 +30,7 @@ int main (int arc, char *argv[]) {
     bool use_best = false;
     int simulations = 1'000'000;
     bool use_tas = false;
+    int first_half_kills = 13;
     string run;
 
     int cur_arg = 1;
@@ -70,6 +71,10 @@ int main (int arc, char *argv[]) {
             case 'g':
                 use_tas = true;
                 break;
+            case 'f':
+                cur_arg++;
+                first_half_kills = stoi(argv[cur_arg]);
+                break;
         }
         cur_arg++;
     }
@@ -84,7 +89,7 @@ int main (int arc, char *argv[]) {
 
     Simulator* simulator = nullptr;
     if (run == "ruins") {
-        simulator = new Ruins(times, !use_tas);
+        simulator = new Ruins(times, !use_tas, first_half_kills);
     } else if (run == "snowdin") {
         simulator = new Snowdin(times);
     } else if (run == "waterfall") {

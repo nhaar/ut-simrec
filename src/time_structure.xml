@@ -102,10 +102,15 @@ const char* time_structure = R"(
             <pos><static>lv-up</static></pos>
             <neg><static>you-won</static></neg>
         </delta>
-        <loop times="10">
+        <!-- Executes number of first half kills - 3, because 3 is how many are done outside the first area -->
+        <loop times="?">
             <variant>steps</variant>
             <variant>blcon</variant>
             <variant>first-half-encounter</variant>
+            <static>ruins-first-transition</static>
+        </loop>
+        <!-- This loop is either 0 or 2 times, depending on whether the first half kills is an even number -->
+        <loop times="?">
             <static>ruins-first-transition</static>
         </loop>
         

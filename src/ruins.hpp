@@ -7,11 +7,13 @@
 class Ruins : public Simulator {
 
 public:
-    Ruins (Times& times_value, bool glitchless);
+    Ruins (Times& times_value, bool glitchless, int first_half_kills);
 
     int simulate() override;
 
     bool glitchless;
+
+    int first_half_kills;
 };
 
 #endif
