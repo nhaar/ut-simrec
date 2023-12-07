@@ -12,6 +12,7 @@
 #include "waterfall.hpp"
 #include "endgame.hpp"
 #include "full_game.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -103,10 +104,12 @@ int main (int arc, char *argv[]) {
         cout << "Chance: " << chance * 100 << "%" << endl;;
     }
     if (get_avg) {
-        cout << "Average: " << dist.get_average() << endl;
+        double average = dist.get_average();
+        cout << "Average: " << Utils::frame_to_time(average) << endl;
     }
     if (get_stdev) {
-        cout << "Standard Deviation: " << dist.get_stdev() << endl;
+        double stdev = dist.get_stdev();
+        cout << "Standard Deviation: " << Utils::frame_to_time(stdev) << endl;
     }
 
     return 0;
