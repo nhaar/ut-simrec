@@ -5,10 +5,10 @@
  -->
 
 <segments>
-    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
         <name>ruins-start</name>
         <start><PickName /></start>
-        <end><RoomTransition room="RuinsHallway" backwards="false" /></end>
+        <end><RoomTransition room="RuinsPreDummy" backwards="false" /></end>
         <plot>0</plot>
         <room>GameMenu</room>
         <message>PROCEED</message>
@@ -17,6 +17,54 @@
 
             Start by picking a name
         </explanation>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="true">
+        <name>ruins-tas</name>
+        <start><RoomTransition room="RuinsPreDummy" backwards="false" /></start>
+        <end><RoomTransition room="RuinsSpikeMaze" backwards="false" /></end>
+        <plot>5</plot>
+        <room>RuinsPreDummy</room>
+        <x>632</x>
+        <y>140</y>
+        <xp>0</xp>
+        <message>PROCEED (DO TAS)</message>
+        <explanation>
+            Proceed through the next room as normal, but do TAS. If you don't want to record TAS, skip this segment.
+        </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="true">
+        <name>ruins-dummy-glitchless</name>
+        <start><RoomTransition room="RuinsPreDummy" backwards="false" /></start>
+        <end><Blcon /></end>
+        <message>PROCEED GLITCHLESS (Kill First Froggit)</message>
+        <explanation>
+            Proceed through the next room as normal, but doing glitchless, so battling the Dummy,
+            and then killing First Froggit.
+        </explanation>
+    </segment>
+
+    <segment uninterruptable="true" fast-encounters="false" type="continuous" tutorial="false">
+        <name>ruins-spikes</name>
+        <start><EnterBattle /></start>
+        <end><RoomTransition room="RuinsSpikeMaze" backwards="false" /></end>
+        <plot>7</plot>
+        <room>RuinsSpikeMaze</room>
+        <x>300</x>
+        <y>100</y>
+        <message>PROCEED</message>
+    </segment>
+
+    <segment uninterruptable="false" fast-encounters="false" type="continuous" tutorial="false">
+        <name>ruins-hallway</name>
+        <start><RoomTransition room="RuinsSpikeMaze" backwards="false" /></start>
+        <end><RoomTransition room="RuinsHallway" backwards="false" /></end>
+        <plot>8</plot>
+        <x>1140</x>
+        <y>100</y>
+        <xp>0</xp>
+        <message>PROCEED</message>
     </segment>
 
     <segment uninterruptable="false" fast-encounters="false" type="downtime-step" tutorial="true">

@@ -557,10 +557,14 @@ static class RoomClass
     /// </summary>
     public static UndertaleRoom GameMenu = new UndertaleRoom(3);
     
+    public static UndertaleRoom RuinsPreDummy = new UndertaleRoom(8);
+
+    public static UndertaleRoom RuinsDummy = new UndertaleRoom(9, RuinsPreDummy);
+
     /// <summary>
     /// Room where Toriel holds your hand across the spikes
     /// </summary>
-    public static UndertaleRoom RuinsSpikeMaze = new UndertaleRoom(10);
+    public static UndertaleRoom RuinsSpikeMaze = new UndertaleRoom(10, RuinsDummy);
 
     /// <summary>
     /// Room with the long hallway and unnecessary tension
@@ -1315,6 +1319,8 @@ public static class CodeEntryClass
     /// Step event for the object that control's Frisk
     /// </summary>
     public static string Mainchara = "gml_Object_obj_mainchara_Step_0";
+
+    public static string LevelUp = "gml_Script_scr_levelup";
 }
 
 /*
@@ -2488,6 +2494,11 @@ void main ()
 
     // make drawing work
     Data.GameObjects.ByName("obj_time").Visible = true;
+
+    // make it so levelup also correctly assigns LV 1
+    place(CodeEntryClass.LevelUp, "currentlevel = global.lv", @"
+    global.lv = 1
+    ");
 
     // initializing variables
     append(CodeEntryClass.create, $@"
